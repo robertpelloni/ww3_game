@@ -1,0 +1,30 @@
+# Unity .gitignore (melon for URP low-spec project)
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+[Aa]ssets/AddressableAssetsData/*/*.bin*
+*.csproj
+*.sln
+*.user
+*.userprefs
+.vs/
+.idea/
+*.apk
+*.aab
+*.unitypackage
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+# MCP / Node
+node_modules/
+.mcp-cache/
+*.log
+# Python (Unreal remote-exec helpers)
+__pycache__/
+.venv/

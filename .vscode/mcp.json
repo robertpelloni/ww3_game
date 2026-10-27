@@ -1,0 +1,16 @@
+{
+  // VS Code MCP extension reads this file. Mirrors ../.mcp.json inputs.
+  // Keep in sync: copy ../.mcp.json -> .vscode/mcp.json inputs when editing.
+  "inputs": [],
+  "servers": {
+    "unity-coplay": {
+      "command": "node",
+      "args": ["${workspaceFolder}/mcp-servers/unity/CoplayDev.unity-mcp/UnityMcpServer/dist/index.js"],
+      "env": { "UNITY_MCP_PORT": "8080" }
+    },
+    "unity-ivanmurzak": {
+      "command": "node",
+      "args": ["${workspaceFolder}/mcp-servers/unity/IvanMurzak.Unity-MCP/Unity-McpServer/dist/index.js"]
+    }
+  }
+}

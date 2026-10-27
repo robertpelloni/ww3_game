@@ -1,0 +1,67 @@
+// MCP client config — Claude Code / Cursor / Windsurf / pi auto-read this file.
+// Only U1+U2 enabled by default. Enable others as needed ("disabled": false).
+// Paths are relative to repo root. Install first: .\scripts\install-mcp.ps1
+{
+  "mcpServers": {
+    "unity-coplay": {
+      "disabled": false,
+      "command": "node",
+      "args": ["mcp-servers/unity/CoplayDev.unity-mcp/UnityMcpServer/dist/index.js"],
+      "env": { "UNITY_MCP_PORT": "8080" }
+    },
+    "unity-ivanmurzak": {
+      "disabled": false,
+      "command": "node",
+      "args": ["mcp-servers/unity/IvanMurzak.Unity-MCP/Unity-McpServer/dist/index.js"],
+      "env": {}
+    },
+    "unity-codergamester": {
+      "disabled": true,
+      "command": "node",
+      "args": ["mcp-servers/unity/CoderGamester.mcp-unity/build/index.js"],
+      "env": {}
+    },
+    "unity-anklebreaker": {
+      "disabled": true,
+      "command": "node",
+      "args": ["mcp-servers/unity/AnkleBreaker.unity-mcp-server/dist/index.js"],
+      "env": {}
+    },
+    "unity-jackwrichards": {
+      "disabled": true,
+      "command": "node",
+      "args": ["mcp-servers/unity/jackwrichards.UnityMCP/dist/index.js"],
+      "env": {}
+    },
+    "unreal-chongdashu": {
+      "disabled": true,
+      "command": "node",
+      "args": ["mcp-servers/unreal/chongdashu.unreal-mcp/dist/index.js"],
+      "env": {}
+    },
+    "unreal-chir24": {
+      "disabled": true,
+      "command": "node",
+      "args": ["mcp-servers/unreal/ChiR24.Unreal_mcp/dist/index.js"],
+      "env": {}
+    },
+    "unreal-kvick": {
+      "disabled": true,
+      "command": "node",
+      "args": ["mcp-servers/unreal/kvick-games.UnrealMCP/dist/index.js"],
+      "env": {}
+    },
+    "unreal-genorca": {
+      "disabled": true,
+      "command": "node",
+      "args": ["mcp-servers/unreal/GenOrca.unreal-mcp/dist/index.js"],
+      "env": {}
+    },
+    "unreal-runreal": {
+      "disabled": true,
+      "command": "python",
+      "args": ["mcp-servers/unreal/runreal.unreal-mcp/server.py"],
+      "env": {}
+    }
+  }
+}
