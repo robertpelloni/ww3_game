@@ -1,0 +1,30 @@
+[submodule "mcp-servers/unity/CoplayDev.unity-mcp"]
+	path = mcp-servers/unity/CoplayDev.unity-mcp
+	url = https://github.com/CoplayDev/unity-mcp.git
+[submodule "mcp-servers/unity/IvanMurzak.Unity-MCP"]
+	path = mcp-servers/unity/IvanMurzak.Unity-MCP
+	url = https://github.com/IvanMurzak/Unity-MCP.git
+[submodule "mcp-servers/unity/CoderGamester.mcp-unity"]
+	path = mcp-servers/unity/CoderGamester.mcp-unity
+	url = https://github.com/CoderGamester/mcp-unity.git
+[submodule "mcp-servers/unity/AnkleBreaker.unity-mcp-server"]
+	path = mcp-servers/unity/AnkleBreaker.unity-mcp-server
+	url = https://github.com/AnkleBreaker-Studio/unity-mcp-server.git
+[submodule "mcp-servers/unity/jackwrichards.UnityMCP"]
+	path = mcp-servers/unity/jackwrichards.UnityMCP
+	url = https://github.com/jackwrichards/UnityMCP.git
+[submodule "mcp-servers/unreal/chongdashu.unreal-mcp"]
+	path = mcp-servers/unreal/chongdashu.unreal-mcp
+	url = https://github.com/chongdashu/unreal-mcp.git
+[submodule "mcp-servers/unreal/ChiR24.Unreal_mcp"]
+	path = mcp-servers/unreal/ChiR24.Unreal_mcp
+	url = https://github.com/ChiR24/Unreal_mcp.git
+[submodule "mcp-servers/unreal/kvick-games.UnrealMCP"]
+	path = mcp-servers/unreal/kvick-games.UnrealMCP
+	url = https://github.com/kvick-games/UnrealMCP.git
+[submodule "mcp-servers/unreal/GenOrca.unreal-mcp"]
+	path = mcp-servers/unreal/GenOrca.unreal-mcp
+	url = https://github.com/GenOrca/unreal-mcp.git
+[submodule "mcp-servers/unreal/runreal.unreal-mcp"]
+	path = mcp-servers/unreal/runreal.unreal-mcp
+	url = https://github.com/runreal/unreal-mcp.git

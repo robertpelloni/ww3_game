@@ -8,7 +8,7 @@
 
 **Repo:** https://github.com/robertpelloni/ww3_game
 **Workspace submodule:** `workspace/ww3_game`
-**Status:** pre-production — GDD + MCP toolchain bootstrapping
+**Status:** pre-production — repo live, GDD v0.1, all 10 MCP servers vendored, 6/10 smoke-verified (U1, U3, U4, U5, R2 + U2 CLI)
 
 ---
 
@@ -129,8 +129,8 @@ Bonus research: `IvanMurzak/Unreal-MCP` (same author as U2), `sam-david/unreal-m
 
 ## Roadmap
 
-- [x] Repo + submodule + README + MCP toolchain
-- [ ] `docs/GAME_DESIGN.md` Act 1 vertical slice (Chongjin night escape)
+- [x] Repo + submodule + README + MCP toolchain (10/10 vendored, 6/10 live-verified)
+- [x] `docs/GAME_DESIGN.md` Act 1 vertical slice (Chongjin night escape)
 - [ ] Unity URP project scaffold (URP asset, input, stealth toolkit)
 - [ ] `prototypes/StealthSim` console sim (patrol AI, noise/light)
 - [ ] First playable: 1 street, 2 patrols, 1 checkpoint, win = reach safehouse

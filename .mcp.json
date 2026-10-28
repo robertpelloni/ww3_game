@@ -1,67 +1,48 @@
-// MCP client config — Claude Code / Cursor / Windsurf / pi auto-read this file.
-// Only U1+U2 enabled by default. Enable others as needed ("disabled": false).
-// Paths are relative to repo root. Install first: .\scripts\install-mcp.ps1
 {
   "mcpServers": {
-    "unity-coplay": {
-      "disabled": false,
+    "unity-anklebreaker": {
       "command": "node",
-      "args": ["mcp-servers/unity/CoplayDev.unity-mcp/UnityMcpServer/dist/index.js"],
-      "env": { "UNITY_MCP_PORT": "8080" }
+      "args": ["mcp-servers/unity/AnkleBreaker.unity-mcp-server/src/index.js"]
     },
-    "unity-ivanmurzak": {
-      "disabled": false,
-      "command": "node",
-      "args": ["mcp-servers/unity/IvanMurzak.Unity-MCP/Unity-McpServer/dist/index.js"],
-      "env": {}
+    "unity-coplay": {
+      "disabled": true,
+      "command": "uvx",
+      "args": ["--from", "mcpforunityserver", "mcp-for-unity", "--transport", "stdio"]
     },
     "unity-codergamester": {
       "disabled": true,
       "command": "node",
-      "args": ["mcp-servers/unity/CoderGamester.mcp-unity/build/index.js"],
-      "env": {}
-    },
-    "unity-anklebreaker": {
-      "disabled": true,
-      "command": "node",
-      "args": ["mcp-servers/unity/AnkleBreaker.unity-mcp-server/dist/index.js"],
-      "env": {}
+      "args": ["mcp-servers/unity/CoderGamester.mcp-unity/Server~/build/index.js"]
     },
     "unity-jackwrichards": {
       "disabled": true,
       "command": "node",
-      "args": ["mcp-servers/unity/jackwrichards.UnityMCP/dist/index.js"],
-      "env": {}
-    },
-    "unreal-chongdashu": {
-      "disabled": true,
-      "command": "node",
-      "args": ["mcp-servers/unreal/chongdashu.unreal-mcp/dist/index.js"],
-      "env": {}
+      "args": ["mcp-servers/unity/jackwrichards.UnityMCP/unity-mcp-server/build/index.js"]
     },
     "unreal-chir24": {
       "disabled": true,
       "command": "node",
-      "args": ["mcp-servers/unreal/ChiR24.Unreal_mcp/dist/index.js"],
-      "env": {}
+      "args": ["mcp-servers/unreal/ChiR24.Unreal_mcp/dist/cli.js"]
     },
-    "unreal-kvick": {
+    "unreal-chongdashu": {
       "disabled": true,
-      "command": "node",
-      "args": ["mcp-servers/unreal/kvick-games.UnrealMCP/dist/index.js"],
-      "env": {}
+      "command": "uv",
+      "args": ["--directory", "mcp-servers/unreal/chongdashu.unreal-mcp/Python", "run", "unreal_mcp_server.py"]
     },
     "unreal-genorca": {
       "disabled": true,
-      "command": "node",
-      "args": ["mcp-servers/unreal/GenOrca.unreal-mcp/dist/index.js"],
-      "env": {}
+      "command": "uv",
+      "args": ["--directory", "mcp-servers/unreal/GenOrca.unreal-mcp/mcp-server", "run", "src/unreal_mcp/main.py"]
+    },
+    "unreal-kvick": {
+      "disabled": true,
+      "command": "python",
+      "args": ["mcp-servers/unreal/kvick-games.UnrealMCP/MCP/unreal_mcp_bridge.py"]
     },
     "unreal-runreal": {
       "disabled": true,
-      "command": "python",
-      "args": ["mcp-servers/unreal/runreal.unreal-mcp/server.py"],
-      "env": {}
+      "command": "npx",
+      "args": ["-y", "@runreal/unreal-mcp"]
     }
   }
 }
