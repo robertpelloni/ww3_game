@@ -43,6 +43,51 @@
       "disabled": true,
       "command": "npx",
       "args": ["-y", "@runreal/unreal-mcp"]
+    },
+    "unreal-samdavid": {
+      "disabled": true,
+      "command": "node",
+      "args": ["mcp-servers/unreal/sam-david.unreal-mcp/dist/bin.js"]
+    },
+    "unreal-appleweed": {
+      "disabled": true,
+      "command": "python",
+      "args": ["mcp-servers/unreal/appleweed.UnrealMCPBridge/MCPClient/unreal_mcp_client.py"]
+    },
+    "unity-glade": {
+      "disabled": true,
+      "command": "uvx",
+      "args": ["gladekit-mcp"]
+    },
+    "godot-coding-solo": {
+      "disabled": true,
+      "command": "node",
+      "args": ["mcp-servers/godot/Coding-Solo.godot-mcp/build/index.js"]
+    },
+    "godot-tugcantopaloglu": {
+      "disabled": true,
+      "command": "node",
+      "args": ["mcp-servers/godot/tugcantopaloglu.godot-mcp/build/index.js"]
+    },
+    "godot-ee0pdt": {
+      "disabled": true,
+      "command": "node",
+      "args": ["mcp-servers/godot/ee0pdt.Godot-MCP/server/dist/index.js"]
+    },
+    "godot-tomyud1": {
+      "disabled": true,
+      "command": "node",
+      "args": ["mcp-servers/godot/tomyud1.godot-mcp/mcp-server/dist/index.js"]
+    },
+    "godot-ai": {
+      "disabled": true,
+      "command": "uvx",
+      "args": ["godot-ai"]
+    },
+    "godot-native": {
+      "disabled": true,
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "http://localhost:9080/mcp"]
     }
   }
 }

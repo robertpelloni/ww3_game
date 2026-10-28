@@ -8,7 +8,7 @@
 
 **Repo:** https://github.com/robertpelloni/ww3_game
 **Workspace submodule:** `workspace/ww3_game`
-**Status:** pre-production — repo live, GDD v0.1, all 10 MCP servers vendored, 6/10 smoke-verified (U1, U3, U4, U5, R2 + U2 CLI)
+**Status:** pre-production — repo live, GDD v0.1, **23 MCP servers** vendored (8 Unity + 8 Unreal + 7 Godot), 13/23 live-verified
 
 ---
 
@@ -53,8 +53,9 @@ ww3_game/
 │   ├── GAME_DESIGN.md        # GDD v0.1
 │   └── MCP_SETUP.md          # how to install/activate all MCP servers
 ├── mcp-servers/
-│   ├── unity/                # top-5 Unity MCP servers (cloned)
-│   └── unreal/               # top-5 Unreal MCP servers (cloned)
+│   ├── unity/                # 8 Unity MCP servers (cloned)
+│   ├── unreal/               # 8 Unreal MCP servers (cloned)
+│   └── godot/                # 7 Godot MCP servers (cloned)
 ├── unity-project/            # Unity URP project goes here (Unity Hub → open this folder)
 ├── prototypes/               # pure C# / console prototypes (no engine needed)
 ├── .mcp.json                 # MCP client config (Claude Code / Cursor / pi)
@@ -101,9 +102,9 @@ dotnet run --project prototypes/StealthSim
 
 ---
 
-## MCP servers (top 5 + top 5, by ⭐)
+## MCP servers (8 Unity + 8 Unreal + 7 Godot, by ⭐)
 
-### Unity — installed & activated
+### Unity — installed & activated (8/8 vendored, 7/8 live-verified)
 | # | Repo | ⭐ | Why |
 |---|------|----|-----|
 | U1 | [CoplayDev/unity-mcp](https://github.com/CoplayDev/unity-mcp) | ~15.4k | Biggest community, bridge LLM ↔ Unity Editor |
@@ -111,8 +112,11 @@ dotnet run --project prototypes/StealthSim
 | U3 | [CoderGamester/mcp-unity](https://github.com/CoderGamester/mcp-unity) | ~2k | Clean Cursor/Claude Code plugin |
 | U4 | [AnkleBreaker-Studio/unity-mcp-server](https://github.com/AnkleBreaker-Studio/unity-mcp-server) | ~500 | 268 tools: scenes, builds, NavMesh, multiplayer |
 | U5 | [jackwrichards/UnityMCP](https://github.com/jackwrichards/UnityMCP) | ~500 | Lightweight alternative |
+| U6 | [isuzu-shiranui/UnityMCP](https://github.com/isuzu-shiranui/UnityMCP) | ~340 | No-runtime native CLI, Editor-hosted HTTP — great for weak PCs |
+| U7 | [FunplayAI/funplay-unity-mcp](https://github.com/FunplayAI/funplay-unity-mcp) | ~270 | In-process HTTP + broker mode |
+| U8 | [Glade-tool/glade-mcp](https://github.com/Glade-tool/glade-mcp) | ~210 | **Unity + Godot** dual-engine, `uvx gladekit-mcp` |
 
-### Unreal — research only (don't run UE5 editor on this laptop)
+### Unreal — research only (don't run UE5 editor on this laptop) (8/8 vendored, 2/8 live-verified)
 | # | Repo | ⭐ | Why |
 |---|------|----|-----|
 | R1 | [chongdashu/unreal-mcp](https://github.com/chongdashu/unreal-mcp) | ~2.1k | #1 Unreal MCP, natural-language control |
@@ -120,6 +124,20 @@ dotnet run --project prototypes/StealthSim
 | R3 | [kvick-games/UnrealMCP](https://github.com/kvick-games/UnrealMCP) | ~600 | Straightforward AI-agent control |
 | R4 | [GenOrca/unreal-mcp](https://github.com/GenOrca/unreal-mcp) | ~140 | UE5 + Claude & agents, Python+C++ tools |
 | R5 | [runreal/unreal-mcp](https://github.com/runreal/unreal-mcp) | ~110 | Uses Unreal Python Remote Execution |
+| R6 | [IvanMurzak/Unreal-MCP](https://github.com/IvanMurzak/Unreal-MCP) | ~50 | Same CLI family as U2/G9 (`unreal-mcp-cli`) |
+| R7 | [appleweed/UnrealMCPBridge](https://github.com/appleweed/UnrealMCPBridge) | ~60 | UE plugin + Python FastMCP client |
+| R8 | [sam-david/unreal-mcp](https://github.com/sam-david/unreal-mcp) | — | 127 tools, **no C++ plugin required** — most laptop-friendly UE path |
+
+### Godot — runs on this laptop! (7/7 vendored, editor not installed yet)
+| # | Repo | ⭐ | Why |
+|---|------|----|-----|
+| G1 | [Coding-Solo/godot-mcp](https://github.com/Coding-Solo/godot-mcp) | ~6.4k | #1 Godot MCP, launches editor + captures debug output |
+| G2 | [hi-godot/godot-ai](https://github.com/hi-godot/godot-ai) | ~3.2k | From the MCP-for-Unity makers, `uvx godot-ai`, totally free |
+| G3 | [yurineko73/Godot-MCP-Native](https://github.com/yurineko73/Godot-MCP-Native) | ~860 | Zero-dep native, headless `--mcp-server` mode |
+| G5 | [ee0pdt/Godot-MCP](https://github.com/ee0pdt/Godot-MCP) | ~620 | FastMCP bridge + editor addon |
+| G7 | [tugcantopaloglu/godot-mcp](https://github.com/tugcantopaloglu/godot-mcp) | ~500 | 157 tools, Godot 4.7-tested |
+| G8 | [tomyud1/godot-mcp](https://github.com/tomyud1/godot-mcp) | ~450 | 71 tools + visualizer |
+| G9 | [IvanMurzak/Godot-MCP](https://github.com/IvanMurzak/Godot-MCP) | ~310 | Same CLI family (`godot-cli`), C# + cloud via ai-game.dev |
 
 Bonus research: `IvanMurzak/Unreal-MCP` (same author as U2), `sam-david/unreal-mcp` (127 tools, no C++ plugin required — interesting for weak PCs).
 
@@ -131,6 +149,8 @@ Bonus research: `IvanMurzak/Unreal-MCP` (same author as U2), `sam-david/unreal-m
 
 - [x] Repo + submodule + README + MCP toolchain (10/10 vendored, 6/10 live-verified)
 - [x] `docs/GAME_DESIGN.md` Act 1 vertical slice (Chongjin night escape)
+- [x] 23 MCP servers (8 Unity + 8 Unreal + 7 Godot) vendored + activated in `.mcp.json`
+- [ ] Install Godot 4 (Compatibility renderer — runs on HD 520) and wire G1/G3 to a test project
 - [ ] Unity URP project scaffold (URP asset, input, stealth toolkit)
 - [ ] `prototypes/StealthSim` console sim (patrol AI, noise/light)
 - [ ] First playable: 1 street, 2 patrols, 1 checkpoint, win = reach safehouse

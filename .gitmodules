@@ -28,3 +28,42 @@
 [submodule "mcp-servers/unreal/runreal.unreal-mcp"]
 	path = mcp-servers/unreal/runreal.unreal-mcp
 	url = https://github.com/runreal/unreal-mcp.git
+[submodule "mcp-servers/godot/Coding-Solo.godot-mcp"]
+	path = mcp-servers/godot/Coding-Solo.godot-mcp
+	url = https://github.com/Coding-Solo/godot-mcp.git
+[submodule "mcp-servers/godot/hi-godot.godot-ai"]
+	path = mcp-servers/godot/hi-godot.godot-ai
+	url = https://github.com/hi-godot/godot-ai.git
+[submodule "mcp-servers/godot/yurineko73.Godot-MCP-Native"]
+	path = mcp-servers/godot/yurineko73.Godot-MCP-Native
+	url = https://github.com/yurineko73/Godot-MCP-Native.git
+[submodule "mcp-servers/godot/ee0pdt.Godot-MCP"]
+	path = mcp-servers/godot/ee0pdt.Godot-MCP
+	url = https://github.com/ee0pdt/Godot-MCP.git
+[submodule "mcp-servers/godot/tugcantopaloglu.godot-mcp"]
+	path = mcp-servers/godot/tugcantopaloglu.godot-mcp
+	url = https://github.com/tugcantopaloglu/godot-mcp.git
+[submodule "mcp-servers/godot/tomyud1.godot-mcp"]
+	path = mcp-servers/godot/tomyud1.godot-mcp
+	url = https://github.com/tomyud1/godot-mcp.git
+[submodule "mcp-servers/godot/IvanMurzak.Godot-MCP"]
+	path = mcp-servers/godot/IvanMurzak.Godot-MCP
+	url = https://github.com/IvanMurzak/Godot-MCP.git
+[submodule "mcp-servers/unity/isuzu-shiranui.UnityMCP"]
+	path = mcp-servers/unity/isuzu-shiranui.UnityMCP
+	url = https://github.com/isuzu-shiranui/UnityMCP.git
+[submodule "mcp-servers/unity/FunplayAI.funplay-unity-mcp"]
+	path = mcp-servers/unity/FunplayAI.funplay-unity-mcp
+	url = https://github.com/FunplayAI/funplay-unity-mcp.git
+[submodule "mcp-servers/unity/Glade-tool.glade-mcp"]
+	path = mcp-servers/unity/Glade-tool.glade-mcp
+	url = https://github.com/Glade-tool/glade-mcp.git
+[submodule "mcp-servers/unreal/IvanMurzak.Unreal-MCP"]
+	path = mcp-servers/unreal/IvanMurzak.Unreal-MCP
+	url = https://github.com/IvanMurzak/Unreal-MCP.git
+[submodule "mcp-servers/unreal/appleweed.UnrealMCPBridge"]
+	path = mcp-servers/unreal/appleweed.UnrealMCPBridge
+	url = https://github.com/appleweed/UnrealMCPBridge.git
+[submodule "mcp-servers/unreal/sam-david.unreal-mcp"]
+	path = mcp-servers/unreal/sam-david.unreal-mcp
+	url = https://github.com/sam-david/unreal-mcp.git
