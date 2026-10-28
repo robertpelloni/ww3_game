@@ -67,3 +67,6 @@
 [submodule "mcp-servers/unreal/sam-david.unreal-mcp"]
 	path = mcp-servers/unreal/sam-david.unreal-mcp
 	url = https://github.com/sam-david/unreal-mcp.git
+[submodule "mcp-servers/unity/AnkleBreaker.unity-mcp-plugin"]
+	path = mcp-servers/unity/AnkleBreaker.unity-mcp-plugin
+	url = https://github.com/AnkleBreaker-Studio/unity-mcp-plugin.git

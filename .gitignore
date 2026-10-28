@@ -21,6 +21,14 @@
 .DS_Store
 Thumbs.db
 Desktop.ini
+# Local engine installs / scratch test projects (docs describe how to recreate)
+tools/godot/*.exe
+tools/godot/*.zip
+godot-test/.godot/
+unity-test/
+*.log
+*-nohup.out
+unity-test-*.log
 # MCP / Node
 node_modules/
 .mcp-cache/
