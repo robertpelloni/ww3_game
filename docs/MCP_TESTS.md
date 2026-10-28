@@ -22,6 +22,13 @@ Editor launched with `-projectPath unity-test` (left running, bridge :7890).
 | U-T8 | Act 1 starter: Ground plane 60×20, Player capsule, Patrol_01/02 cubes, Checkpoint wall, Safehouse cube | all `success:true`, hierarchy confirms 6/6 ✅ |
 | U-T9 | `unity_scene_save` {Assets/Act1_Starter.unity} | saved to disk (26KB) ✅ — scene survives restarts |
 | U-T10 | `unity_screenshot_scene` | Act 1 street visible: plane + capsule + cubes + realtime shadows ✅ |
+| U-T11 | `unity_script_create` PatrolMover.cs + PlayerMove.cs | written to `Assets/Act1/` via MCP ✅ (each triggers ~2–4 min domain reload on dual-core) |
+| U-T12 | `unity_component_add` PatrolMover→Patrol_01/02, PlayerMove→Player | `success:true`, fullType resolved ✅ |
+| U-T13 | `unity_component_set_property` Patrol_02.pointA/B | route relocated to x=10 ✅ |
+| U-T14 | `unity_play_mode` play → live `unity_gameobject_info` | Patrol_01 at z=-3.88 mid-patrol (spawned -4, heading +4) — **gameplay logic running in-engine** ✅ |
+| U-T15 | `unity_screenshot_game` | ⚠️ returns success+path but writes no file in this setup (scene-view capture works; game-view capture doesn't — likely needs focused Game view). Position polling (U-T14) used as proof instead. |
+
+**Committed:** `unity-test/` is now versioned (Assets incl. `Act1_Starter.unity` + `Assets/Act1/*.cs`, ProjectSettings, Packages/manifest with the plugin) — Library/Temp/Logs stay ignored. Open it in Unity Hub to continue; bridge auto-registers on :7890.
 
 **Recovery note (2026-10-28):** disk-full crash orphaned `bee_backend.exe` + `Unity.ILPP.Trigger.exe` (file locks) and wedged the editor; killing orphans unblocked a 388s recompile, but Safe Mode tripped on `com.unity.ide.rider`/`visualstudio` TestRunner resolve errors. Fix: removed both IDE packages from `manifest.json` (unused) → clean boot, bridge :7890 back. Lesson: keep `unity_scene_save` frequent; scratch `unity-test/` stays gitignored.
 

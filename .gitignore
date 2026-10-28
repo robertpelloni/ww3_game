@@ -25,7 +25,10 @@ Desktop.ini
 tools/godot/*.exe
 tools/godot/*.zip
 godot-test/.godot/
-unity-test/
+unity-test/Library/
+unity-test/Temp/
+unity-test/Logs/
+unity-test/UserSettings/
 *.log
 *-nohup.out
 unity-test-*.log
