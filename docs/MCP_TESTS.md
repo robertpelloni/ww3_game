@@ -19,6 +19,11 @@ Editor launched with `-projectPath unity-test` (left running, bridge :7890).
 | U-T5 | `unity_scene_hierarchy` | cube present w/ MeshFilter+BoxCollider+MeshRenderer ✅ |
 | U-T6 | `unity_screenshot_scene` | `Assets/Screenshots/SceneView_20261028_000623.png` (106KB) — white cube visible ✅ |
 | U-T7 | `unity_hub_list_editors` | timed out (>25s Hub query on dual-core) — retry with longer window, non-blocking |
+| U-T8 | Act 1 starter: Ground plane 60×20, Player capsule, Patrol_01/02 cubes, Checkpoint wall, Safehouse cube | all `success:true`, hierarchy confirms 6/6 ✅ |
+| U-T9 | `unity_scene_save` {Assets/Act1_Starter.unity} | saved to disk (26KB) ✅ — scene survives restarts |
+| U-T10 | `unity_screenshot_scene` | Act 1 street visible: plane + capsule + cubes + realtime shadows ✅ |
+
+**Recovery note (2026-10-28):** disk-full crash orphaned `bee_backend.exe` + `Unity.ILPP.Trigger.exe` (file locks) and wedged the editor; killing orphans unblocked a 388s recompile, but Safe Mode tripped on `com.unity.ide.rider`/`visualstudio` TestRunner resolve errors. Fix: removed both IDE packages from `manifest.json` (unused) → clean boot, bridge :7890 back. Lesson: keep `unity_scene_save` frequent; scratch `unity-test/` stays gitignored.
 
 ## ✅ Godot — FULL protocol + engine interrogation (Coding-Solo G1 + Godot 4.3)
 
@@ -35,6 +40,14 @@ scratch project `godot-test/project.godot` (gl_compatibility). No editor window 
 | G-T6 | G8 tomyud1 boot | 71 tools, WS :6505 + HTTP :6506, waits for editor ✅ |
 
 Next (needs editor window): `launch_editor` on `godot-test`, then `create_scene`/`add_node` + `run_project`.
+
+UPDATE: full MCP-mediated playtest done via persistent session (`scripts/mcp-session.js` — one server lifetime for run→poll→stop):
+
+| # | Task | Result |
+|---|------|--------|
+| G-T7 | `run_project` + `get_debug_output` + `stop_project` in one session | game booted, `WW3_TEST: Escape scene ready` + engine string captured through MCP, stopped cleanly with final output ✅ |
+
+Note: one-shot stdio clients (one process per call) can't poll `get_debug_output` — the server tracks the child per-lifetime. Real clients (Claude Code etc.) hold the server open, so run→poll→stop works there natively.
 
 ## ⚠️ Unreal — protocol + error path only (sam-david R8, no engine on disk)
 
