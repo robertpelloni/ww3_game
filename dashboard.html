@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WW3: Escape from North Korea — Console (v0.1.0)</title>
+<style>
+  body { font-family: -apple-system, "Segoe UI", Verdana, sans-serif; color: #1a1a1a; background: #fff; max-width: 72rem; margin: 0 auto; padding: 1.5rem; line-height: 1.5; }
+  h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+  h2 { font-size: 1.2rem; border-bottom: 2px solid #1f6f3a; padding-bottom: 0.25rem; margin-top: 2rem; }
+  h3 { font-size: 1rem; margin-bottom: 0.25rem; }
+  .lede { color: #333; max-width: 60rem; }
+  table { border-collapse: collapse; width: 100%; margin: 0.5rem 0 1rem; font-size: 0.92rem; }
+  th, td { border: 1px solid #bbb; padding: 0.4rem 0.6rem; text-align: left; vertical-align: top; }
+  th { background: #eef4ee; }
+  code { background: #f2f2f2; padding: 0.1rem 0.3rem; font-size: 0.88em; }
+  pre { background: #f2f2f2; padding: 0.6rem; overflow-x: auto; font-size: 0.85rem; }
+  dfn { border-bottom: 1px dotted #1f6f3a; cursor: help; font-style: normal; font-weight: bold; }
+  .grid { display: block; }
+  .note { background: #fff8e1; border: 1px solid #c9a100; padding: 0.6rem 0.8rem; margin: 0.75rem 0; }
+  .ok { color: #1f6f3a; font-weight: bold; }
+  footer { margin-top: 2rem; font-size: 0.85rem; color: #444; }
+</style>
+</head>
+<body>
+<h1>WW3: Escape from North Korea — Console</h1>
+<p class="lede">Single-page console for the whole repo, ordered by value: <strong>1. Run</strong> (playable builds first),
+<strong>2. MCP fleet</strong> (the AI bridges that drive the engines), <strong>3. Game design</strong>,
+<strong>4. Scripts</strong>, <strong>5. Repo health</strong>. Hover any <dfn title="Dotted bold terms carry a tooltip: hover to see why it matters and where it lives.">dotted term</dfn> for guidance.
+Version <code>0.1.0</code> — source of truth <code>VERSION.md</code>. Full docs: <code>VISION.md</code>, <code>ROADMAP.md</code>, <code>TODO.md</code>, <code>DEPLOY.md</code>.</p>
+
+<h2>1. Run the game (highest value)</h2>
+<table>
+<tr><th>Target</th><th>How to run</th><th>Status</th></tr>
+<tr>
+<td><dfn title="Versioned Unity scratch project holding the Act 1 starter scene (Assets/Act1_Starter.unity). Open in Unity Hub; bridge auto-registers on port 7890.">unity-test</dfn> — Act 1 street</td>
+<td>Hub &rarr; Open <code>unity-test/</code> &rarr; open <code>Assets/Act1_Starter.unity</code> &rarr; Play. Patrols move (U-T14 verified).</td>
+<td class="ok">Verified U-T1–U-T14</td>
+</tr>
+<tr>
+<td><dfn title="Minimal Godot 4.3 probe (gl_compatibility). No editor window needed for read tasks; editor needed for scene authoring.">godot-test</dfn> — engine probe</td>
+<td><code>$env:GODOT_PATH="$pwd/tools/godot/Godot_v4.3-stable_win64_console.exe"</code> then<br><code>node scripts/mcp-session.js node mcp-servers/godot/Coding-Solo.godot-mcp/build/index.js -- godot-test</code></td>
+<td class="ok">Verified G-T1–G-T7</td>
+</tr>
+<tr>
+<td><dfn title="Planned pure-C# console sim (no GPU): patrol cones + noise + light exposure from GAME_DESIGN.md. Not implemented yet — fastest place to tune detection math.">StealthSim</dfn> — planned</td>
+<td><code>dotnet new console -o prototypes/StealthSim</code>, then implement per <code>TODO.md</code>.</td>
+<td>Not built</td>
+</tr>
+</table>
+<div class="note"><strong>Gap — game-view capture (U-T15):</strong> <dfn title="MCP call unity_screenshot_game returns success plus a path but writes no file in this setup. Scene-view capture works; Game view likely needs focus. Position polling (U-T14) is the accepted proof until fixed.">U-T15</dfn> writes no file. Keep position polling as proof; fix or drop per <code>TODO.md</code>.</div>
+
+<h2>2. MCP fleet (23 servers, one bridge at a time)</h2>
+<p><dfn title="Only one Unity bridge at a time: they share the Editor connection. Default-on is unity-anklebreaker in .mcp.json; flip disabled flags per client.">One Unity bridge at a time.</dfn> Default-on: <code>unity-anklebreaker</code>. Smoke helper: <code>node scripts/mcp-call.js . &lt;server&gt; -- tools/list '{}'</code>.</p>
+<h3>Unity — build the game here (8 vendored)</h3>
+<table>
+<tr><th>Key</th><th>Server</th><th>Run</th></tr>
+<tr><td>U4 (on)</td><td>AnkleBreaker unity-mcp-server — 338 tools</td><td><code>node mcp-servers/unity/AnkleBreaker.unity-mcp-server/src/index.js</code></td></tr>
+<tr><td>U1</td><td>CoplayDev unity-mcp — biggest community</td><td><code>uvx --from mcpforunityserver mcp-for-unity --transport stdio</code></td></tr>
+<tr><td>U2</td><td>IvanMurzak Unity-MCP — CLI-managed per-agent setup</td><td><code>node mcp-servers/unity/IvanMurzak.Unity-MCP/cli/bin/unity-mcp-cli.js setup-mcp --list</code></td></tr>
+<tr><td>U3</td><td>CoderGamester mcp-unity</td><td><code>node "mcp-servers/unity/CoderGamester.mcp-unity/Server~/build/index.js"</code></td></tr>
+<tr><td>U5–U8</td><td>jackwrichards, isuzu-shiranui (no-runtime CLI), FunplayAI (in-process HTTP), Glade (Unity+Godot)</td><td>See <code>docs/MCP_SETUP.md</code> — dynamic ports, Editor-first config</td></tr>
+</table>
+<h3>Godot — runs on this laptop (7 vendored)</h3>
+<table>
+<tr><th>Key</th><th>Server</th><th>Run</th></tr>
+<tr><td>G1</td><td>Coding-Solo godot-mcp — primary probe</td><td><code>node mcp-servers/godot/Coding-Solo.godot-mcp/build/index.js</code> (+ <code>GODOT_PATH</code>)</td></tr>
+<tr><td>G7/G5/G8</td><td>tugcantopaloglu (157 tools), ee0pdt (editor WS :9080), tomyud1 (71 tools, WS :6505)</td><td>See <code>docs/MCP_SETUP.md</code></td></tr>
+<tr><td>G2/G3/G9</td><td>hi-godot godot-ai (<code>uvx godot-ai</code>), Native headless <code>-- --mcp-server</code>, IvanMurzak CLI family</td><td>See <code>docs/MCP_SETUP.md</code></td></tr>
+</table>
+<h3>Unreal — research only, no engine on disk (8 vendored)</h3>
+<p>Graceful offline proof: <code>node scripts/mcp-call.js . node mcp-servers/unreal/sam-david.unreal-mcp/dist/bin.js -- tools/list '{}'</code> (R-T1/R-T2 verified). Full list in <code>docs/MCP_SETUP.md</code>.</p>
+
+<h2>3. Game design (what we are building)</h2>
+<h3>Pillars</h3>
+<table>
+<tr><th>Pillar</th><th>Means in play</th></tr>
+<tr><td><dfn title="Vision cones, noise rings, light/shadow exposure, curfew searchlights. Detection rate scales with exposure, distance, stance.">Stealth over shooting</dfn></td><td>Avoid 2 patrols + checkpoint; getting seen is the fail state.</td></tr>
+<tr><td><dfn title="Hunger, cold, stamina, batteries, medicine. Every detour costs; river is fast but freezing, bribes cost rice.">Survival pressure</dfn></td><td>72-hour clock; Act 2–3 add hunger/cold bite.</td></tr>
+<tr><td><dfn title="Forged papers (safe, slow) vs bribe (2 rice) vs Tumen river (fast, freezing) vs tunnel; endings Alone / Together / Caught with roguelite mercy item.">Choices with cost</dfn></td><td>Checkpoints: papers timed dialogue, bribe, or sneak.</td></tr>
+<tr><td><dfn title="Night fog plus one realtime light plus baked ambient occlusion. Target 1280x720 Very Low at 30fps on Intel HD 520.">Mood over polys</dfn></td><td>Low-poly URP; audio lo-fi .wav 22kHz mono.</td></tr>
+</table>
+<h3>Acts and acceptance</h3>
+<p><strong>Act 1 (vertical slice):</strong> 1 street 60x20m, win by pure stealth in &lt;5 min, lose + retry &lt;3s. <strong>Act 2:</strong> Papers or River. <strong>Act 3:</strong> DMZ minefield + flare, carry choice. Controls: <code>WASD</code> move, <code>Shift</code> sprint, <code>C</code> crouch, <code>E</code> interact, <code>Q</code> whistle, <code>F</code> flashlight, <code>Esc</code> pause. Detail: <code>docs/GAME_DESIGN.md</code>.</p>
+
+<h2>4. Scripts and build (wrappers, not rewrites)</h2>
+<table>
+<tr><th>Script</th><th>Use when</th></tr>
+<tr><td><code>scripts/run-all-checks.ps1</code> <dfn title="New in v0.1.0. Runs doc-link check plus Godot/Unreal MCP smokes and a graceful Unity bridge probe. Safe entry point for log watching.">new wrapper</dfn></td><td>First command after any pull: <code>.\scripts\run-all-checks.ps1</code>.</td></tr>
+<tr><td><code>scripts/mcp-call.js</code></td><td>Single MCP call: handshake + one <code>tools/call</code>.</td></tr>
+<tr><td><code>scripts/mcp-session.js</code></td><td>One server lifetime for run&rarr;poll&rarr;stop (Godot debug capture).</td></tr>
+<tr><td><code>scripts/mcp-run.py</code></td><td>Params from JSON file with <code>{"$file": "path"}</code> inlining.</td></tr>
+<tr><td><code>scripts/install-mcp.ps1</code></td><td>Install Node/Python deps for all vendored servers; re-run after pulls.</td></tr>
+</table>
+
+<h2>5. Repo health and gaps</h2>
+<table>
+<tr><th>Area</th><th>State</th></tr>
+<tr><td><dfn title="No dashboard existed before v0.1.0 — this page is new construction consolidating Run / MCP / Design / Scripts / Health, not a redesign of an existing UI. There are no subpages left; everything first-party is above.">Dashboard coverage</dfn></td><td>This page covers all first-party features; vendored MCP internals stay upstream.</td></tr>
+<tr><td><dfn title="No tray icon exists in this repo (searched docs, scripts, prototypes, testbeds, tools — zero hits). TODO.md records the decision: cheapest real path is Python pystray with bridge poll + Quit; Electron/Tauri deferred.">System tray icon</dfn></td><td>None — not built. No quit-servers affordance exists yet.</td></tr>
+<tr><td>Submodules</td><td>Dirty: godot x3, unity x1, unreal x1 + untracked <code>jackwrichards.UnityMCP</code>. Inspect per-submodule; never bulk-commit.</td></tr>
+<tr><td>unity-project/</td><td>Placeholder README only — URP scaffold pending (M1).</td></tr>
+</table>
+
+<footer>Standalone file — no server, no imports, works offline. Open this file in a browser. Smoked v0.1.0: no local imports, all doc links resolve (see <code>scripts/run-all-checks.ps1</code>).</footer>
+</body>
+</html>

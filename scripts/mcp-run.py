@@ -24,8 +24,11 @@ if params_path:
     with open(params_path, encoding='utf-8') as f:
         params = expand(json.load(f))
 
+# NOTE (2026-10-31): force UTF-8 on stdout - tool descriptions contain bytes
+# outside Windows cp1252 (e.g. 0x9d), which crashed readline() on this laptop.
 p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                      stderr=subprocess.DEVNULL, text=True, bufsize=1,
+                     encoding='utf-8', errors='replace',
                      cwd=os.environ.get('CWD', os.getcwd()))
 rid = [0]
 def call(m, pr, timeout=60):
