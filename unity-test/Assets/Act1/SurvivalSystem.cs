@@ -28,6 +28,7 @@ public class SurvivalSystem : MonoBehaviour
     public bool showDebugHUD = true;
 
     private PlayerMove playerMove;
+    private PatrolMover nearestGuard;
 
     void Awake()
     {
@@ -77,6 +78,12 @@ public class SurvivalSystem : MonoBehaviour
         // Quick input for item consumption
         if (Input.GetKeyDown(KeyCode.Alpha1)) EatRice();
         if (Input.GetKeyDown(KeyCode.Alpha2)) TakeMedicine();
+
+        // Query nearest guard for HUD status
+        if (nearestGuard == null)
+        {
+            nearestGuard = FindFirstObjectByType<PatrolMover>();
+        }
     }
 
     public void EatRice()
@@ -104,24 +111,34 @@ public class SurvivalSystem : MonoBehaviour
     {
         if (!showDebugHUD) return;
 
-        GUI.Box(new Rect(10, 10, 240, 180), "Jun-ho Survival Monitor (Act 1)");
+        GUI.Box(new Rect(10, 10, 260, 230), "Jun-ho Survival Monitor (Act 1)");
 
-        GUI.Label(new Rect(20, 35, 200, 20), $"Stamina:  {stamina:F0}%");
-        GUI.Label(new Rect(20, 55, 200, 20), $"Hunger:   {hunger:F0}%");
-        GUI.Label(new Rect(20, 75, 200, 20), $"Cold:     {cold:F0}%");
-        GUI.Label(new Rect(20, 95, 200, 20), $"Health:   {health:F0}%");
+        GUI.Label(new Rect(20, 35, 220, 20), $"Stamina:  {stamina:F0}%");
+        GUI.Label(new Rect(20, 55, 220, 20), $"Hunger:   {hunger:F0}%");
+        GUI.Label(new Rect(20, 75, 220, 20), $"Cold:     {cold:F0}%");
+        GUI.Label(new Rect(20, 95, 220, 20), $"Health:   {health:F0}%");
 
         string stanceName = playerMove != null ? playerMove.currentStance.ToString() : "N/A";
-        GUI.Label(new Rect(20, 115, 200, 20), $"Stance:   {stanceName}");
+        float noise = playerMove != null ? playerMove.CurrentNoiseRadius : 0f;
+        GUI.Label(new Rect(20, 115, 220, 20), $"Stance:   {stanceName} (Noise: {noise:F1}m)");
 
-        if (GUI.Button(new Rect(20, 140, 95, 25), $"Eat Rice ({riceCount})"))
+        string guardStatus = "None";
+        if (nearestGuard != null)
+        {
+            guardStatus = $"{nearestGuard.currentState} ({nearestGuard.suspicionMeter * 100f:F0}%)";
+        }
+        GUI.Label(new Rect(20, 135, 220, 20), $"Guard AI: {guardStatus}");
+
+        if (GUI.Button(new Rect(20, 165, 100, 25), $"Eat Rice ({riceCount})"))
         {
             EatRice();
         }
 
-        if (GUI.Button(new Rect(125, 140, 110, 25), $"Medicine ({medicineCount})"))
+        if (GUI.Button(new Rect(130, 165, 110, 25), $"Medicine ({medicineCount})"))
         {
             TakeMedicine();
         }
+
+        GUI.Label(new Rect(20, 195, 220, 25), $"Papers: {(hasForgedPapers ? "Forged ID (OK)" : "None")}");
     }
 }

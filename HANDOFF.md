@@ -1,6 +1,11 @@
-# HANDOFF — session 2026-11-03 (v0.3.0)
+# HANDOFF — session 2026-11-03 (v0.3.1)
 
 ## What was accomplished this session
+- **Act 1 Guard AI & Detection System (`unity-test/Assets/Act1/PatrolMover.cs`)**:
+  * Implemented a 3-state AI state machine (Patrolling, Suspicious, Alert) with vision cone checks (angle and distance) and stance-based detection scaling.
+  * Added dynamic noise radius emissions in `PlayerMove.cs` (Prone 0.5m, Crouch 2.0m, Walk 5.0m, Sprint 12.0m).
+  * Connected guard suspicion and alert state directly to `SurvivalSystem.cs` debug HUD.
+- **StealthSim Automated Test Suite Expansion**: Added Test 8 in `prototypes/StealthSim/Program.cs` to test vision cone suspicion escalation on exposed targets.
 - **Unity Survival Mechanics Functional Prototype (`unity-test/Assets/Act1/`)**:
   * Implemented `SurvivalSystem.cs` modeling hunger, cold, stamina, health, and inventory (rice, medicine, papers) with real-time debug OnGUI HUD.
   * Integrated with `PlayerMove.cs` for stance management (Prone, Crouch, Walk, Sprint), movement speeds, sprint stamina consumption, and cold/hunger speed penalties.

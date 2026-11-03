@@ -1,8 +1,9 @@
-# TODO — granular short-term tasks (v0.3.0)
+# TODO — granular short-term tasks (v0.3.1)
 
 ## Verified working (keep green)
 - [x] Unity Survival System (`unity-test/Assets/Act1/SurvivalSystem.cs` + `PlayerMove.cs`)
-- [x] Pure-C# console sim `prototypes/StealthSim` (.NET 10/8, 7/7 tests passing)
+- [x] Unity Guard AI State Machine (`unity-test/Assets/Act1/PatrolMover.cs` with FOV, stance scaling, and HUD alerts)
+- [x] Pure-C# console sim `prototypes/StealthSim` (.NET 10/8, 8/8 tests passing)
 - [x] System Tray Icon & Server Manager `scripts/tray_manager.py` (--status, --stop-all, --start)
 - [x] Redesigned single-page Command Center `dashboard.html` with 30 interactive tooltips
 - [x] Universal cross-platform health runner `scripts/run_checks.py`

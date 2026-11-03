@@ -509,6 +509,20 @@ namespace WW3.StealthSim
             }
             Assert(sim2.PlayerCharacter.Position.X > 2.0, "100 tick simulation completes smoothly");
 
+            // Test 8: Guard suspicion escalation on standing player in line of sight
+            var sim3 = new SimulationWorld();
+            sim3.PlayerCharacter.Position = new Vec2(15.0, 10.0); // directly in Patrol-1's path
+            sim3.PlayerCharacter.CurrentStance = Stance.Walk;
+            sim3.PlayerCharacter.FlashlightOn = true; // high visibility
+            sim3.Guards[0].Position = new Vec2(15.0, 6.0);
+            sim3.Guards[0].Forward = new Vec2(0, 1);
+            for (int i = 0; i < 20; i++)
+            {
+                sim3.Step(0.1, new Vec2(0, 0));
+            }
+            Assert(sim3.Guards[0].Suspicion > 30.0 && sim3.Guards[0].State != AIState.Patrol,
+                "Guard escalates suspicion and leaves Patrol state when exposed player in sight");
+
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;
         }

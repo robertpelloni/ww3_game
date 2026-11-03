@@ -16,6 +16,12 @@ public class PlayerMove : MonoBehaviour
     public float walkSpeed = 6.0f;
     public float sprintSpeed = 9.5f;
 
+    [Header("Noise Profiles (Radius in meters)")]
+    public float proneNoise = 0.5f;
+    public float crouchNoise = 2.0f;
+    public float walkNoise = 5.0f;
+    public float sprintNoise = 12.0f;
+
     [Header("Current Stance")]
     public Stance currentStance = Stance.Walk;
 
@@ -23,6 +29,7 @@ public class PlayerMove : MonoBehaviour
     public float minX = -28f, maxX = 28f, minZ = -9f, maxZ = 9f;
 
     public bool IsMoving { get; private set; }
+    public float CurrentNoiseRadius { get; private set; }
 
     private SurvivalSystem survival;
 
@@ -57,6 +64,9 @@ public class PlayerMove : MonoBehaviour
         p.z = Mathf.Clamp(p.z, minZ, maxZ);
         p.y = 1f;
         transform.position = p;
+
+        // Calculate emitted noise radius
+        CurrentNoiseRadius = IsMoving ? GetBaseNoiseRadius() : 0f;
     }
 
     void HandleStanceInput()
@@ -99,6 +109,18 @@ public class PlayerMove : MonoBehaviour
             Stance.Walk => walkSpeed,
             Stance.Sprint => sprintSpeed,
             _ => walkSpeed
+        };
+    }
+
+    public float GetBaseNoiseRadius()
+    {
+        return currentStance switch
+        {
+            Stance.Prone => proneNoise,
+            Stance.Crouch => crouchNoise,
+            Stance.Walk => walkNoise,
+            Stance.Sprint => sprintNoise,
+            _ => walkNoise
         };
     }
 }

@@ -21,7 +21,10 @@ def check_doc_links():
         'docs/MCP_SETUP.md', 'docs/MCP_TESTS.md', 'scripts/mcp-call.js',
         'scripts/mcp-session.js', 'scripts/mcp-run.py', 'scripts/install-mcp.ps1',
         'scripts/run-all-checks.ps1', 'scripts/tray_manager.py',
-        'prototypes/StealthSim/Program.cs'
+        'prototypes/StealthSim/Program.cs',
+        'unity-test/Assets/Act1/PlayerMove.cs',
+        'unity-test/Assets/Act1/PatrolMover.cs',
+        'unity-test/Assets/Act1/SurvivalSystem.cs'
     ]
     missing = []
     for rel_path in required_files:
