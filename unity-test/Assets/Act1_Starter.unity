@@ -929,14 +929,21 @@ MonoBehaviour:
   m_GameObject: {fileID: 1653317154}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 921358509022f9e40a9bc7c3425f484c, type: 3}
+  m_Script: {fileID: 11500000, guid: 8e5f7a2b3c4d5e6f1a2b3c4d5e6f7a8b, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerMove
-  speed: 8
-  minX: -28
-  maxX: 28
-  minZ: -9
-  maxZ: 9
+  m_EditorClassIdentifier: Assembly-CSharp::SurvivalSystem
+  hunger: 10
+  cold: 15
+  stamina: 100
+  health: 100
+  hungerRate: 0.2
+  coldRate: 0.35
+  staminaDrainRate: 25
+  staminaRecoverRate: 12
+  riceCount: 3
+  medicineCount: 1
+  hasForgedPapers: 1
+  showDebugHUD: 1
 --- !u!114 &1653317160
 MonoBehaviour:
   m_ObjectHideFlags: 0

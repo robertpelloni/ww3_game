@@ -61,27 +61,31 @@ public class PlayerMove : MonoBehaviour
 
     void HandleStanceInput()
     {
-        if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+        // Toggle Crouch with C
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            currentStance = currentStance == Stance.Crouch ? Stance.Walk : Stance.Crouch;
+        }
+        // Toggle Prone with Z
+        else if (Input.GetKeyDown(KeyCode.Z))
+        {
+            currentStance = currentStance == Stance.Prone ? Stance.Walk : Stance.Prone;
+        }
+        // Sprint when holding Shift (if sufficient stamina available)
+        else if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
         {
             if (survival == null || survival.stamina > 5f)
             {
                 currentStance = Stance.Sprint;
             }
-            else
+            else if (currentStance == Stance.Sprint)
             {
                 currentStance = Stance.Walk;
             }
         }
-        else if (Input.GetKey(KeyCode.C))
+        else if (currentStance == Stance.Sprint)
         {
-            currentStance = Stance.Crouch;
-        }
-        else if (Input.GetKey(KeyCode.Z))
-        {
-            currentStance = Stance.Prone;
-        }
-        else
-        {
+            // Drop back to Walk when releasing sprint
             currentStance = Stance.Walk;
         }
     }

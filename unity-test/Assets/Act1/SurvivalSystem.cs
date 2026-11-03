@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[RequireComponent(typeof(PlayerMove))]
 public class SurvivalSystem : MonoBehaviour
 {
     [Header("Survival Meters (0 - 100)")]
@@ -31,6 +32,11 @@ public class SurvivalSystem : MonoBehaviour
     void Awake()
     {
         playerMove = GetComponent<PlayerMove>();
+        if (playerMove == null)
+        {
+            // Resilient runtime safeguard: ensures player movement is always attached
+            playerMove = gameObject.AddComponent<PlayerMove>();
+        }
     }
 
     void Update()
