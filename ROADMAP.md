@@ -1,6 +1,6 @@
 # ROADMAP — major structural milestones
 
-**Version:** 0.2.0 (see [VERSION.md](VERSION.md)).
+**Version:** 0.3.0 (see [VERSION.md](VERSION.md)).
 
 ## M1 — Vertical slice: Act 1 Blackout Chongjin
 - 1 street 60x20m, night + fog + searchlight, 2 patrols + 1 checkpoint guard.
@@ -8,12 +8,14 @@
 - State:
   * Pure-C# console sim verified in `prototypes/StealthSim` (7/7 tests passing).
   * Scene + patrol/player starter scripts live in `unity-test/` (see [docs/MCP_TESTS.md](docs/MCP_TESTS.md)).
+  * Unity Survival System + IMGUI OnGUI HUD active in `unity-test/Assets/Act1/`.
   * System tray icon & background server manager in `scripts/tray_manager.py`.
 
-## M2 — Survival systems
+## M2 — Survival systems (In Progress -> Functional Prototype Complete)
 - Hunger / cold / stamina / batteries / medicine; exposure light model;
   suspicion 0-100 investigate → chase → search → reset; whistle lure.
-- Mathematical mechanics verified in `prototypes/StealthSim`. Next: wire to Unity URP.
+- Mathematical mechanics verified in `prototypes/StealthSim`.
+- Implemented in `unity-test/Assets/Act1/SurvivalSystem.cs` and `PlayerMove.cs` with real-time debug HUD.
 
 ## M3 — Choice systems
 - Papers timed dialogue, bribe (2 rice), sneak (vent/river), wire cutters;
