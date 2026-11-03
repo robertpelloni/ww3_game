@@ -152,8 +152,10 @@ Bonus research: `IvanMurzak/Unreal-MCP` (same author as U2), `sam-david/unreal-m
 - [x] 23 MCP servers (8 Unity + 8 Unreal + 7 Godot) vendored + activated in `.mcp.json`
 - [ ] Install Godot 4 (Compatibility renderer — runs on HD 520) and wire G1/G3 to a test project
 - [ ] Unity URP project scaffold (URP asset, input, stealth toolkit)
-- [ ] `prototypes/StealthSim` console sim (patrol AI, noise/light)
-- [ ] First playable: 1 street, 2 patrols, 1 checkpoint, win = reach safehouse
+- [x] `prototypes/StealthSim` console sim (patrol AI, noise/light, survival stats)
+- [x] System Tray Icon & Background Server Manager (`scripts/tray_manager.py`)
+- [x] Redesigned unified Command Center (`dashboard.html` v0.2.0)
+- [ ] First playable in Unity: 1 street, 2 patrols, 1 checkpoint, win = reach safehouse
 - [ ] Itch.io private playtest build (Windows x64, Very Low preset)
 
 ---

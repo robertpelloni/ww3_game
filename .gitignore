@@ -8,7 +8,9 @@
 [Uu]ser[Ss]ettings/
 [Mm]emoryCaptures/
 [Aa]ssets/AddressableAssetsData/*/*.bin*
+# Unity/IDE generated projects (allow manual prototypes)
 *.csproj
+!prototypes/**/*.csproj
 *.sln
 *.user
 *.userprefs
