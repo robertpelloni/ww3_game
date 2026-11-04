@@ -2,6 +2,13 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.3.3 — 2026-11-04
+- **Acoustic Noise & Sound Lure System (`PlayerMove.cs`)**: Added player whistle lure input `[Q]` producing a 20-meter acoustic radius, dynamically integrated into stance noise footprints.
+- **Guard Acoustic Hearing & Investigation State Machine (`PatrolMover.cs`)**: Expanded guard AI states to include `Investigating`, reacting immediately to player footsteps and sound lures, inspecting noise origins, searching the area with rotational scans, and smoothly returning to patrol.
+- **Checkpoint Security Gate & Interrogation System (`CheckpointTrigger.cs`)**: Created dedicated checkpoint security logic featuring transit paper inspections `[E]`, bribery mechanics `[B]`, and security alarms alerting nearby patrol guards.
+- **Act 1 Survival HUD Enhancements (`SurvivalSystem.cs`)**: Extended the live OnGUI monitor to display real-time acoustic noise radius, active whistling feedback, guard detection status, and contextual keybindings.
+- **Unified Dashboard v0.3.3 Sync (`dashboard.html`)**: Updated the Act 1 Starter Scene card with checkpoint interaction controls, acoustic hearing documentation, and bumped system version to v0.3.3.
+
 ## 0.3.2 — 2026-11-04
 - **Command Center Dashboard Overhaul (`dashboard.html`)**: Redesigned single-page console categorized strictly by high value (Playable Simulators & Engines &rarr; System Tray & Server Control &rarr; MCP AI Fleet Operations Console &rarr; Game Systems & Survival Architecture &rarr; Diagnostics, Build Scripts & Governance). Expanded interactive tooltips (`<dfn title="...">`) to 41 items with interactive copy buttons and offline zero-dependency styling.
 - **System Tray & Server Manager Refinement (`scripts/tray_manager.py`)**: Enhanced process descriptions, port bindings, and graceful termination handling for background MCP server processes.

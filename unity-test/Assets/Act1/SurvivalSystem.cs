@@ -120,7 +120,8 @@ public class SurvivalSystem : MonoBehaviour
 
         string stanceName = playerMove != null ? playerMove.currentStance.ToString() : "N/A";
         float noise = playerMove != null ? playerMove.CurrentNoiseRadius : 0f;
-        GUI.Label(new Rect(20, 115, 220, 20), $"Stance:   {stanceName} (Noise: {noise:F1}m)");
+        string whistleNote = (playerMove != null && playerMove.IsWhistling) ? " [WHISTLE!]" : "";
+        GUI.Label(new Rect(20, 115, 220, 20), $"Stance:   {stanceName} (Noise: {noise:F1}m){whistleNote}");
 
         string guardStatus = "None";
         if (nearestGuard != null)
@@ -129,16 +130,17 @@ public class SurvivalSystem : MonoBehaviour
         }
         GUI.Label(new Rect(20, 135, 220, 20), $"Guard AI: {guardStatus}");
 
-        if (GUI.Button(new Rect(20, 165, 100, 25), $"Eat Rice ({riceCount})"))
+        if (GUI.Button(new Rect(20, 160, 100, 25), $"Eat Rice ({riceCount})"))
         {
             EatRice();
         }
 
-        if (GUI.Button(new Rect(130, 165, 110, 25), $"Medicine ({medicineCount})"))
+        if (GUI.Button(new Rect(130, 160, 110, 25), $"Medicine ({medicineCount})"))
         {
             TakeMedicine();
         }
 
-        GUI.Label(new Rect(20, 195, 220, 25), $"Papers: {(hasForgedPapers ? "Forged ID (OK)" : "None")}");
+        GUI.Label(new Rect(20, 190, 220, 20), $"Papers: {(hasForgedPapers ? "Forged ID (OK)" : "None")}");
+        GUI.Label(new Rect(20, 208, 220, 20), "[Q] Whistle Lure | [1] Rice | [2] Med");
     }
 }

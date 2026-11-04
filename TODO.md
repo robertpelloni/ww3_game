@@ -1,11 +1,14 @@
-# TODO — granular short-term tasks (v0.3.2)
+# TODO — granular short-term tasks (v0.3.3)
 
 ## Verified working (keep green)
-- [x] Command Center console redesign with 41 tooltips, copy buttons, and high-value layout (`dashboard.html`)
+- [x] Command Center console redesign with 42 tooltips, copy buttons, and high-value layout (`dashboard.html`)
 - [x] System Tray Icon & Server Manager `scripts/tray_manager.py` with process inspection
 - [x] Universal cross-platform health runner with dashboard check `scripts/run_checks.py`
 - [x] Unity Survival System (`unity-test/Assets/Act1/SurvivalSystem.cs` + `PlayerMove.cs`)
-- [x] Unity Guard AI State Machine (`unity-test/Assets/Act1/PatrolMover.cs` with FOV, stance scaling, and HUD alerts)
+- [x] Sound lure mechanics: Player whistle `[Q]` producing a 20m acoustic radius in `PlayerMove.cs`
+- [x] Guard acoustic hearing & `Investigating` AI state machine in `PatrolMover.cs`
+- [x] Checkpoint security gate & interrogation system (`CheckpointTrigger.cs`) with paper checks `[E]` and bribe `[B]`
+- [x] Unity Guard AI State Machine (`unity-test/Assets/Act1/PatrolMover.cs` with FOV, hearing, stance scaling, and HUD alerts)
 - [x] Pure-C# console sim `prototypes/StealthSim` (.NET 10/8, 8/8 tests passing)
 - [x] Unity MCP round-trip U-T1–U-T14 via AnkleBreaker (`unity-test/` Act 1 starter)
 - [x] Godot G-T1–G-T7 via Coding-Solo G1 (`godot-test/` boot + debug capture + compiled TypeScript)

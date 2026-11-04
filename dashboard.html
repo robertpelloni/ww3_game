@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>WW3: Escape from North Korea — Unified Command Center (v0.3.2)</title>
+<title>WW3: Escape from North Korea — Unified Command Center (v0.3.3)</title>
 <style>
   :root {
     --bg-main: #0b0f14;
@@ -292,7 +292,7 @@
 <!-- HEADER & HERO -->
 <header>
   <div class="header-top">
-    <div class="header-badge">AUTONOMOUS CONSOLE v0.3.2</div>
+    <div class="header-badge">AUTONOMOUS CONSOLE v0.3.3</div>
     <div class="header-meta">
       Single Source of Truth: <code>VERSION.md</code> &bull; Platform: Windows 10 x64 / Linux Sandbox
     </div>
@@ -365,11 +365,11 @@
     <div class="subcard">
       <div>
         <h4>
-          <dfn title="Unity Act 1 street scene at unity-test/Assets/Act1_Starter.unity. Verified U-T1–U-T14 via AnkleBreaker MCP bridge on port 7890. Features SurvivalSystem.cs IMGUI HUD, PlayerMove.cs stance noise, and PatrolMover.cs 3-state AI with FOV cones.">Unity Act 1 Starter</dfn>
-          <span class="status-tag status-active">Survival HUD + Guard AI</span>
+          <dfn title="Unity Act 1 street scene at unity-test/Assets/Act1_Starter.unity. Verified U-T1–U-T14 via AnkleBreaker MCP bridge on port 7890. Features SurvivalSystem.cs IMGUI HUD, PlayerMove.cs stance noise & whistle lure [Q], PatrolMover.cs 4-state AI with FOV & acoustic hearing, and CheckpointTrigger.cs interrogation.">Unity Act 1 Starter</dfn>
+          <span class="status-tag status-active">Survival HUD + Guard AI + Checkpoints</span>
         </h4>
         <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:0.6rem;">
-          Interactive low-poly URP scene targeting Intel HD 520 GPU (Very Low quality preset). Live OnGUI monitor for hunger, cold, stamina, and guard alert states.
+          Interactive low-poly URP scene targeting Intel HD 520 GPU (Very Low quality preset). Live OnGUI monitor for hunger, cold, stamina, whistle lure [Q], acoustic hearing, and checkpoint interrogation.
         </p>
       </div>
       <div>
@@ -378,11 +378,11 @@
           <button class="copy-btn" onclick="navigator.clipboard.writeText('unity-test/')">Copy</button>
         </div>
         <div class="cmd-box">
-          <code>SurvivalSystem.cs + PatrolMover.cs</code>
+          <code>SurvivalSystem.cs + PatrolMover.cs + CheckpointTrigger.cs</code>
           <button class="copy-btn" onclick="navigator.clipboard.writeText('unity-test/Assets/Act1/')">Copy</button>
         </div>
         <div class="callout">
-          <strong>Key Files:</strong> <code>unity-test/Assets/Act1/</code> holds <dfn title="SurvivalSystem.cs handles hunger/cold depletion, stamina regen, and OnGUI HUD.">SurvivalSystem.cs</dfn>, <dfn title="PlayerMove.cs handles stances, sprint exhaustion, and noise radius.">PlayerMove.cs</dfn>, and <dfn title="PatrolMover.cs implements Patrolling, Suspicious, and Alert states with vision cones.">PatrolMover.cs</dfn>.
+          <strong>Key Files:</strong> <code>unity-test/Assets/Act1/</code> holds <dfn title="SurvivalSystem.cs handles hunger/cold depletion, stamina regen, and OnGUI HUD.">SurvivalSystem.cs</dfn>, <dfn title="PlayerMove.cs handles stances, sprint exhaustion, and noise radius with whistle lure.">PlayerMove.cs</dfn>, <dfn title="PatrolMover.cs implements Patrolling, Investigating, Suspicious, and Alert states with vision cones and acoustic hearing.">PatrolMover.cs</dfn>, and <dfn title="CheckpointTrigger.cs manages security gates, transit paper inspection, and guard alerts.">CheckpointTrigger.cs</dfn>.
         </div>
       </div>
     </div>
@@ -756,7 +756,7 @@
 <!-- FOOTER -->
 <footer>
   <div>
-    <strong>WW3: Escape from North Korea</strong> &bull; Version <code>0.3.2</code>
+    <strong>WW3: Escape from North Korea</strong> &bull; Version <code>0.3.3</code>
   </div>
   <div>
     Autonomous Console &bull; Zero external CSS/JS dependencies &bull; Fully Offline Ready

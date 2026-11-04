@@ -1,21 +1,17 @@
-# HANDOFF — session 2026-11-04 (v0.3.2)
+# HANDOFF — session 2026-11-04 (v0.3.3)
 
 ## What was accomplished this session
-- **Command Center Dashboard Overhaul (`dashboard.html`)**:
-  * Redesigned single-page layout strictly organized by priority: 1. Playable Runners & Simulators &rarr; 2. System Tray & Server Control &rarr; 3. MCP AI Fleet Operations Console (23 servers) &rarr; 4. Game Systems & Survival Architecture &rarr; 5. Diagnostics, Scripts & Governance.
-  * Added 41 interactive hover tooltips (`<dfn title="...">`) covering every parameter, stance, server bridge, and script.
-  * Added interactive clipboard copy buttons and fast terminal commands.
-  * Retained 100% zero-dependency, self-contained, offline-ready styling.
-- **System Tray & Server Manager Enhancements (`scripts/tray_manager.py`)**:
-  * Expanded process descriptions, port bindings, and graceful termination handling for background MCP server processes.
-- **Automated Health Runner Expansion (`scripts/run_checks.py`)**:
-  * Integrated automated dashboard integrity checks (verifying version consistency with `VERSION.md`, minimum 25 tooltips, and file links).
-- **Submodule Build Validation**:
-  * Built TypeScript in `mcp-servers/godot/Coding-Solo.godot-mcp/` to produce `build/index.js`, allowing graceful offline MCP handshakes to pass cleanly.
-- **Documentation & Governance**:
-  * Synchronized version `0.3.2` across `VERSION.md`, `CHANGELOG.md`, `ROADMAP.md`, `TODO.md`, `dashboard.html`, and `HANDOFF.md`.
+- **Act 1 Blackout Chongjin Stealth & AI Expansion**:
+  * Added sound lure whistle mechanic (`[Q]` key, 20m noise footprint, 1s duration, 3s cooldown) in `unity-test/Assets/Act1/PlayerMove.cs`.
+  * Expanded guard AI state machine in `PatrolMover.cs` with `GuardState.Investigating` and acoustic hearing (`CheckHearing()`). Guards now turn towards footstep noise / whistles, investigate the sound origin, search the area, and decay back to patrol after a timeout.
+  * Created `CheckpointTrigger.cs` simulating militarized checkpoint gate interrogation: supports transit paper inspection (`[E]`), guard bribery (`[B]`, 50 won), and security alarms that escalate guards to `Alert` upon violation.
+  * Updated `SurvivalSystem.cs` real-time debug HUD to display whistle status, noise radius, guard status, and player controls.
+- **Unified Command Center & Governance Sync**:
+  * Synchronized `dashboard.html` with Act 1 checkpoint interactions, acoustic hearing descriptions, and bumped version to `0.3.3`.
+  * Updated `scripts/run_checks.py` to validate `CheckpointTrigger.cs`. All 8/8 simulation tests, doc links, and checks passed cleanly.
+  * Updated `VERSION.md`, `CHANGELOG.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md`.
 
 ## For the successor
-1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems.
-2. Open `dashboard.html` in a web browser to inspect the reorganized single-page console.
-3. Next priority: hook light exposure and guard suspicion meters directly into the Unity scene.
+1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (StealthSim tests, docs, server statuses).
+2. Open `dashboard.html` in a web browser to inspect the updated Command Center console.
+3. Next priority: hook dynamic light exposure into `Act1_Starter.unity` and overhead 3D world-space suspicion meters on guards.

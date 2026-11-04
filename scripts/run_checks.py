@@ -25,7 +25,8 @@ def check_doc_links():
         'prototypes/StealthSim/Program.cs',
         'unity-test/Assets/Act1/PlayerMove.cs',
         'unity-test/Assets/Act1/PatrolMover.cs',
-        'unity-test/Assets/Act1/SurvivalSystem.cs'
+        'unity-test/Assets/Act1/SurvivalSystem.cs',
+        'unity-test/Assets/Act1/CheckpointTrigger.cs',
     ]
     missing = []
     for rel_path in required_files:

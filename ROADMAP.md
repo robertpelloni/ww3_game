@@ -1,6 +1,6 @@
 # ROADMAP — major structural milestones
 
-**Version:** 0.3.2 (see [VERSION.md](VERSION.md)).
+**Version:** 0.3.3 (see [VERSION.md](VERSION.md)).
 
 ## M1 — Vertical slice: Act 1 Blackout Chongjin
 - 1 street 60x20m, night + fog + searchlight, 2 patrols + 1 checkpoint guard.
@@ -9,9 +9,11 @@
   * Pure-C# console sim verified in `prototypes/StealthSim` (8/8 tests passing).
   * Scene + patrol/player starter scripts live in `unity-test/` (see [docs/MCP_TESTS.md](docs/MCP_TESTS.md)).
   * Unity Survival System + IMGUI OnGUI HUD active in `unity-test/Assets/Act1/`.
-  * Unity Guard AI state machine (Patrolling, Suspicious, Alert) with vision cone checks and stance scaling in `PatrolMover.cs`.
+  * Sound lure mechanics (Whistle `[Q]`, 20m noise footprint) in `PlayerMove.cs`.
+  * Guard AI 4-state machine (Patrolling, Investigating, Suspicious, Alert) with vision FOV & acoustic hearing in `PatrolMover.cs`.
+  * Checkpoint security gate & interrogation system (`CheckpointTrigger.cs`) with transit papers and bribery.
   * System tray icon & background server manager in `scripts/tray_manager.py`.
-  * Unified single-page Command Center console active in `dashboard.html` (41 tooltips, high-value categorization).
+  * Unified single-page Command Center console active in `dashboard.html` (42 tooltips, high-value categorization).
 
 ## M2 — Survival systems (In Progress -> Functional Prototype Complete)
 - Hunger / cold / stamina / batteries / medicine; exposure light model;

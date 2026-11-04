@@ -1,17 +1,19 @@
 using UnityEngine;
 
 /// <summary>
-/// Guard AI state machine: Patrolling, Suspicious, or Alert.
-/// Integrates vision cone checking, stance modifiers from PlayerMove, and suspicion escalation.
+/// Guard AI state machine: Patrolling, Investigating, Suspicious, or Alert.
+/// Integrates vision cone checking, acoustic hearing (footsteps & whistle), stance modifiers from PlayerMove,
+/// search investigation, and suspicion escalation.
 /// </summary>
 public class PatrolMover : MonoBehaviour
 {
-    public enum GuardState { Patrolling, Suspicious, Alert }
+    public enum GuardState { Patrolling, Investigating, Suspicious, Alert }
 
     [Header("Patrol Waypoints")]
     public Vector3 pointA = new Vector3(-5f, 1f, -4f);
     public Vector3 pointB = new Vector3(-5f, 1f, 4f);
     public float speed = 3f;
+    public float investigateSpeed = 3.5f;
     public float chaseSpeed = 4.5f;
 
     [Header("Vision & Detection")]
@@ -23,6 +25,11 @@ public class PatrolMover : MonoBehaviour
     public float suspicionMeter = 0f;
     public float suspicionRate = 0.8f;   // Rate per second when player in line-of-sight
     public float cooldownRate = 0.35f;   // Decay per second when sight lost
+
+    [Header("Acoustic / Hearing Settings")]
+    public float hearingMultiplier = 1.0f;
+    public float searchWaitTime = 4.0f;
+    private float searchTimer = 0f;
 
     private float t;
     private int dir = 1;
@@ -45,8 +52,9 @@ public class PatrolMover : MonoBehaviour
     void Update()
     {
         bool playerSeen = CheckVision();
+        bool soundHeard = CheckHearing();
 
-        // Update suspicion meter based on vision check
+        // Update suspicion meter based on vision check and hearing
         if (playerSeen)
         {
             // Detection rate scaled by player stance if PlayerMove is present
@@ -78,12 +86,35 @@ public class PatrolMover : MonoBehaviour
                 currentState = GuardState.Suspicious;
             }
         }
+        else if (soundHeard)
+        {
+            // Hearing sound immediately raises interest to Investigating or Suspicious
+            suspicionMeter = Mathf.Clamp01(suspicionMeter + 0.35f * Time.deltaTime);
+            if (targetPlayer != null) lastKnownPlayerPos = targetPlayer.position;
+
+            if (currentState == GuardState.Patrolling)
+            {
+                currentState = GuardState.Investigating;
+                searchTimer = searchWaitTime;
+            }
+        }
         else
         {
             suspicionMeter = Mathf.Clamp01(suspicionMeter - cooldownRate * Time.deltaTime);
-            if (suspicionMeter < 0.2f && currentState != GuardState.Patrolling)
+            if (suspicionMeter < 0.15f && currentState != GuardState.Patrolling)
             {
-                currentState = GuardState.Patrolling;
+                if (currentState == GuardState.Investigating)
+                {
+                    searchTimer -= Time.deltaTime;
+                    if (searchTimer <= 0f)
+                    {
+                        currentState = GuardState.Patrolling;
+                    }
+                }
+                else
+                {
+                    currentState = GuardState.Patrolling;
+                }
             }
             else if (suspicionMeter < 0.75f && currentState == GuardState.Alert)
             {
@@ -98,6 +129,22 @@ public class PatrolMover : MonoBehaviour
                 PatrolMovement();
                 break;
 
+            case GuardState.Investigating:
+                // Move towards last heard or seen position
+                Vector3 investDir = (lastKnownPlayerPos - transform.position);
+                investDir.y = 0;
+                if (investDir.magnitude > 1.2f)
+                {
+                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(investDir.normalized), Time.deltaTime * 3.5f);
+                    transform.position += transform.forward * investigateSpeed * Time.deltaTime;
+                }
+                else
+                {
+                    // Look around slowly
+                    transform.Rotate(Vector3.up, 30f * Time.deltaTime);
+                }
+                break;
+
             case GuardState.Suspicious:
                 // Look toward last known position or pause
                 Vector3 lookDir = (lastKnownPlayerPos - transform.position);
@@ -109,7 +156,7 @@ public class PatrolMover : MonoBehaviour
                 break;
 
             case GuardState.Alert:
-                // Move towards last known player position
+                // Move rapidly towards last known player position
                 Vector3 targetDir = (lastKnownPlayerPos - transform.position);
                 targetDir.y = 0;
                 if (targetDir.magnitude > 1f)
@@ -119,6 +166,20 @@ public class PatrolMover : MonoBehaviour
                 }
                 break;
         }
+    }
+
+    private bool CheckHearing()
+    {
+        if (targetPlayer == null) return false;
+
+        var pm = targetPlayer.GetComponent<PlayerMove>();
+        if (pm == null) return false;
+
+        float noiseRadius = pm.CurrentNoiseRadius * hearingMultiplier;
+        if (noiseRadius <= 0f) return false;
+
+        float dist = Vector3.Distance(transform.position, targetPlayer.position);
+        return dist <= noiseRadius;
     }
 
     private void PatrolMovement()
@@ -150,9 +211,9 @@ public class PatrolMover : MonoBehaviour
         float angle = Vector3.Angle(transform.forward, toPlayer);
         if (angle > viewAngle) return false;
 
-        // Raycast check to ensure line of sight isn't blocked by obstacles
+        // Raycast check to ensure line of sight isn't blocked by obstacles (clamped to dist)
         RaycastHit hit;
-        if (Physics.Raycast(transform.position + Vector3.up * 0.5f, toPlayer.normalized, out hit, viewDistance))
+        if (Physics.Raycast(transform.position + Vector3.up * 0.5f, toPlayer.normalized, out hit, dist))
         {
             if (hit.transform == targetPlayer || hit.transform.IsChildOf(targetPlayer))
             {
@@ -161,7 +222,7 @@ public class PatrolMover : MonoBehaviour
         }
         else
         {
-            // If raycast didn't hit any obstacle, target in clear sight
+            // If raycast didn't hit any obstacle before reaching the player, target in clear sight
             return true;
         }
 

@@ -25,11 +25,19 @@ public class PlayerMove : MonoBehaviour
     [Header("Current Stance")]
     public Stance currentStance = Stance.Walk;
 
+    [Header("Distraction & Sound Mechanics")]
+    public float whistleNoiseRadius = 20.0f;
+    public float whistleDuration = 1.0f;
+    public float whistleCooldown = 3.0f;
+    public float whistleTimer = 0f;
+    public float whistleCooldownTimer = 0f;
+
     [Header("Boundaries")]
     public float minX = -28f, maxX = 28f, minZ = -9f, maxZ = 9f;
 
     public bool IsMoving { get; private set; }
     public float CurrentNoiseRadius { get; private set; }
+    public bool IsWhistling => whistleTimer > 0f;
 
     private SurvivalSystem survival;
 
@@ -41,6 +49,7 @@ public class PlayerMove : MonoBehaviour
     void Update()
     {
         HandleStanceInput();
+        HandleWhistleInput();
 
         float h = Input.GetAxisRaw("Horizontal");
         float v = Input.GetAxisRaw("Vertical");
@@ -66,7 +75,31 @@ public class PlayerMove : MonoBehaviour
         transform.position = p;
 
         // Calculate emitted noise radius
-        CurrentNoiseRadius = IsMoving ? GetBaseNoiseRadius() : 0f;
+        if (whistleTimer > 0f)
+        {
+            whistleTimer -= Time.deltaTime;
+            CurrentNoiseRadius = whistleNoiseRadius;
+        }
+        else
+        {
+            CurrentNoiseRadius = IsMoving ? GetBaseNoiseRadius() : 0f;
+        }
+
+        if (whistleCooldownTimer > 0f)
+        {
+            whistleCooldownTimer -= Time.deltaTime;
+        }
+    }
+
+    void HandleWhistleInput()
+    {
+        // [Q] Key triggers a loud whistle to lure or distract nearby guards
+        if (Input.GetKeyDown(KeyCode.Q) && whistleCooldownTimer <= 0f)
+        {
+            whistleTimer = whistleDuration;
+            whistleCooldownTimer = whistleCooldown;
+            Debug.Log($"[PlayerMove] Whistled! Noise radius temporarily expanded to {whistleNoiseRadius}m.");
+        }
     }
 
     void HandleStanceInput()
