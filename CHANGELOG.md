@@ -2,6 +2,15 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.3.4 — 2026-11-04
+- **Act 1 Environmental Warming & Shelter Zones (`ShelterZone.cs`)**: Created dedicated shelter zone component allowing Jun-ho to warm up near burn barrels and covered alleys (`-6.0/s` cold recovery) instead of accumulating curfew hypothermia. Includes `ShelterZone.cs.meta`.
+- **Shivering Acoustic Footprint & Movement Debuff (`SurvivalSystem.cs`)**: Cold levels >= 70% now trigger physical shivering, generating an involuntary +1.5m acoustic noise radius that can alert nearby guards and reducing stamina recovery by 60%.
+- **Starvation Sprint Drain Penalty (`SurvivalSystem.cs`)**: Hunger levels >= 80% mark Jun-ho as starving, multiplying sprint stamina exhaustion rate by 1.75x.
+- **Hot Tea & Boiled Water Item (`[3]` key)**: Added hot tea consumption reducing cold by 45% and restoring 25 stamina and 10 health.
+- **Survival HUD Expansion**: Updated IMGUI monitor with live area shelter readout, shivering warning, starving indicator, and full keybinding tips.
+- **Console Prototype Expansion (`prototypes/StealthSim`)**: Added `Shelter` zones and 2 new automated headless tests (shelter warming and shivering acoustic noise), bringing total automated test suite to 10/10 passed.
+- **Universal Health Runner Sync (`scripts/run_checks.py`)**: Updated to validate `ShelterZone.cs` and track 10/10 passing StealthSim tests.
+
 ## 0.3.3 — 2026-11-04
 - **Acoustic Noise & Sound Lure System (`PlayerMove.cs`)**: Added player whistle lure input `[Q]` producing a 20-meter acoustic radius, dynamically integrated into stance noise footprints.
 - **Guard Acoustic Hearing & Investigation State Machine (`PatrolMover.cs`)**: Expanded guard AI states to include `Investigating`, reacting immediately to player footsteps and sound lures, inspecting noise origins, searching the area with rotational scans, and smoothly returning to patrol.

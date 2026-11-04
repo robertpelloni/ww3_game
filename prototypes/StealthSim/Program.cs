@@ -64,6 +64,14 @@ namespace WW3.StealthSim
         public double HearingSensitivity { get; set; } = 1.0;
     }
 
+    public class Shelter
+    {
+        public string Name { get; set; } = "Shelter";
+        public Vec2 Position { get; set; }
+        public double Radius { get; set; } = 3.5;
+        public double WarmingRate { get; set; } = 6.0;
+    }
+
     public class Player
     {
         public Vec2 Position { get; set; }
@@ -73,9 +81,12 @@ namespace WW3.StealthSim
         public double Cold { get; set; } = 15.0; // 0 (warm) to 100 (hypothermia)
         public double Battery { get; set; } = 80.0;
         public int RiceCount { get; set; } = 2;
+        public int HotTeaCount { get; set; } = 1;
         public bool HasForgedPapers { get; set; } = true;
         public bool HasWireCutters { get; set; } = false;
         public bool FlashlightOn { get; set; } = false;
+        public bool IsShivering => Cold >= 70.0;
+        public bool IsStarving => Hunger >= 80.0;
 
         public double GetBaseSpeed() => CurrentStance switch
         {
@@ -86,14 +97,19 @@ namespace WW3.StealthSim
             _ => 2.5
         };
 
-        public double GetNoiseRadius() => CurrentStance switch
+        public double GetNoiseRadius()
         {
-            Stance.Prone => 0.5,
-            Stance.Crouch => 2.0,
-            Stance.Walk => 6.0,
-            Stance.Sprint => 12.0,
-            _ => 2.0
-        };
+            double baseNoise = CurrentStance switch
+            {
+                Stance.Prone => 0.5,
+                Stance.Crouch => 2.0,
+                Stance.Walk => 6.0,
+                Stance.Sprint => 12.0,
+                _ => 2.0
+            };
+            if (IsShivering) baseNoise += 1.5; // Chattering teeth adds acoustic noise
+            return baseNoise;
+        }
 
         public double GetStanceDetectionMultiplier() => CurrentStance switch
         {
@@ -133,6 +149,7 @@ namespace WW3.StealthSim
         public Player PlayerCharacter { get; set; } = new Player();
         public List<Guard> Guards { get; } = new List<Guard>();
         public List<Lamp> Lamps { get; } = new List<Lamp>();
+        public List<Shelter> Shelters { get; } = new List<Shelter>();
         public Spotlight CurfewSearchlight { get; set; } = new Spotlight();
         public Vec2 SafehousePosition { get; set; } = new Vec2(56.0, 10.0);
         public Vec2 CheckpointPosition { get; set; } = new Vec2(40.0, 10.0);
@@ -185,6 +202,15 @@ namespace WW3.StealthSim
             Lamps.Add(new Lamp { Position = new Vec2(26.0, 10.0), Radius = 4.5 });
             Lamps.Add(new Lamp { Position = new Vec2(38.0, 10.0), Radius = 5.0 });
 
+            // Warming shelter / burn barrel alcove
+            Shelters.Add(new Shelter
+            {
+                Name = "Alley Burn Barrel",
+                Position = new Vec2(20.0, 4.0),
+                Radius = 3.5,
+                WarmingRate = 6.0
+            });
+
             // Curfew searchlight sweeping
             CurfewSearchlight = new Spotlight
             {
@@ -193,6 +219,18 @@ namespace WW3.StealthSim
                 SweepRange = 12.0,
                 SweepSpeed = 0.8
             };
+        }
+
+        public bool IsPlayerSheltered()
+        {
+            foreach (var s in Shelters)
+            {
+                if (Vec2.Distance(PlayerCharacter.Position, s.Position) <= s.Radius)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public double CalculatePlayerExposure()
@@ -252,7 +290,8 @@ namespace WW3.StealthSim
             double speed = PlayerCharacter.GetBaseSpeed();
             if (PlayerCharacter.CurrentStance == Stance.Sprint && moveInput.Magnitude() > 0.01)
             {
-                PlayerCharacter.Stamina = Math.Max(0, PlayerCharacter.Stamina - 20.0 * dt);
+                double starvationMult = PlayerCharacter.IsStarving ? 1.75 : 1.0;
+                PlayerCharacter.Stamina = Math.Max(0, PlayerCharacter.Stamina - 20.0 * starvationMult * dt);
                 if (PlayerCharacter.Stamina <= 0.01)
                 {
                     PlayerCharacter.CurrentStance = Stance.Walk;
@@ -260,12 +299,23 @@ namespace WW3.StealthSim
             }
             else
             {
-                PlayerCharacter.Stamina = Math.Min(100.0, PlayerCharacter.Stamina + 10.0 * dt);
+                double shiveringMod = PlayerCharacter.IsShivering ? 0.4 : 1.0;
+                PlayerCharacter.Stamina = Math.Min(100.0, PlayerCharacter.Stamina + 10.0 * shiveringMod * dt);
             }
 
-            // Survival drain
+            // Survival drain vs shelter warming
             PlayerCharacter.Hunger = Math.Min(100.0, PlayerCharacter.Hunger + 0.15 * dt);
-            PlayerCharacter.Cold = Math.Min(100.0, PlayerCharacter.Cold + 0.25 * dt);
+
+            bool sheltered = IsPlayerSheltered();
+            if (sheltered)
+            {
+                PlayerCharacter.Cold = Math.Max(0.0, PlayerCharacter.Cold - 6.0 * dt);
+            }
+            else
+            {
+                PlayerCharacter.Cold = Math.Min(100.0, PlayerCharacter.Cold + 0.25 * dt);
+            }
+
             if (PlayerCharacter.FlashlightOn)
             {
                 PlayerCharacter.Battery = Math.Max(0, PlayerCharacter.Battery - 1.0 * dt);
@@ -523,6 +573,22 @@ namespace WW3.StealthSim
             Assert(sim3.Guards[0].Suspicion > 30.0 && sim3.Guards[0].State != AIState.Patrol,
                 "Guard escalates suspicion and leaves Patrol state when exposed player in sight");
 
+            // Test 9: Shelter zone cold recovery
+            var sim4 = new SimulationWorld();
+            sim4.PlayerCharacter.Cold = 50.0;
+            sim4.PlayerCharacter.Position = sim4.Shelters[0].Position; // Inside burn barrel zone
+            sim4.Step(1.0, new Vec2(0, 0));
+            Assert(sim4.PlayerCharacter.Cold < 50.0, "Shelter zone warms player and reduces cold meter");
+
+            // Test 10: Shivering increases acoustic noise radius
+            var sim5 = new SimulationWorld();
+            sim5.PlayerCharacter.CurrentStance = Stance.Crouch;
+            sim5.PlayerCharacter.Cold = 10.0;
+            double warmNoise = sim5.PlayerCharacter.GetNoiseRadius();
+            sim5.PlayerCharacter.Cold = 80.0; // Shivering threshold
+            double shiveringNoise = sim5.PlayerCharacter.GetNoiseRadius();
+            Assert(shiveringNoise > warmNoise, "Shivering increases player acoustic noise radius");
+
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;
         }
@@ -630,11 +696,19 @@ namespace WW3.StealthSim
                 if (c >= 0 && c < cols && r >= 0 && r < rows) grid[r, c] = 'o';
             }
 
+            // Draw Shelters
+            foreach (var s in world.Shelters)
+            {
+                int sc = (int)((s.Position.X / world.Width) * cols);
+                int sr = (int)((s.Position.Y / world.Height) * rows);
+                if (sc >= 0 && sc < cols && sr >= 0 && sr < rows) grid[sr, sc] = 'S';
+            }
+
             // Draw Spotlight
             Vec2 spot = world.CurfewSearchlight.GetCurrentPosition();
-            int sc = (int)((spot.X / world.Width) * cols);
-            int sr = (int)((spot.Y / world.Height) * rows);
-            if (sc >= 0 && sc < cols && sr >= 0 && sr < rows) grid[sr, sc] = '*';
+            int spc = (int)((spot.X / world.Width) * cols);
+            int spr = (int)((spot.Y / world.Height) * rows);
+            if (spc >= 0 && spc < cols && spr >= 0 && spr < rows) grid[spr, spc] = '*';
 
             // Draw Safehouse
             int shC = (int)((world.SafehousePosition.X / world.Width) * cols);
@@ -654,7 +728,7 @@ namespace WW3.StealthSim
             int pr = (int)((world.PlayerCharacter.Position.Y / world.Height) * rows);
             if (pc >= 0 && pc < cols && pr >= 0 && pr < rows) grid[pr, pc] = '@';
 
-            Console.WriteLine("\n--- Chongjin Alley Map [@:Player, G:Guard, *:Spotlight, o:Lamp, H:Safehouse] ---");
+            Console.WriteLine("\n--- Chongjin Alley Map [@:Player, G:Guard, *:Spotlight, o:Lamp, S:Shelter, H:Safehouse] ---");
             for (int r = rows - 1; r >= 0; r--)
             {
                 for (int c = 0; c < cols; c++)

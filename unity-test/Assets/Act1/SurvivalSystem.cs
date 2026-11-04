@@ -22,13 +22,23 @@ public class SurvivalSystem : MonoBehaviour
     [Header("Inventory")]
     public int riceCount = 3;
     public int medicineCount = 1;
+    public int hotTeaCount = 2;
     public bool hasForgedPapers = true;
+
+    [Header("Environmental Status")]
+    public bool isSheltered = false;
+    public string currentShelterName = "Exposed (Curfew Alley)";
+
+    [Header("Debuffs & Condition")]
+    public bool isShivering = false;
+    public bool isStarving = false;
 
     [Header("Debug HUD")]
     public bool showDebugHUD = true;
 
     private PlayerMove playerMove;
     private PatrolMover nearestGuard;
+    private ShelterZone[] shelterZones;
 
     void Awake()
     {
@@ -40,15 +50,36 @@ public class SurvivalSystem : MonoBehaviour
         }
     }
 
+    void Start()
+    {
+        shelterZones = FindObjectsByType<ShelterZone>(FindObjectsSortMode.None);
+    }
+
     void Update()
     {
         float dt = Time.deltaTime;
 
+        // Check shelter proximity
+        CheckShelterStatus();
+
         // Base hunger accumulation
         hunger = Mathf.Clamp(hunger + hungerRate * dt, 0f, 100f);
 
-        // Base cold accumulation
-        cold = Mathf.Clamp(cold + coldRate * dt, 0f, 100f);
+        // Cold accumulation / recovery based on shelter
+        if (isSheltered)
+        {
+            // Recover from cold while near warmth source
+            cold = Mathf.Max(0f, cold - 6.0f * dt);
+        }
+        else
+        {
+            // Suffer outdoor curfew frostbite
+            cold = Mathf.Clamp(cold + coldRate * dt, 0f, 100f);
+        }
+
+        // Shivering mechanic (Cold > 70%): generates acoustic noise & reduces stamina regen
+        isShivering = cold >= 70f;
+        isStarving = hunger >= 80f;
 
         // Health penalties for extreme cold/hunger
         if (cold >= 90f || hunger >= 90f)
@@ -62,7 +93,9 @@ public class SurvivalSystem : MonoBehaviour
 
         if (isSprinting)
         {
-            float drain = staminaDrainRate * (1f + (hunger / 100f) * 0.5f);
+            // Starvation increases sprint drain significantly
+            float starvationMultiplier = isStarving ? 1.75f : 1.0f;
+            float drain = staminaDrainRate * (1f + (hunger / 100f) * 0.5f) * starvationMultiplier;
             stamina = Mathf.Max(0f, stamina - drain * dt);
             if (stamina <= 0.5f && playerMove != null)
             {
@@ -71,18 +104,45 @@ public class SurvivalSystem : MonoBehaviour
         }
         else
         {
-            float recovery = staminaRecoverRate * (1f - (cold / 100f) * 0.4f);
+            // Cold shivering reduces recovery rate
+            float shiveringPenalty = isShivering ? 0.4f : 1.0f;
+            float recovery = staminaRecoverRate * (1f - (cold / 100f) * 0.4f) * shiveringPenalty;
             stamina = Mathf.Min(100f, stamina + recovery * dt);
         }
 
         // Quick input for item consumption
         if (Input.GetKeyDown(KeyCode.Alpha1)) EatRice();
         if (Input.GetKeyDown(KeyCode.Alpha2)) TakeMedicine();
+        if (Input.GetKeyDown(KeyCode.Alpha3)) DrinkHotTea();
 
         // Query nearest guard for HUD status
         if (nearestGuard == null)
         {
             nearestGuard = FindFirstObjectByType<PatrolMover>();
+        }
+    }
+
+    private void CheckShelterStatus()
+    {
+        if (shelterZones == null || shelterZones.Length == 0)
+        {
+            shelterZones = FindObjectsByType<ShelterZone>(FindObjectsSortMode.None);
+        }
+
+        isSheltered = false;
+        currentShelterName = "Exposed (Curfew Alley)";
+
+        if (shelterZones != null)
+        {
+            foreach (var zone in shelterZones)
+            {
+                if (zone != null && zone.IsPlayerInside())
+                {
+                    isSheltered = true;
+                    currentShelterName = zone.zoneName;
+                    break;
+                }
+            }
         }
     }
 
@@ -107,40 +167,61 @@ public class SurvivalSystem : MonoBehaviour
         }
     }
 
+    public void DrinkHotTea()
+    {
+        if (hotTeaCount > 0)
+        {
+            hotTeaCount--;
+            cold = Mathf.Max(0f, cold - 45f);
+            stamina = Mathf.Min(100f, stamina + 25f);
+            health = Mathf.Min(100f, health + 10f);
+            Debug.Log($"[SurvivalSystem] Drank hot tea. Cold reduced to {cold:F0}%. Stamina +25. Teas remaining: {hotTeaCount}");
+        }
+    }
+
     void OnGUI()
     {
         if (!showDebugHUD) return;
 
-        GUI.Box(new Rect(10, 10, 260, 230), "Jun-ho Survival Monitor (Act 1)");
+        GUI.Box(new Rect(10, 10, 275, 270), "Jun-ho Survival Monitor (Act 1)");
 
-        GUI.Label(new Rect(20, 35, 220, 20), $"Stamina:  {stamina:F0}%");
-        GUI.Label(new Rect(20, 55, 220, 20), $"Hunger:   {hunger:F0}%");
-        GUI.Label(new Rect(20, 75, 220, 20), $"Cold:     {cold:F0}%");
-        GUI.Label(new Rect(20, 95, 220, 20), $"Health:   {health:F0}%");
+        GUI.Label(new Rect(20, 32, 235, 18), $"Stamina:  {stamina:F0}%");
+        GUI.Label(new Rect(20, 50, 235, 18), $"Hunger:   {hunger:F0}% {(isStarving ? "[STARVING!]" : "")}");
+        GUI.Label(new Rect(20, 68, 235, 18), $"Cold:     {cold:F0}% {(isShivering ? "[SHIVERING!]" : "")}");
+        GUI.Label(new Rect(20, 86, 235, 18), $"Health:   {health:F0}%");
 
         string stanceName = playerMove != null ? playerMove.currentStance.ToString() : "N/A";
         float noise = playerMove != null ? playerMove.CurrentNoiseRadius : 0f;
+        if (isShivering) noise += 1.5f; // Teeth chattering noise footprint
         string whistleNote = (playerMove != null && playerMove.IsWhistling) ? " [WHISTLE!]" : "";
-        GUI.Label(new Rect(20, 115, 220, 20), $"Stance:   {stanceName} (Noise: {noise:F1}m){whistleNote}");
+        GUI.Label(new Rect(20, 104, 235, 18), $"Stance:   {stanceName} (Noise: {noise:F1}m){whistleNote}");
+
+        GUI.Label(new Rect(20, 122, 235, 18), $"Area:     {(isSheltered ? "SHELTERED: " : "")}{currentShelterName}");
 
         string guardStatus = "None";
         if (nearestGuard != null)
         {
             guardStatus = $"{nearestGuard.currentState} ({nearestGuard.suspicionMeter * 100f:F0}%)";
         }
-        GUI.Label(new Rect(20, 135, 220, 20), $"Guard AI: {guardStatus}");
+        GUI.Label(new Rect(20, 140, 235, 18), $"Guard AI: {guardStatus}");
 
-        if (GUI.Button(new Rect(20, 160, 100, 25), $"Eat Rice ({riceCount})"))
+        if (GUI.Button(new Rect(18, 164, 75, 24), $"Rice ({riceCount})"))
         {
             EatRice();
         }
 
-        if (GUI.Button(new Rect(130, 160, 110, 25), $"Medicine ({medicineCount})"))
+        if (GUI.Button(new Rect(98, 164, 80, 24), $"Meds ({medicineCount})"))
         {
             TakeMedicine();
         }
 
-        GUI.Label(new Rect(20, 190, 220, 20), $"Papers: {(hasForgedPapers ? "Forged ID (OK)" : "None")}");
-        GUI.Label(new Rect(20, 208, 220, 20), "[Q] Whistle Lure | [1] Rice | [2] Med");
+        if (GUI.Button(new Rect(183, 164, 90, 24), $"Tea ({hotTeaCount})"))
+        {
+            DrinkHotTea();
+        }
+
+        GUI.Label(new Rect(20, 195, 235, 18), $"Papers: {(hasForgedPapers ? "Forged ID (Valid)" : "None")}");
+        GUI.Label(new Rect(20, 215, 235, 18), "[Q] Whistle | [1] Rice | [2] Med | [3] Tea");
+        GUI.Label(new Rect(20, 235, 235, 18), "[E] Checkpoint Papers | [B] Bribe Guard");
     }
 }
