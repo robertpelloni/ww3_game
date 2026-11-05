@@ -35,6 +35,11 @@ public class SurvivalSystem : MonoBehaviour
     public bool isShivering = false;
     public bool isStarving = false;
 
+    [Header("Game Loop State")]
+    public bool isGameOver = false;
+    public bool isGameWon = false;
+    public string gameOverReason = "";
+
     [Header("Debug HUD")]
     public bool showDebugHUD = true;
 
@@ -42,6 +47,7 @@ public class SurvivalSystem : MonoBehaviour
     private PatrolMover nearestGuard;
     private ShelterZone[] shelterZones;
     private LightExposureZone[] lightZones;
+    private SafehouseTrigger safehouseTrigger;
 
     void Awake()
     {
@@ -124,6 +130,78 @@ public class SurvivalSystem : MonoBehaviour
         if (nearestGuard == null)
         {
             nearestGuard = FindFirstObjectByType<PatrolMover>();
+        }
+
+        // Check fail conditions
+        CheckGameOverConditions();
+
+        // Quick restart on 'R' key
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            RestartLevel();
+        }
+    }
+
+    private void CheckGameOverConditions()
+    {
+        if (isGameOver || isGameWon) return;
+
+        // Health depleted
+        if (health <= 0f)
+        {
+            isGameOver = true;
+            gameOverReason = cold >= 90f ? "FROZEN TO DEATH (Hypothermia)" : "STARVATION";
+            return;
+        }
+
+        // Guard capture check: if guard is in Alert state and within 1.8 meters
+        if (nearestGuard != null && nearestGuard.currentState == PatrolMover.GuardState.Alert)
+        {
+            float dist = Vector3.Distance(transform.position, nearestGuard.transform.position);
+            if (dist <= 1.8f)
+            {
+                isGameOver = true;
+                gameOverReason = "CAPTURED BY CURFEW PATROL";
+                return;
+            }
+        }
+    }
+
+    public void TriggerVictory(string safehouseName = "Border Safehouse")
+    {
+        isGameWon = true;
+        Debug.Log($"[SurvivalSystem] VICTORY! Reached {safehouseName}.");
+    }
+
+    public void RestartLevel()
+    {
+        Debug.Log("[SurvivalSystem] Quick restarting Act 1 scene...");
+        try
+        {
+            string currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            if (!string.IsNullOrEmpty(currentScene))
+            {
+                UnityEngine.SceneManagement.SceneManager.LoadScene(currentScene);
+                return;
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning($"[SurvivalSystem] SceneManager reload fallback: {ex.Message}");
+        }
+
+        // Fallback in-memory reset if SceneManager isn't bound in testing
+        hunger = 10f;
+        cold = 15f;
+        stamina = 100f;
+        health = 100f;
+        isGameOver = false;
+        isGameWon = false;
+        gameOverReason = "";
+        if (nearestGuard != null)
+        {
+            nearestGuard.currentState = PatrolMover.GuardState.Patrolling;
+            nearestGuard.suspicionMeter = 0f;
         }
     }
 
@@ -256,6 +334,32 @@ public class SurvivalSystem : MonoBehaviour
 
         GUI.Label(new Rect(20, 204, 235, 18), $"Papers: {(hasForgedPapers ? "Forged ID (Valid)" : "None")}");
         GUI.Label(new Rect(20, 222, 235, 18), "[Q] Whistle | [1] Rice | [2] Med | [3] Tea");
-        GUI.Label(new Rect(20, 240, 235, 18), "[E] Checkpoint Papers | [B] Bribe Guard");
+        GUI.Label(new Rect(20, 240, 235, 18), "[E] Checkpoint Papers | [B] Bribe Guard | [R] Retry");
+
+        // Overlay for Game Over or Victory
+        if (isGameOver)
+        {
+            GUI.Box(new Rect(Screen.width / 2f - 180, Screen.height / 2f - 70, 360, 140), "=== MISSION FAILED ===");
+            GUIStyle failStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold };
+            failStyle.normal.textColor = Color.red;
+            GUI.Label(new Rect(Screen.width / 2f - 160, Screen.height / 2f - 35, 320, 25), gameOverReason, failStyle);
+
+            if (GUI.Button(new Rect(Screen.width / 2f - 80, Screen.height / 2f + 10, 160, 32), "RETRY [R] (< 3s)"))
+            {
+                RestartLevel();
+            }
+        }
+        else if (isGameWon)
+        {
+            GUI.Box(new Rect(Screen.width / 2f - 180, Screen.height / 2f - 70, 360, 140), "=== MISSION ACCOMPLISHED ===");
+            GUIStyle winStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold };
+            winStyle.normal.textColor = Color.green;
+            GUI.Label(new Rect(Screen.width / 2f - 160, Screen.height / 2f - 35, 320, 25), "SAFED IN THE BUNKER!", winStyle);
+
+            if (GUI.Button(new Rect(Screen.width / 2f - 80, Screen.height / 2f + 10, 160, 32), "PLAY AGAIN [R]"))
+            {
+                RestartLevel();
+            }
+        }
     }
 }

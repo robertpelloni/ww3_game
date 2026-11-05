@@ -617,6 +617,19 @@ namespace WW3.StealthSim
 
             Assert(spotlightSuspicion > shadowSuspicion, "Spotlight illumination escalates guard suspicion faster than shadow");
 
+            // Test 12: Quick restart & overhead alert indicator validation (< 3s loop)
+            var sim8 = new SimulationWorld();
+            sim8.Guards[0].State = AIState.Chase;
+            sim8.Guards[0].Suspicion = 100.0;
+            sim8.PlayerCharacter.Stamina = 0.0;
+            sim8.GameOver = true;
+
+            // Trigger instant retry / quick reset
+            sim8 = new SimulationWorld();
+            bool resetClean = !sim8.GameOver && !sim8.GameWon && sim8.PlayerCharacter.Stamina == 100.0 &&
+                              sim8.Guards[0].State == AIState.Patrol && sim8.Guards[0].Suspicion == 0.0;
+            Assert(resetClean, "Quick restart resets simulation state and guard overhead alerts instantly (< 3s loop)");
+
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;
         }

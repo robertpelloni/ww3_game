@@ -238,6 +238,62 @@ public class PatrolMover : MonoBehaviour
         return false;
     }
 
+    void OnGUI()
+    {
+        // Render overhead suspicion meter and status marker in screen space
+        if (currentState == GuardState.Patrolling && suspicionMeter <= 0.05f) return;
+
+        Camera cam = Camera.main;
+        if (cam == null) cam = FindFirstObjectByType<Camera>();
+        if (cam == null) return;
+
+        Vector3 headPos = transform.position + Vector3.up * 2.2f;
+        Vector3 screenPos = cam.WorldToScreenPoint(headPos);
+
+        // Discard if behind camera
+        if (screenPos.z <= 0) return;
+
+        // Invert Y coordinate for IMGUI
+        float x = screenPos.x;
+        float y = Screen.height - screenPos.y;
+
+        // Status icon
+        string marker = "";
+        Color markerColor = Color.white;
+        if (currentState == GuardState.Alert)
+        {
+            marker = "[ ! ALERT ! ]";
+            markerColor = Color.red;
+        }
+        else if (currentState == GuardState.Suspicious)
+        {
+            marker = "[ ? SUSPICIOUS ]";
+            markerColor = Color.yellow;
+        }
+        else if (currentState == GuardState.Investigating)
+        {
+            marker = "[ ? INVESTIGATING ]";
+            markerColor = new Color(1f, 0.6f, 0.2f);
+        }
+
+        GUIStyle style = new GUIStyle(GUI.skin.label);
+        style.alignment = TextAnchor.MiddleCenter;
+        style.normal.textColor = markerColor;
+        style.fontStyle = FontStyle.Bold;
+
+        GUI.Label(new Rect(x - 75, y - 24, 150, 20), marker, style);
+
+        // Suspicion progress bar background & fill
+        float barWidth = 70f;
+        float barHeight = 8f;
+        GUI.Box(new Rect(x - barWidth / 2f, y - 4, barWidth, barHeight), GUIContent.none);
+
+        Color oldColor = GUI.color;
+        GUI.color = currentState == GuardState.Alert ? Color.red : (currentState == GuardState.Suspicious ? Color.yellow : Color.cyan);
+        GUI.DrawTexture(new Rect(x - barWidth / 2f + 1, y - 3, (barWidth - 2) * suspicionMeter, barHeight - 2), Texture2D.whiteTexture);
+        GUI.color = oldColor;
+    }
+
     void OnDrawGizmosSelected()
     {
         // Waypoint line
