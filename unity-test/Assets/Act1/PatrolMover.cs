@@ -57,8 +57,10 @@ public class PatrolMover : MonoBehaviour
         // Update suspicion meter based on vision check and hearing
         if (playerSeen)
         {
-            // Detection rate scaled by player stance if PlayerMove is present
+            // Detection rate scaled by player stance and ambient light exposure
             float stanceModifier = 1.0f;
+            float lightExposure = 0.25f; // Baseline ambient alley exposure
+
             if (targetPlayer != null)
             {
                 var pm = targetPlayer.GetComponent<PlayerMove>();
@@ -72,9 +74,16 @@ public class PatrolMover : MonoBehaviour
                         case PlayerMove.Stance.Sprint: stanceModifier = 1.50f; break;
                     }
                 }
+
+                var survival = targetPlayer.GetComponent<SurvivalSystem>();
+                if (survival != null)
+                {
+                    lightExposure = survival.currentLightExposure;
+                }
             }
 
-            suspicionMeter = Mathf.Clamp01(suspicionMeter + (suspicionRate * stanceModifier) * Time.deltaTime);
+            float detectionMultiplier = stanceModifier * Mathf.Lerp(0.3f, 1.8f, lightExposure);
+            suspicionMeter = Mathf.Clamp01(suspicionMeter + (suspicionRate * detectionMultiplier) * Time.deltaTime);
             if (targetPlayer != null) lastKnownPlayerPos = targetPlayer.position;
 
             if (suspicionMeter >= 0.8f)

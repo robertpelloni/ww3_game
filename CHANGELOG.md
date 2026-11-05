@@ -2,6 +2,14 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.3.5 — 2026-11-04
+- **Light Exposure Zones (`LightExposureZone.cs`)**: Created dedicated illumination zone component for streetlamps and curfew searchlights with configurable radius and exposure levels (0.0 deep shadow to 1.0 direct glare). Includes `LightExposureZone.cs.meta`.
+- **Dynamic Guard Detection Multipliers (`PatrolMover.cs`)**: Integrated ambient light exposure (`Mathf.Lerp(0.3f, 1.8f, lightExposure)`) and player stance into vision cone detection rate, escalating suspicion significantly faster in illuminated areas.
+- **Survival HUD Illumination Meter (`SurvivalSystem.cs`)**: Wired live light exposure percentage into the IMGUI monitor so players know their visibility status in real time.
+- **Console Prototype Headless Test Expansion (`prototypes/StealthSim`)**: Added Test 11 validating that spotlight illumination escalates guard suspicion faster than shadow, bringing headless test suite to 11/11 passing.
+- **Universal Health Runner Sync (`scripts/run_checks.py`)**: Updated to validate `LightExposureZone.cs` and track 11/11 passing StealthSim tests.
+- **Single-Page Command Center (v0.3.5)**: Updated `dashboard.html` to v0.3.5 with light exposure documentation and tooltip verification.
+
 ## 0.3.4 — 2026-11-04
 - **Act 1 Environmental Warming & Shelter Zones (`ShelterZone.cs`)**: Created dedicated shelter zone component allowing Jun-ho to warm up near burn barrels and covered alleys (`-6.0/s` cold recovery) instead of accumulating curfew hypothermia. Includes `ShelterZone.cs.meta`.
 - **Shivering Acoustic Footprint & Movement Debuff (`SurvivalSystem.cs`)**: Cold levels >= 70% now trigger physical shivering, generating an involuntary +1.5m acoustic noise radius that can alert nearby guards and reducing stamina recovery by 60%.

@@ -28,6 +28,8 @@ public class SurvivalSystem : MonoBehaviour
     [Header("Environmental Status")]
     public bool isSheltered = false;
     public string currentShelterName = "Exposed (Curfew Alley)";
+    [Range(0f, 1f)]
+    public float currentLightExposure = 0.15f; // Ambient dark alley default
 
     [Header("Debuffs & Condition")]
     public bool isShivering = false;
@@ -39,6 +41,7 @@ public class SurvivalSystem : MonoBehaviour
     private PlayerMove playerMove;
     private PatrolMover nearestGuard;
     private ShelterZone[] shelterZones;
+    private LightExposureZone[] lightZones;
 
     void Awake()
     {
@@ -53,14 +56,16 @@ public class SurvivalSystem : MonoBehaviour
     void Start()
     {
         shelterZones = FindObjectsByType<ShelterZone>(FindObjectsSortMode.None);
+        lightZones = FindObjectsByType<LightExposureZone>(FindObjectsSortMode.None);
     }
 
     void Update()
     {
         float dt = Time.deltaTime;
 
-        // Check shelter proximity
+        // Check shelter proximity & ambient light exposure
         CheckShelterStatus();
+        CheckLightExposure();
 
         // Base hunger accumulation
         hunger = Mathf.Clamp(hunger + hungerRate * dt, 0f, 100f);
@@ -146,6 +151,33 @@ public class SurvivalSystem : MonoBehaviour
         }
     }
 
+    private void CheckLightExposure()
+    {
+        if (lightZones == null || lightZones.Length == 0)
+        {
+            lightZones = FindObjectsByType<LightExposureZone>(FindObjectsSortMode.None);
+        }
+
+        // Deep shadow default baseline in curfew night alleys
+        float maxExposure = isSheltered ? 0.05f : 0.15f;
+
+        if (lightZones != null)
+        {
+            foreach (var lz in lightZones)
+            {
+                if (lz != null && lz.IsPlayerInside())
+                {
+                    if (lz.exposureLevel > maxExposure)
+                    {
+                        maxExposure = lz.exposureLevel;
+                    }
+                }
+            }
+        }
+
+        currentLightExposure = maxExposure;
+    }
+
     public void EatRice()
     {
         if (riceCount > 0)
@@ -197,31 +229,33 @@ public class SurvivalSystem : MonoBehaviour
         GUI.Label(new Rect(20, 104, 235, 18), $"Stance:   {stanceName} (Noise: {noise:F1}m){whistleNote}");
 
         GUI.Label(new Rect(20, 122, 235, 18), $"Area:     {(isSheltered ? "SHELTERED: " : "")}{currentShelterName}");
+        string lightPercent = $"{currentLightExposure * 100f:F0}%";
+        GUI.Label(new Rect(20, 138, 235, 18), $"Light:    {lightPercent} exposure");
 
         string guardStatus = "None";
         if (nearestGuard != null)
         {
             guardStatus = $"{nearestGuard.currentState} ({nearestGuard.suspicionMeter * 100f:F0}%)";
         }
-        GUI.Label(new Rect(20, 140, 235, 18), $"Guard AI: {guardStatus}");
+        GUI.Label(new Rect(20, 154, 235, 18), $"Guard AI: {guardStatus}");
 
-        if (GUI.Button(new Rect(18, 164, 75, 24), $"Rice ({riceCount})"))
+        if (GUI.Button(new Rect(18, 174, 75, 24), $"Rice ({riceCount})"))
         {
             EatRice();
         }
 
-        if (GUI.Button(new Rect(98, 164, 80, 24), $"Meds ({medicineCount})"))
+        if (GUI.Button(new Rect(98, 174, 80, 24), $"Meds ({medicineCount})"))
         {
             TakeMedicine();
         }
 
-        if (GUI.Button(new Rect(183, 164, 90, 24), $"Tea ({hotTeaCount})"))
+        if (GUI.Button(new Rect(183, 174, 90, 24), $"Tea ({hotTeaCount})"))
         {
             DrinkHotTea();
         }
 
-        GUI.Label(new Rect(20, 195, 235, 18), $"Papers: {(hasForgedPapers ? "Forged ID (Valid)" : "None")}");
-        GUI.Label(new Rect(20, 215, 235, 18), "[Q] Whistle | [1] Rice | [2] Med | [3] Tea");
-        GUI.Label(new Rect(20, 235, 235, 18), "[E] Checkpoint Papers | [B] Bribe Guard");
+        GUI.Label(new Rect(20, 204, 235, 18), $"Papers: {(hasForgedPapers ? "Forged ID (Valid)" : "None")}");
+        GUI.Label(new Rect(20, 222, 235, 18), "[Q] Whistle | [1] Rice | [2] Med | [3] Tea");
+        GUI.Label(new Rect(20, 240, 235, 18), "[E] Checkpoint Papers | [B] Bribe Guard");
     }
 }

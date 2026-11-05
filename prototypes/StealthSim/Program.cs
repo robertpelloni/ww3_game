@@ -589,6 +589,34 @@ namespace WW3.StealthSim
             double shiveringNoise = sim5.PlayerCharacter.GetNoiseRadius();
             Assert(shiveringNoise > warmNoise, "Shivering increases player acoustic noise radius");
 
+            // Test 11: Light exposure directly scales detection escalation
+            var sim6 = new SimulationWorld();
+            sim6.Guards[0].Position = new Vec2(15.0, 5.0);
+            sim6.Guards[0].Forward = new Vec2(0, 1);
+            sim6.PlayerCharacter.Position = new Vec2(15.0, 10.0); // Directly in front
+            sim6.PlayerCharacter.CurrentStance = Stance.Walk;
+            sim6.Lamps.Clear();
+            sim6.CurfewSearchlight.Radius = 0; // Disable spotlight
+
+            // In dark alley shadow
+            sim6.Step(0.2, new Vec2(0, 0));
+            double shadowSuspicion = sim6.Guards[0].Suspicion;
+
+            // In direct spotlight illumination (exposure 1.0)
+            var sim7 = new SimulationWorld();
+            sim7.Guards[0].Position = new Vec2(15.0, 5.0);
+            sim7.Guards[0].Forward = new Vec2(0, 1);
+            sim7.PlayerCharacter.Position = new Vec2(15.0, 10.0);
+            sim7.PlayerCharacter.CurrentStance = Stance.Walk;
+            sim7.CurfewSearchlight.Center = new Vec2(15.0, 10.0); // Directly illuminate player
+            sim7.CurfewSearchlight.SweepRange = 0;
+            sim7.CurfewSearchlight.Radius = 5.0;
+
+            sim7.Step(0.2, new Vec2(0, 0));
+            double spotlightSuspicion = sim7.Guards[0].Suspicion;
+
+            Assert(spotlightSuspicion > shadowSuspicion, "Spotlight illumination escalates guard suspicion faster than shadow");
+
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;
         }
