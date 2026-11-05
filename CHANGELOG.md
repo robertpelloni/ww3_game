@@ -2,6 +2,12 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.3.6 — 2026-11-04
+- **Guard Overhead Suspicion & Investigation Markers (`PatrolMover.cs`)**: World-to-screen projected IMGUI status indicators (`[ ! ALERT ! ]`, `[ ? SUSPICIOUS ]`, `[ ? INVESTIGATING ]`) and dynamic colored suspicion fill bar above guard positions.
+- **Quick-Reload Game Loop & Win/Loss Logic (`SurvivalSystem.cs`)**: Added instant fail triggers for hypothermia, starvation, and alert patrol capture (within 1.8m), coupled with a rapid (< 3s) retry loop via `[R]` key or interactive retry button.
+- **Console Prototype Headless Test Expansion (`prototypes/StealthSim`)**: Added Test 12 confirming quick restart state cleanup across player meters and AI states, expanding automated test suite to 12/12 passing.
+- **Single-Page Command Center Sync (`dashboard.html`)**: Bumped console to v0.3.6 with full overhead indicators and quick-reload telemetry.
+
 ## 0.3.5 — 2026-11-04
 - **Light Exposure Zones (`LightExposureZone.cs`)**: Created dedicated illumination zone component for streetlamps and curfew searchlights with configurable radius and exposure levels (0.0 deep shadow to 1.0 direct glare). Includes `LightExposureZone.cs.meta`.
 - **Dynamic Guard Detection Multipliers (`PatrolMover.cs`)**: Integrated ambient light exposure (`Mathf.Lerp(0.3f, 1.8f, lightExposure)`) and player stance into vision cone detection rate, escalating suspicion significantly faster in illuminated areas.
