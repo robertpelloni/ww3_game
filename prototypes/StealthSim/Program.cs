@@ -1,0 +1,668 @@
+using System;
+using System.Collections.Generic;
+
+namespace WW3.StealthSim
+{
+    public enum Stance
+    {
+        Prone,
+        Crouch,
+        Walk,
+        Sprint
+    }
+
+    public enum AIState
+    {
+        Patrol,
+        Investigate,
+        Chase,
+        Search
+    }
+
+    public struct Vec2
+    {
+        public double X;
+        public double Y;
+
+        public Vec2(double x, double y)
+        {
+            X = x;
+            Y = y;
+        }
+
+        public static Vec2 operator +(Vec2 a, Vec2 b) => new Vec2(a.X + b.X, a.Y + b.Y);
+        public static Vec2 operator -(Vec2 a, Vec2 b) => new Vec2(a.X - b.X, a.Y - b.Y);
+        public static Vec2 operator *(Vec2 a, double d) => new Vec2(a.X * d, a.Y * d);
+
+        public double Magnitude() => Math.Sqrt(X * X + Y * Y);
+        public Vec2 Normalized()
+        {
+            double m = Magnitude();
+            return m > 0.0001 ? new Vec2(X / m, Y / m) : new Vec2(0, 0);
+        }
+
+        public static double Distance(Vec2 a, Vec2 b) => (a - b).Magnitude();
+        public static double Dot(Vec2 a, Vec2 b) => a.X * b.X + a.Y * b.Y;
+    }
+
+    public class Guard
+    {
+        public string Name { get; set; } = "Guard";
+        public Vec2 Position { get; set; }
+        public Vec2 Forward { get; set; }
+        public Vec2 WaypointA { get; set; }
+        public Vec2 WaypointB { get; set; }
+        public int WaypointDir { get; set; } = 1;
+        public double PatrolSpeed { get; set; } = 2.0;
+        public double ChaseSpeed { get; set; } = 4.0;
+        public double Suspicion { get; set; } = 0.0; // 0 to 100
+        public AIState State { get; set; } = AIState.Patrol;
+        public Vec2 LastInvestigateTarget { get; set; }
+        public double SearchTimer { get; set; } = 0.0;
+        public double VisionAngleDeg { get; set; } = 70.0;
+        public double VisionRange { get; set; } = 14.0;
+        public double HearingSensitivity { get; set; } = 1.0;
+    }
+
+    public class Player
+    {
+        public Vec2 Position { get; set; }
+        public Stance CurrentStance { get; set; } = Stance.Crouch;
+        public double Stamina { get; set; } = 100.0;
+        public double Hunger { get; set; } = 10.0; // 0 (full) to 100 (starving)
+        public double Cold { get; set; } = 15.0; // 0 (warm) to 100 (hypothermia)
+        public double Battery { get; set; } = 80.0;
+        public int RiceCount { get; set; } = 2;
+        public bool HasForgedPapers { get; set; } = true;
+        public bool HasWireCutters { get; set; } = false;
+        public bool FlashlightOn { get; set; } = false;
+
+        public double GetBaseSpeed() => CurrentStance switch
+        {
+            Stance.Prone => 1.2,
+            Stance.Crouch => 2.5,
+            Stance.Walk => 4.0,
+            Stance.Sprint => 7.0,
+            _ => 2.5
+        };
+
+        public double GetNoiseRadius() => CurrentStance switch
+        {
+            Stance.Prone => 0.5,
+            Stance.Crouch => 2.0,
+            Stance.Walk => 6.0,
+            Stance.Sprint => 12.0,
+            _ => 2.0
+        };
+
+        public double GetStanceDetectionMultiplier() => CurrentStance switch
+        {
+            Stance.Prone => 0.3,
+            Stance.Crouch => 0.6,
+            Stance.Walk => 1.0,
+            Stance.Sprint => 1.5,
+            _ => 1.0
+        };
+    }
+
+    public class Lamp
+    {
+        public Vec2 Position { get; set; }
+        public double Radius { get; set; } = 5.0;
+    }
+
+    public class Spotlight
+    {
+        public Vec2 Center { get; set; }
+        public double Radius { get; set; } = 4.0;
+        public double SweepRange { get; set; } = 10.0;
+        public double SweepSpeed { get; set; } = 1.5;
+        public double SweepTime { get; set; } = 0.0;
+
+        public Vec2 GetCurrentPosition()
+        {
+            double offset = Math.Sin(SweepTime * SweepSpeed) * SweepRange;
+            return new Vec2(Center.X + offset, Center.Y);
+        }
+    }
+
+    public class SimulationWorld
+    {
+        public double Width { get; set; } = 60.0; // 60x20m street
+        public double Height { get; set; } = 20.0;
+        public Player PlayerCharacter { get; set; } = new Player();
+        public List<Guard> Guards { get; } = new List<Guard>();
+        public List<Lamp> Lamps { get; } = new List<Lamp>();
+        public Spotlight CurfewSearchlight { get; set; } = new Spotlight();
+        public Vec2 SafehousePosition { get; set; } = new Vec2(56.0, 10.0);
+        public Vec2 CheckpointPosition { get; set; } = new Vec2(40.0, 10.0);
+
+        public bool GameWon { get; set; } = false;
+        public bool GameOver { get; set; } = false;
+        public string EndReason { get; set; } = "";
+
+        public SimulationWorld()
+        {
+            // Player starts at west entry of Chongjin alley
+            PlayerCharacter.Position = new Vec2(2.0, 10.0);
+
+            // Patrol 1: Alley near start
+            Guards.Add(new Guard
+            {
+                Name = "Patrol-1",
+                Position = new Vec2(15.0, 5.0),
+                WaypointA = new Vec2(15.0, 3.0),
+                WaypointB = new Vec2(15.0, 17.0),
+                Forward = new Vec2(0, 1),
+                PatrolSpeed = 2.0
+            });
+
+            // Patrol 2: Mid-street patrol
+            Guards.Add(new Guard
+            {
+                Name = "Patrol-2",
+                Position = new Vec2(28.0, 15.0),
+                WaypointA = new Vec2(28.0, 17.0),
+                WaypointB = new Vec2(28.0, 3.0),
+                Forward = new Vec2(0, -1),
+                PatrolSpeed = 2.4
+            });
+
+            // Checkpoint Guard
+            Guards.Add(new Guard
+            {
+                Name = "Checkpoint Guard",
+                Position = new Vec2(42.0, 10.0),
+                WaypointA = new Vec2(42.0, 8.0),
+                WaypointB = new Vec2(42.0, 12.0),
+                Forward = new Vec2(-1, 0),
+                PatrolSpeed = 1.0,
+                VisionRange = 16.0
+            });
+
+            // Street lamps
+            Lamps.Add(new Lamp { Position = new Vec2(12.0, 10.0), Radius = 4.5 });
+            Lamps.Add(new Lamp { Position = new Vec2(26.0, 10.0), Radius = 4.5 });
+            Lamps.Add(new Lamp { Position = new Vec2(38.0, 10.0), Radius = 5.0 });
+
+            // Curfew searchlight sweeping
+            CurfewSearchlight = new Spotlight
+            {
+                Center = new Vec2(30.0, 10.0),
+                Radius = 4.0,
+                SweepRange = 12.0,
+                SweepSpeed = 0.8
+            };
+        }
+
+        public double CalculatePlayerExposure()
+        {
+            Vec2 pPos = PlayerCharacter.Position;
+
+            // Curfew Spotlight: max exposure
+            Vec2 spotPos = CurfewSearchlight.GetCurrentPosition();
+            if (Vec2.Distance(pPos, spotPos) <= CurfewSearchlight.Radius)
+            {
+                return 1.0;
+            }
+
+            // Flashlight on increases exposure significantly
+            if (PlayerCharacter.FlashlightOn)
+            {
+                return 0.85;
+            }
+
+            // Street lamps
+            foreach (var lamp in Lamps)
+            {
+                if (Vec2.Distance(pPos, lamp.Position) <= lamp.Radius)
+                {
+                    return 0.50;
+                }
+            }
+
+            // Default dark alley shadow
+            return 0.05;
+        }
+
+        public void TriggerWhistle()
+        {
+            Vec2 pPos = PlayerCharacter.Position;
+            double whistleNoise = 20.0; // audible within 20m
+
+            foreach (var guard in Guards)
+            {
+                double dist = Vec2.Distance(guard.Position, pPos);
+                if (dist <= whistleNoise)
+                {
+                    guard.LastInvestigateTarget = pPos;
+                    guard.State = AIState.Investigate;
+                    guard.Suspicion = Math.Max(guard.Suspicion, 40.0);
+                }
+            }
+        }
+
+        public void Step(double dt, Vec2 moveInput)
+        {
+            if (GameOver || GameWon) return;
+
+            CurfewSearchlight.SweepTime += dt;
+
+            // Player Stamina / Movement
+            double speed = PlayerCharacter.GetBaseSpeed();
+            if (PlayerCharacter.CurrentStance == Stance.Sprint && moveInput.Magnitude() > 0.01)
+            {
+                PlayerCharacter.Stamina = Math.Max(0, PlayerCharacter.Stamina - 20.0 * dt);
+                if (PlayerCharacter.Stamina <= 0.01)
+                {
+                    PlayerCharacter.CurrentStance = Stance.Walk;
+                }
+            }
+            else
+            {
+                PlayerCharacter.Stamina = Math.Min(100.0, PlayerCharacter.Stamina + 10.0 * dt);
+            }
+
+            // Survival drain
+            PlayerCharacter.Hunger = Math.Min(100.0, PlayerCharacter.Hunger + 0.15 * dt);
+            PlayerCharacter.Cold = Math.Min(100.0, PlayerCharacter.Cold + 0.25 * dt);
+            if (PlayerCharacter.FlashlightOn)
+            {
+                PlayerCharacter.Battery = Math.Max(0, PlayerCharacter.Battery - 1.0 * dt);
+                if (PlayerCharacter.Battery <= 0) PlayerCharacter.FlashlightOn = false;
+            }
+
+            // Apply movement
+            Vec2 moveDir = moveInput.Normalized();
+            PlayerCharacter.Position = new Vec2(
+                Math.Clamp(PlayerCharacter.Position.X + moveDir.X * speed * dt, 0.0, Width),
+                Math.Clamp(PlayerCharacter.Position.Y + moveDir.Y * speed * dt, 0.0, Height)
+            );
+
+            // Win condition check
+            if (Vec2.Distance(PlayerCharacter.Position, SafehousePosition) <= 2.5)
+            {
+                GameWon = true;
+                EndReason = "Safehouse reached! Knocked twice in the darkness. You escaped Chongjin Act 1!";
+                return;
+            }
+
+            double exposure = CalculatePlayerExposure();
+            double noiseRadius = moveInput.Magnitude() > 0.01 ? PlayerCharacter.GetNoiseRadius() : 0.0;
+
+            // Update Guards
+            foreach (var guard in Guards)
+            {
+                UpdateGuard(guard, dt, exposure, noiseRadius);
+                if (GameOver) break;
+            }
+        }
+
+        private void UpdateGuard(Guard guard, double dt, double playerExposure, double playerNoiseRadius)
+        {
+            Vec2 toPlayer = PlayerCharacter.Position - guard.Position;
+            double dist = toPlayer.Magnitude();
+            Vec2 dirToPlayer = toPlayer.Normalized();
+
+            // Vision Check
+            double dot = Vec2.Dot(guard.Forward, dirToPlayer);
+            double angleDeg = Math.Acos(Math.Clamp(dot, -1.0, 1.0)) * (180.0 / Math.PI);
+            bool inVisionCone = angleDeg <= (guard.VisionAngleDeg / 2.0) && dist <= guard.VisionRange;
+
+            // Hearing Check
+            bool heardNoise = dist <= (playerNoiseRadius * guard.HearingSensitivity);
+
+            if (heardNoise)
+            {
+                guard.LastInvestigateTarget = PlayerCharacter.Position;
+                if (guard.State != AIState.Chase)
+                {
+                    guard.State = AIState.Investigate;
+                    guard.Suspicion = Math.Max(guard.Suspicion, 35.0);
+                }
+            }
+
+            if (inVisionCone)
+            {
+                // Detection scales with exposure, stance, and proximity
+                double stanceMod = PlayerCharacter.GetStanceDetectionMultiplier();
+                double proximityMod = Math.Clamp(1.0 - (dist / guard.VisionRange), 0.1, 1.0);
+                double suspicionDelta = 65.0 * playerExposure * stanceMod * proximityMod * dt;
+
+                // Close range detection even in low light
+                if (dist < 2.5) suspicionDelta += 40.0 * dt;
+
+                guard.Suspicion = Math.Clamp(guard.Suspicion + suspicionDelta, 0.0, 100.0);
+                guard.LastInvestigateTarget = PlayerCharacter.Position;
+
+                if (guard.Suspicion >= 85.0)
+                {
+                    guard.State = AIState.Chase;
+                }
+                else if (guard.Suspicion >= 30.0 && guard.State == AIState.Patrol)
+                {
+                    guard.State = AIState.Investigate;
+                }
+            }
+            else
+            {
+                // Decay suspicion if not seeing/hearing
+                if (guard.State == AIState.Chase)
+                {
+                    guard.SearchTimer += dt;
+                    if (guard.SearchTimer > 4.0)
+                    {
+                        guard.State = AIState.Search;
+                        guard.SearchTimer = 0.0;
+                    }
+                }
+                else
+                {
+                    guard.Suspicion = Math.Max(0.0, guard.Suspicion - 12.0 * dt);
+                    if (guard.Suspicion <= 5.0 && (guard.State == AIState.Investigate || guard.State == AIState.Search))
+                    {
+                        guard.State = AIState.Patrol;
+                    }
+                }
+            }
+
+            // AI State Execution
+            switch (guard.State)
+            {
+                case AIState.Patrol:
+                    ExecutePatrol(guard, dt);
+                    break;
+
+                case AIState.Investigate:
+                    ExecuteMoveTowards(guard, guard.LastInvestigateTarget, guard.PatrolSpeed * 1.2, dt);
+                    if (Vec2.Distance(guard.Position, guard.LastInvestigateTarget) < 1.0)
+                    {
+                        guard.State = AIState.Search;
+                        guard.SearchTimer = 3.0;
+                    }
+                    break;
+
+                case AIState.Chase:
+                    ExecuteMoveTowards(guard, PlayerCharacter.Position, guard.ChaseSpeed, dt);
+                    if (dist < 1.8)
+                    {
+                        GameOver = true;
+                        EndReason = $"{guard.Name} caught you under the curfew searchlight! Spotlight sirens blare.";
+                    }
+                    break;
+
+                case AIState.Search:
+                    guard.SearchTimer -= dt;
+                    if (guard.SearchTimer <= 0)
+                    {
+                        guard.State = AIState.Patrol;
+                    }
+                    break;
+            }
+        }
+
+        private void ExecutePatrol(Guard guard, double dt)
+        {
+            Vec2 target = guard.WaypointDir > 0 ? guard.WaypointB : guard.WaypointA;
+            Vec2 diff = target - guard.Position;
+            double dist = diff.Magnitude();
+
+            if (dist < 0.2)
+            {
+                guard.WaypointDir *= -1;
+                return;
+            }
+
+            Vec2 dir = diff.Normalized();
+            guard.Position = guard.Position + dir * (guard.PatrolSpeed * dt);
+            guard.Forward = dir;
+        }
+
+        private void ExecuteMoveTowards(Guard guard, Vec2 target, double speed, double dt)
+        {
+            Vec2 diff = target - guard.Position;
+            double dist = diff.Magnitude();
+            if (dist > 0.1)
+            {
+                Vec2 dir = diff.Normalized();
+                guard.Position = guard.Position + dir * (speed * dt);
+                guard.Forward = dir;
+            }
+        }
+    }
+
+    public class Program
+    {
+        public static int Main(string[] args)
+        {
+            if (args.Length > 0 && args[0] == "--test")
+            {
+                return RunHeadlessTests();
+            }
+
+            if (args.Length > 0 && args[0] == "--benchmark")
+            {
+                return RunBenchmark();
+            }
+
+            return RunInteractiveSim();
+        }
+
+        public static int RunHeadlessTests()
+        {
+            Console.WriteLine("=== WW3 StealthSim: Running Automated Simulation Tests ===");
+            var world = new SimulationWorld();
+            int passed = 0;
+            int total = 0;
+
+            void Assert(bool condition, string testName)
+            {
+                total++;
+                if (condition)
+                {
+                    Console.WriteLine($"[PASS] {testName}");
+                    passed++;
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"[FAIL] {testName}");
+                    Console.ResetColor();
+                }
+            }
+
+            // Test 1: Baseline dark alley exposure
+            double baseExp = world.CalculatePlayerExposure();
+            Assert(Math.Abs(baseExp - 0.05) < 0.001, "Dark alley shadow exposure equals 0.05");
+
+            // Test 2: Lamp exposure
+            world.PlayerCharacter.Position = world.Lamps[0].Position;
+            double lampExp = world.CalculatePlayerExposure();
+            Assert(Math.Abs(lampExp - 0.50) < 0.001, "Lamp radius exposure equals 0.50");
+
+            // Test 3: Spotlight exposure
+            world.PlayerCharacter.Position = world.CurfewSearchlight.GetCurrentPosition();
+            double spotExp = world.CalculatePlayerExposure();
+            Assert(Math.Abs(spotExp - 1.0) < 0.001, "Curfew spotlight exposure equals 1.0");
+
+            // Test 4: Whistle alert mechanics
+            world.PlayerCharacter.Position = new Vec2(2.0, 10.0);
+            world.TriggerWhistle();
+            Assert(world.Guards[0].State == AIState.Investigate, "Whistle alerts Patrol-1 to investigate");
+
+            // Test 5: Sprinting drains stamina
+            double initialStamina = world.PlayerCharacter.Stamina;
+            world.PlayerCharacter.CurrentStance = Stance.Sprint;
+            world.Step(0.5, new Vec2(1, 0));
+            Assert(world.PlayerCharacter.Stamina < initialStamina, "Sprinting decreases stamina");
+
+            // Test 6: Safehouse win condition
+            world.PlayerCharacter.Position = world.SafehousePosition;
+            world.Step(0.1, new Vec2(0, 0));
+            Assert(world.GameWon, "Reaching safehouse marks GameWon true");
+
+            // Test 7: Simulated run of 100 ticks without crash
+            var sim2 = new SimulationWorld();
+            for (int i = 0; i < 100; i++)
+            {
+                sim2.Step(0.1, new Vec2(1, 0));
+            }
+            Assert(sim2.PlayerCharacter.Position.X > 2.0, "100 tick simulation completes smoothly");
+
+            // Test 8: Guard suspicion escalation on standing player in line of sight
+            var sim3 = new SimulationWorld();
+            sim3.PlayerCharacter.Position = new Vec2(15.0, 10.0); // directly in Patrol-1's path
+            sim3.PlayerCharacter.CurrentStance = Stance.Walk;
+            sim3.PlayerCharacter.FlashlightOn = true; // high visibility
+            sim3.Guards[0].Position = new Vec2(15.0, 6.0);
+            sim3.Guards[0].Forward = new Vec2(0, 1);
+            for (int i = 0; i < 20; i++)
+            {
+                sim3.Step(0.1, new Vec2(0, 0));
+            }
+            Assert(sim3.Guards[0].Suspicion > 30.0 && sim3.Guards[0].State != AIState.Patrol,
+                "Guard escalates suspicion and leaves Patrol state when exposed player in sight");
+
+            Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
+            return passed == total ? 0 : 1;
+        }
+
+        public static int RunBenchmark()
+        {
+            Console.WriteLine("Benchmarking StealthSim 10,000 steps...");
+            var world = new SimulationWorld();
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            for (int i = 0; i < 10000; i++)
+            {
+                world.Step(0.016, new Vec2(0.5, 0.2));
+            }
+            sw.Stop();
+            Console.WriteLine($"Completed 10,000 steps in {sw.ElapsedMilliseconds} ms ({(10000.0 / (sw.ElapsedMilliseconds / 1000.0)):F0} steps/sec)");
+            return 0;
+        }
+
+        public static int RunInteractiveSim()
+        {
+            Console.WriteLine("=================================================");
+            Console.WriteLine("   WW3: Escape from North Korea — StealthSim     ");
+            Console.WriteLine("   Console Prototype (Intel HD 520 / Potato Safe)");
+            Console.WriteLine("=================================================");
+            Console.WriteLine("Goal: Navigate 60m alley to Safehouse at [56, 10].");
+            Console.WriteLine("Avoid searchlights and guards. Crouch/Sprint carefully.");
+            Console.WriteLine("Controls: [W/A/S/D] Move | [1] Prone [2] Crouch [3] Walk [4] Sprint | [Q] Whistle | [F] Flashlight | [X] Exit");
+
+            var world = new SimulationWorld();
+            var random = new Random();
+
+            while (!world.GameOver && !world.GameWon)
+            {
+                RenderAsciiMap(world);
+
+                Console.WriteLine($"\n[Jun-ho] Pos: ({world.PlayerCharacter.Position.X:F1}, {world.PlayerCharacter.Position.Y:F1}) | Stance: {world.PlayerCharacter.CurrentStance} | Stamina: {world.PlayerCharacter.Stamina:F0}% | Hunger: {world.PlayerCharacter.Hunger:F0}% | Cold: {world.PlayerCharacter.Cold:F0}%");
+                double exp = world.CalculatePlayerExposure();
+                Console.WriteLine($"Exposure: {exp * 100:F0}% | Rice: {world.PlayerCharacter.RiceCount} | Flashlight: {(world.PlayerCharacter.FlashlightOn ? "ON" : "OFF")}");
+                foreach (var g in world.Guards)
+                {
+                    Console.WriteLine($" Guard [{g.Name}] Pos: ({g.Position.X:F1}, {g.Position.Y:F1}) | State: {g.State} | Suspicion: {g.Suspicion:F0}%");
+                }
+
+                Console.Write("\nAction (W/A/S/D/1/2/3/4/Q/F/X or Enter to wait): ");
+                string? input = Console.ReadLine()?.Trim().ToUpperInvariant();
+
+                Vec2 move = new Vec2(0, 0);
+                if (input == "W") move = new Vec2(0, 1.5);
+                else if (input == "S") move = new Vec2(0, -1.5);
+                else if (input == "A") move = new Vec2(-1.5, 0);
+                else if (input == "D") move = new Vec2(1.5, 0);
+                else if (input == "1") world.PlayerCharacter.CurrentStance = Stance.Prone;
+                else if (input == "2") world.PlayerCharacter.CurrentStance = Stance.Crouch;
+                else if (input == "3") world.PlayerCharacter.CurrentStance = Stance.Walk;
+                else if (input == "4") world.PlayerCharacter.CurrentStance = Stance.Sprint;
+                else if (input == "Q")
+                {
+                    world.TriggerWhistle();
+                    Console.WriteLine("\n* Jun-ho whistles quietly into the fog! *");
+                }
+                else if (input == "F")
+                {
+                    world.PlayerCharacter.FlashlightOn = !world.PlayerCharacter.FlashlightOn;
+                }
+                else if (input == "X")
+                {
+                    Console.WriteLine("Exiting simulation.");
+                    return 0;
+                }
+
+                world.Step(0.5, move);
+            }
+
+            if (world.GameWon)
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"\nVICTORY: {world.EndReason}");
+                Console.ResetColor();
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"\nBUSTED: {world.EndReason}");
+                Console.ResetColor();
+            }
+
+            return 0;
+        }
+
+        private static void RenderAsciiMap(SimulationWorld world)
+        {
+            int cols = 40;
+            int rows = 12;
+            char[,] grid = new char[rows, cols];
+
+            for (int r = 0; r < rows; r++)
+                for (int c = 0; c < cols; c++)
+                    grid[r, c] = '.';
+
+            // Draw Lamps
+            foreach (var l in world.Lamps)
+            {
+                int c = (int)((l.Position.X / world.Width) * cols);
+                int r = (int)((l.Position.Y / world.Height) * rows);
+                if (c >= 0 && c < cols && r >= 0 && r < rows) grid[r, c] = 'o';
+            }
+
+            // Draw Spotlight
+            Vec2 spot = world.CurfewSearchlight.GetCurrentPosition();
+            int sc = (int)((spot.X / world.Width) * cols);
+            int sr = (int)((spot.Y / world.Height) * rows);
+            if (sc >= 0 && sc < cols && sr >= 0 && sr < rows) grid[sr, sc] = '*';
+
+            // Draw Safehouse
+            int shC = (int)((world.SafehousePosition.X / world.Width) * cols);
+            int shR = (int)((world.SafehousePosition.Y / world.Height) * rows);
+            if (shC >= 0 && shC < cols && shR >= 0 && shR < rows) grid[shR, shC] = 'H';
+
+            // Draw Guards
+            foreach (var g in world.Guards)
+            {
+                int gc = (int)((g.Position.X / world.Width) * cols);
+                int gr = (int)((g.Position.Y / world.Height) * rows);
+                if (gc >= 0 && gc < cols && gr >= 0 && gr < rows) grid[gr, gc] = 'G';
+            }
+
+            // Draw Player
+            int pc = (int)((world.PlayerCharacter.Position.X / world.Width) * cols);
+            int pr = (int)((world.PlayerCharacter.Position.Y / world.Height) * rows);
+            if (pc >= 0 && pc < cols && pr >= 0 && pr < rows) grid[pr, pc] = '@';
+
+            Console.WriteLine("\n--- Chongjin Alley Map [@:Player, G:Guard, *:Spotlight, o:Lamp, H:Safehouse] ---");
+            for (int r = rows - 1; r >= 0; r--)
+            {
+                for (int c = 0; c < cols; c++)
+                {
+                    Console.Write(grid[r, c]);
+                }
+                Console.WriteLine();
+            }
+        }
+    }
+}
