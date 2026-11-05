@@ -2,7 +2,7 @@
 """
 WW3 Server & Tray Manager
 Provides system tray icon (pystray / tkinter fallback) and headless CLI control
-to manage, monitor, and gracefully quit background MCP servers and game processes.
+to manage, monitor, inspect, and gracefully quit background MCP servers and game processes.
 """
 
 import os
@@ -21,19 +21,22 @@ MANAGED_SERVICES = {
         "name": "Unity AnkleBreaker MCP",
         "cmd": ["node", "mcp-servers/unity/AnkleBreaker.unity-mcp-server/src/index.js"],
         "port": 7890,
-        "type": "unity"
+        "type": "unity",
+        "desc": "Primary Unity 2022/6 editor bridge exposing 338 scene/build tools on port 7890."
     },
     "godot-coding-solo": {
         "name": "Godot Coding-Solo MCP",
         "cmd": ["node", "mcp-servers/godot/Coding-Solo.godot-mcp/build/index.js"],
         "port": None,
-        "type": "godot"
+        "type": "godot",
+        "desc": "Primary Godot 4.3 editor launcher and live debug capture bridge."
     },
     "unreal-sam-david": {
         "name": "Unreal Sam-David MCP",
         "cmd": ["node", "mcp-servers/unreal/sam-david.unreal-mcp/dist/bin.js"],
         "port": None,
-        "type": "unreal"
+        "type": "unreal",
+        "desc": "Unreal Engine research bridge with 127 tools (no C++ compile required)."
     }
 }
 
@@ -109,7 +112,7 @@ def start_server(service_id):
         return False
 
 def print_status():
-    """Prints status of servers and ports."""
+    """Prints status of servers and ports with descriptions."""
     pids = get_running_pids()
     print("==================================================")
     print("   WW3 Server & Tray Manager — Status             ")
@@ -118,6 +121,7 @@ def print_status():
         status = f"RUNNING (PID {pids[sid]})" if sid in pids else "STOPPED"
         port_info = f"[Port {info['port']}]" if info['port'] else ""
         print(f" - {info['name']} ({sid}): {status} {port_info}")
+        print(f"   -> {info['desc']}")
     print("==================================================")
     print(f"Tracked active processes: {len(pids)}")
     return len(pids)
@@ -128,7 +132,6 @@ def run_tray_gui():
         import pystray
         from PIL import Image, ImageDraw
 
-        # Create a simple icon in memory
         def create_image():
             img = Image.new('RGB', (64, 64), color=(31, 111, 58))
             d = ImageDraw.Draw(img)
@@ -181,7 +184,6 @@ def main():
         success = start_server(args.start)
         return 0 if success else 1
     else:
-        # Default to tray mode (or fallback to daemon/help)
         run_tray_gui()
         return 0
 

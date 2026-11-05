@@ -1,22 +1,29 @@
 # ROADMAP — major structural milestones
 
-**Version:** 0.3.1 (see [VERSION.md](VERSION.md)).
+**Version:** 0.3.5 (see [VERSION.md](VERSION.md)).
 
 ## M1 — Vertical slice: Act 1 Blackout Chongjin
 - 1 street 60x20m, night + fog + searchlight, 2 patrols + 1 checkpoint guard.
 - Win = reach safehouse; lose + retry < 3s; 30fps+ HD 520 Very Low.
 - State:
-  * Pure-C# console sim verified in `prototypes/StealthSim` (8/8 tests passing).
+  * Pure-C# console sim verified in `prototypes/StealthSim` (11/11 tests passing).
   * Scene + patrol/player starter scripts live in `unity-test/` (see [docs/MCP_TESTS.md](docs/MCP_TESTS.md)).
   * Unity Survival System + IMGUI OnGUI HUD active in `unity-test/Assets/Act1/`.
-  * Unity Guard AI state machine (Patrolling, Suspicious, Alert) with vision cone checks and stance scaling in `PatrolMover.cs`.
+  * Light Exposure Zones (`LightExposureZone.cs`) with dynamic detection escalation in `PatrolMover.cs`.
+  * Environmental Warming & Shelter Zones (`ShelterZone.cs`) with live area temperature feedback.
+  * Shivering acoustic penalty (+1.5m noise) & stamina regeneration debuff when cold >= 70%.
+  * Starvation sprint stamina exhaustion penalty when hunger >= 80%.
+  * Sound lure mechanics (Whistle `[Q]`, 20m noise footprint) in `PlayerMove.cs`.
+  * Guard AI 4-state machine (Patrolling, Investigating, Suspicious, Alert) with vision FOV & acoustic hearing in `PatrolMover.cs`.
+  * Checkpoint security gate & interrogation system (`CheckpointTrigger.cs`) with transit papers and bribery.
   * System tray icon & background server manager in `scripts/tray_manager.py`.
+  * Unified single-page Command Center console active in `dashboard.html`.
 
-## M2 — Survival systems (In Progress -> Functional Prototype Complete)
-- Hunger / cold / stamina / batteries / medicine; exposure light model;
-  suspicion 0-100 investigate → chase → search → reset; whistle lure.
-- Mathematical mechanics verified in `prototypes/StealthSim`.
-- Implemented in `unity-test/Assets/Act1/SurvivalSystem.cs` and `PlayerMove.cs` with real-time debug HUD.
+## M2 — Survival systems (Completed & Verified)
+- Hunger / cold / stamina / batteries / medicine / hot tea; exposure light model;
+  suspicion 0-100 investigate → chase → search → reset; whistle lure; shelter zones; dynamic illumination.
+- Mathematical mechanics verified in `prototypes/StealthSim` (11/11 automated tests).
+- Implemented in `unity-test/Assets/Act1/SurvivalSystem.cs`, `PlayerMove.cs`, and `ShelterZone.cs` with real-time debug HUD.
 
 ## M3 — Choice systems
 - Papers timed dialogue, bribe (2 rice), sneak (vent/river), wire cutters;

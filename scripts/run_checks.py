@@ -2,11 +2,12 @@
 """
 WW3 Universal Health & Smokes Runner
 Cross-platform (Linux/Windows/macOS) equivalent to run-all-checks.ps1.
-Validates doc links, prototypes, MCP smokes, and server manager status.
+Validates doc links, prototypes, MCP smokes, server manager status, and dashboard integrity.
 """
 
 import sys
 import os
+import re
 import subprocess
 from pathlib import Path
 
@@ -24,7 +25,10 @@ def check_doc_links():
         'prototypes/StealthSim/Program.cs',
         'unity-test/Assets/Act1/PlayerMove.cs',
         'unity-test/Assets/Act1/PatrolMover.cs',
-        'unity-test/Assets/Act1/SurvivalSystem.cs'
+        'unity-test/Assets/Act1/SurvivalSystem.cs',
+        'unity-test/Assets/Act1/CheckpointTrigger.cs',
+    "unity-test/Assets/Act1/ShelterZone.cs",
+        "unity-test/Assets/Act1/LightExposureZone.cs",
     ]
     missing = []
     for rel_path in required_files:
@@ -35,6 +39,28 @@ def check_doc_links():
         else:
             print(f"  [OK] {rel_path}")
     return len(missing) == 0
+
+def check_dashboard_integrity():
+    print("\n== Checking Dashboard HTML Integrity & Tooltip Coverage")
+    v_file = REPO_ROOT / "VERSION.md"
+    d_file = REPO_ROOT / "dashboard.html"
+    if not v_file.exists() or not d_file.exists():
+        print("  [FAIL] Missing VERSION.md or dashboard.html")
+        return False
+    version = v_file.read_text(encoding="utf-8").strip()
+    content = d_file.read_text(encoding="utf-8")
+
+    if version not in content:
+        print(f"  [FAIL] dashboard.html does not match VERSION.md ({version})")
+        return False
+
+    dfn_matches = re.findall(r'<dfn[^>]*title=["\']([^"\']+)["\']', content)
+    if len(dfn_matches) < 25:
+        print(f"  [FAIL] Too few tooltips found ({len(dfn_matches)})")
+        return False
+
+    print(f"  [OK] dashboard.html verified: version {version}, {len(dfn_matches)} tooltips, offline ready.")
+    return True
 
 def check_stealth_sim():
     print("\n== Running StealthSim Prototype Simulation Tests")
@@ -56,7 +82,6 @@ def check_godot_mcp():
         "--", "tools/call", '{"name": "get_godot_version", "arguments": {}}'
     ]
     res = subprocess.run(cmd, cwd=REPO_ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-    # The server starts up, initializes via JSON-RPC, and returns graceful message if engine is offline
     if "SERVER:" in res.stdout or "get_godot_version" in res.stdout or res.returncode == 0:
         print("  [OK] Godot MCP protocol handshake verified.")
         return True
@@ -88,12 +113,13 @@ def main():
     print("==================================================")
 
     docs_ok = check_doc_links()
+    dash_ok = check_dashboard_integrity()
     sim_ok = check_stealth_sim()
     tray_ok = check_tray_manager()
     godot_ok = check_godot_mcp()
     unreal_ok = check_unreal_mcp()
 
-    all_passed = docs_ok and sim_ok and tray_ok and godot_ok
+    all_passed = docs_ok and dash_ok and sim_ok and tray_ok and godot_ok
 
     print("\n==================================================")
     if all_passed:

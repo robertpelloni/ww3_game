@@ -3,13 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>WW3: Escape from North Korea — Command Center (v0.3.0)</title>
+<title>WW3: Escape from North Korea — Unified Command Center (v0.3.5)</title>
 <style>
   :root {
-    --bg-main: #0d1117;
-    --bg-card: #161b22;
-    --bg-card-hover: #1c2128;
+    --bg-main: #0b0f14;
+    --bg-card: #151b23;
+    --bg-card-sub: #0d1117;
+    --bg-hover: #1e2632;
     --border: #30363d;
+    --border-accent: #238636;
     --accent: #238636;
     --accent-hover: #2ea043;
     --text-primary: #f0f6fc;
@@ -27,137 +29,182 @@
     line-height: 1.6;
     padding: 1.5rem;
   }
-  .container { max-width: 80rem; margin: 0 auto; }
+  .container { max-width: 82rem; margin: 0 auto; }
+
+  /* Header */
   header {
     border-bottom: 1px solid var(--border);
     padding-bottom: 1.25rem;
     margin-bottom: 1.5rem;
   }
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
   .header-badge {
-    display: inline-block;
     background: rgba(35, 134, 54, 0.2);
     color: #3fb950;
     border: 1px solid #238636;
-    padding: 0.15rem 0.5rem;
+    padding: 0.2rem 0.6rem;
     border-radius: 4px;
     font-size: 0.8rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
   }
-  h1 { font-size: 1.85rem; font-weight: 700; color: #fff; margin-bottom: 0.25rem; }
-  .tagline { color: var(--text-secondary); font-size: 1.05rem; }
+  .header-meta {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+  h1 { font-size: 1.9rem; font-weight: 700; color: #fff; margin-bottom: 0.35rem; }
+  .tagline { color: var(--text-secondary); font-size: 1.02rem; }
 
-  /* Navigation / Quick Jump Bar */
+  /* Quick Navigation Jump Bar */
   .quickbar {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 0.5rem;
     background: var(--bg-card);
-    padding: 0.75rem 1rem;
+    padding: 0.85rem 1.15rem;
     border-radius: 6px;
     border: 1px solid var(--border);
     margin-bottom: 1.5rem;
+  }
+  .quickbar span.label {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-right: 0.25rem;
+    text-transform: uppercase;
   }
   .quickbar a {
     color: var(--info);
     text-decoration: none;
     font-size: 0.88rem;
-    padding: 0.2rem 0.6rem;
+    padding: 0.25rem 0.65rem;
     border-radius: 4px;
-    background: rgba(88, 166, 255, 0.1);
-    transition: background 0.15s ease;
+    background: rgba(88, 166, 255, 0.08);
+    border: 1px solid rgba(88, 166, 255, 0.2);
+    transition: all 0.15s ease;
   }
-  .quickbar a:hover { background: rgba(88, 166, 255, 0.25); }
+  .quickbar a:hover {
+    background: rgba(88, 166, 255, 0.2);
+    border-color: var(--info);
+  }
 
-  /* Grid Sections */
+  /* Section Containers */
   .section-card {
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 1.25rem;
-    margin-bottom: 1.5rem;
+    padding: 1.35rem;
+    margin-bottom: 1.75rem;
     transition: border-color 0.2s ease;
   }
-  .section-card:hover { border-color: #58a6ff66; }
+  .section-card:hover { border-color: rgba(88, 166, 255, 0.45); }
   .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--border);
-    padding-bottom: 0.5rem;
-    margin-bottom: 1rem;
+    padding-bottom: 0.6rem;
+    margin-bottom: 1.1rem;
   }
-  .section-title { font-size: 1.2rem; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 0.5rem; }
+  .section-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
   .badge-priority {
     font-size: 0.75rem;
-    padding: 0.15rem 0.4rem;
+    padding: 0.2rem 0.5rem;
     border-radius: 4px;
-    font-weight: 600;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
-  .badge-high { background: #fa454922; color: #ff7b72; border: 1px solid #fa454955; }
-  .badge-med { background: #d2992222; color: #e3b341; border: 1px solid #d2992255; }
-  .badge-low { background: #58a6ff22; color: #79c0ff; border: 1px solid #58a6ff55; }
+  .badge-high { background: #fa454922; color: #ff7b72; border: 1px solid #fa454966; }
+  .badge-med { background: #d2992222; color: #e3b341; border: 1px solid #d2992266; }
+  .badge-low { background: #58a6ff22; color: #79c0ff; border: 1px solid #58a6ff66; }
 
-  /* Subgrids */
-  .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
-  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1rem; }
+  /* Subgrid Formats */
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 1.1rem; }
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 1.1rem; }
 
   .subcard {
-    background: #0d1117;
+    background: var(--bg-card-sub);
     border: 1px solid var(--border);
     border-radius: 6px;
-    padding: 1rem;
+    padding: 1.15rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
   }
-  .subcard h4 { font-size: 0.98rem; margin-bottom: 0.5rem; color: #fff; display: flex; justify-content: space-between; }
+  .subcard h4 {
+    font-size: 1.02rem;
+    margin-bottom: 0.6rem;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
 
   /* Tables */
-  table { width: 100%; border-collapse: collapse; margin: 0.5rem 0; font-size: 0.9rem; }
-  th, td { border: 1px solid var(--border); padding: 0.5rem 0.75rem; text-align: left; vertical-align: middle; }
-  th { background: #1f242c; color: var(--text-secondary); font-weight: 600; }
-  tr:hover td { background: #161b22; }
+  table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 0.89rem; }
+  th, td { border: 1px solid var(--border); padding: 0.55rem 0.8rem; text-align: left; vertical-align: middle; }
+  th { background: #1a2028; color: var(--text-secondary); font-weight: 600; font-size: 0.82rem; text-transform: uppercase; }
+  tr:hover td { background: rgba(255, 255, 255, 0.03); }
 
-  /* Status indicators */
+  /* Status Badges */
   .status-tag {
     display: inline-block;
-    padding: 0.15rem 0.45rem;
+    padding: 0.15rem 0.5rem;
     border-radius: 4px;
-    font-size: 0.78rem;
-    font-weight: 600;
+    font-size: 0.76rem;
+    font-weight: 700;
   }
   .status-active { background: #23863633; color: #3fb950; border: 1px solid #238636; }
   .status-warn { background: #d2992233; color: #f0883e; border: 1px solid #d29922; }
   .status-offline { background: #30363d66; color: #8b949e; border: 1px solid #484f58; }
 
-  /* Code / Pre */
+  /* Code Boxes */
   code {
     background: #21262d;
     color: #79c0ff;
     padding: 0.15rem 0.4rem;
     border-radius: 4px;
     font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-    font-size: 0.85em;
+    font-size: 0.84em;
   }
   .cmd-box {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #0d1117;
+    background: #090d12;
     border: 1px solid var(--border);
-    padding: 0.4rem 0.6rem;
+    padding: 0.45rem 0.65rem;
     border-radius: 4px;
     font-family: monospace;
-    font-size: 0.83rem;
+    font-size: 0.82rem;
     color: #e6edf3;
-    margin-top: 0.5rem;
+    margin-top: 0.55rem;
   }
   .copy-btn {
     background: #21262d;
     color: var(--text-secondary);
     border: 1px solid var(--border);
     padding: 0.2rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.75rem;
+    border-radius: 3px;
+    font-size: 0.72rem;
     cursor: pointer;
+    transition: background 0.15s ease;
   }
   .copy-btn:hover { background: #30363d; color: #fff; }
 
@@ -176,37 +223,38 @@
     bottom: 125%;
     left: 50%;
     transform: translateX(-50%);
-    background: #1f242c;
+    background: #1c222b;
     color: #f0f6fc;
     border: 1px solid #58a6ff;
-    padding: 0.4rem 0.65rem;
+    padding: 0.5rem 0.75rem;
     border-radius: 6px;
-    font-size: 0.78rem;
+    font-size: 0.8rem;
     font-weight: normal;
     white-space: normal;
-    min-width: 200px;
-    max-width: 340px;
+    min-width: 220px;
+    max-width: 360px;
     z-index: 1000;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-    line-height: 1.35;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.6);
+    line-height: 1.4;
     pointer-events: none;
   }
 
   /* Interactive Controller Buttons */
-  .btn-bar { display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap; }
+  .btn-bar { display: flex; gap: 0.55rem; margin-top: 0.85rem; flex-wrap: wrap; }
   .btn {
     background: var(--bg-card);
     border: 1px solid var(--border);
     color: var(--text-primary);
-    padding: 0.4rem 0.8rem;
+    padding: 0.4rem 0.85rem;
     border-radius: 4px;
-    font-size: 0.85rem;
+    font-size: 0.84rem;
     cursor: pointer;
-    font-weight: 500;
+    font-weight: 600;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
+    transition: all 0.15s ease;
   }
   .btn:hover { background: #21262d; border-color: #8b949e; }
   .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
@@ -214,10 +262,21 @@
   .btn-danger { background: rgba(248, 81, 73, 0.15); border-color: var(--danger); color: #ff7b72; }
   .btn-danger:hover { background: rgba(248, 81, 73, 0.3); }
 
+  /* Callout notes */
+  .callout {
+    background: rgba(88, 166, 255, 0.08);
+    border-left: 3px solid var(--info);
+    padding: 0.6rem 0.85rem;
+    border-radius: 0 4px 4px 0;
+    font-size: 0.84rem;
+    color: var(--text-secondary);
+    margin-top: 0.75rem;
+  }
+
   footer {
     border-top: 1px solid var(--border);
     padding-top: 1.5rem;
-    margin-top: 2rem;
+    margin-top: 2.5rem;
     font-size: 0.85rem;
     color: var(--text-muted);
     display: flex;
@@ -230,84 +289,128 @@
 <body>
 <div class="container">
 
+<!-- HEADER & HERO -->
 <header>
-  <div class="header-badge">AUTONOMOUS CONSOLE v0.3.0</div>
+  <div class="header-top">
+    <div class="header-badge">AUTONOMOUS CONSOLE v0.3.5</div>
+    <div class="header-meta">
+      Single Source of Truth: <code>VERSION.md</code> &bull; Platform: Windows 10 x64 / Linux Sandbox
+    </div>
+  </div>
   <h1>WW3: Escape from North Korea — Unified Command Center</h1>
-  <p class="tagline">Consolidated single-page management console. Categorized by value: <strong>1. Playable Runners</strong> &rarr; <strong>2. System Tray & Server Control</strong> &rarr; <strong>3. MCP AI Fleet</strong> &rarr; <strong>4. Game Design Systems</strong> &rarr; <strong>5. Diagnostics & Scripts</strong>.</p>
+  <p class="tagline">
+    Consolidated single-page management console. Categorized strictly by high value:
+    <strong>1. Playable Runners</strong> &rarr;
+    <strong>2. System Tray & Server Control</strong> &rarr;
+    <strong>3. MCP AI Fleet Operations</strong> &rarr;
+    <strong>4. Game Design Systems & Survival Model</strong> &rarr;
+    <strong>5. Diagnostics, Scripts & Governance</strong>.
+  </p>
 </header>
 
-<!-- Quick Navigation Bar -->
+<!-- QUICK NAVIGATION BAR -->
 <div class="quickbar">
-  <span style="font-size:0.85rem; color:var(--text-muted); margin-right:0.25rem;">JUMP TO:</span>
-  <a href="#playables">&#9654; 1. Playable Runners (StealthSim / Act 1)</a>
+  <span class="label">Quick Jump:</span>
+  <a href="#playables">&#9654; 1. Playable Simulators & Engines</a>
   <a href="#tray-servers">&#9881; 2. System Tray & Server Controller</a>
-  <a href="#mcp-fleet">&#129302; 3. MCP Fleet (Unity / Godot / Unreal)</a>
-  <a href="#game-systems">&#128391; 4. Game Systems & Survival Model</a>
-  <a href="#scripts-health">&#128269; 5. Scripts, Wrappers & Health</a>
+  <a href="#mcp-fleet">&#129302; 3. MCP AI Fleet (23 Servers)</a>
+  <a href="#game-systems">&#128391; 4. Game Systems & Survival Architecture</a>
+  <a href="#scripts-health">&#128269; 5. Diagnostics, Scripts & Governance</a>
 </div>
 
-<!-- SECTION 1: PLAYABLE BUILDS & SIMULATION (HIGHEST VALUE) -->
+<!-- SECTION 1: PLAYABLE SIMULATORS & ENGINE TARGETS (HIGHEST VALUE) -->
 <section id="playables" class="section-card">
   <div class="section-header">
     <div class="section-title">
-      <span>&#9654; 1. Playable Simulations & Engine Targets</span>
+      <span>&#9654; 1. Playable Simulators & Engine Targets</span>
     </div>
     <span class="badge-priority badge-high">HIGHEST VALUE</span>
   </div>
-  <p style="color:var(--text-secondary); margin-bottom:1rem; font-size:0.92rem;">
-    Zero-GPU prototype and engine targets. Hover any <dfn title="Tooltip markers explain purpose, prerequisites, and file locations.">dotted element</dfn> for instant guidance.
+  <p style="color:var(--text-secondary); margin-bottom:1.1rem; font-size:0.92rem;">
+    Zero-GPU standalone prototype and engine targets. Hover any <dfn title="Tooltip markers explain purpose, prerequisites, and file locations.">dotted element</dfn> for instant interactive guidance.
   </p>
 
   <div class="grid-3">
-    <!-- StealthSim Console App -->
+    <!-- StealthSim Console Prototype -->
     <div class="subcard">
-      <h4>
-        <dfn title="Pure C# terminal stealth simulation implemented in prototypes/StealthSim. Tests FOV cones, noise rings, light exposure, guard patrol/chase AI, and survival stats without engine overhead.">StealthSim (Console Sim)</dfn>
-        <span class="status-tag status-active">Verified 7/7</span>
-      </h4>
-      <p style="font-size:0.85rem; color:var(--text-secondary);">
-        Chongjin 60x20m alley sim. Vision cones, lamps, searchlights, hunger/cold/stamina.
-      </p>
-      <div class="cmd-box">
-        <code>dotnet run --project prototypes/StealthSim</code>
+      <div>
+        <h4>
+          <dfn title="Pure C# terminal stealth simulation located in prototypes/StealthSim. Runs on .NET 8/10 without GPU dependencies. Simulates FOV cones, noise emission rings, light exposure levels, guard AI state escalation, and survival meters.">StealthSim (Console Sim)</dfn>
+          <span class="status-tag status-active">Verified 8/8 Tests</span>
+        </h4>
+        <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:0.6rem;">
+          Chongjin 60x20m blackout street. Top-down ASCII display with real-time guard patrol, suspicion escalation, and whistle lure mechanics.
+        </p>
       </div>
-      <div class="cmd-box" style="margin-top:0.35rem;">
-        <code>dotnet run --project prototypes/StealthSim -- --test</code>
+      <div>
+        <div class="cmd-box">
+          <code>dotnet run --project prototypes/StealthSim</code>
+          <button class="copy-btn" onclick="navigator.clipboard.writeText('dotnet run --project prototypes/StealthSim')">Copy</button>
+        </div>
+        <div class="cmd-box">
+          <code>dotnet run --project prototypes/StealthSim -- --test</code>
+          <button class="copy-btn" onclick="navigator.clipboard.writeText('dotnet run --project prototypes/StealthSim -- --test')">Copy</button>
+        </div>
+        <div class="cmd-box">
+          <code>dotnet run --project prototypes/StealthSim -- --benchmark</code>
+          <button class="copy-btn" onclick="navigator.clipboard.writeText('dotnet run --project prototypes/StealthSim -- --benchmark')">Copy</button>
+        </div>
+        <div class="callout">
+          <strong>Controls:</strong> WASD to move &bull; [1-4] Stances &bull; [F] Flashlight &bull; [Q] Whistle lure &bull; [1-3] Rice/Meds/Tea &bull; Shelters (Burn Barrels) reverse cold.
+        </div>
       </div>
     </div>
 
-    <!-- Unity Act 1 Starter -->
+    <!-- Unity Act 1 Starter Scene -->
     <div class="subcard">
-      <h4>
-        <dfn title="Unity Act 1 street scene at unity-test/Assets/Act1_Starter.unity. Verified U-T1–U-T14 via AnkleBreaker MCP bridge on port 7890. Includes real-time SurvivalSystem HUD (Hunger, Cold, Stamina, Health, Rice/Medicine inventory).">Unity Act 1 Starter</dfn>
-        <span class="status-tag status-active">Verified + Survival HUD</span>
-      </h4>
-      <p style="font-size:0.85rem; color:var(--text-secondary);">
-        Interactive low-poly URP scene with real-time Survival HUD: hunger, cold, stamina, and stance controls.
-      </p>
-      <div class="cmd-box">
-        <code>Hub &rarr; Open unity-test/ &rarr; Play</code>
+      <div>
+        <h4>
+          <dfn title="Unity Act 1 street scene at unity-test/Assets/Act1_Starter.unity. Verified U-T1–U-T14 via AnkleBreaker MCP bridge on port 7890. Features SurvivalSystem.cs IMGUI HUD, ShelterZone.cs warming zones, PlayerMove.cs stance noise & whistle lure [Q], PatrolMover.cs 4-state AI, and CheckpointTrigger.cs.">Unity Act 1 Starter</dfn>
+          <span class="status-tag status-active">Survival HUD + Guard AI + Shelters</span>
+        </h4>
+        <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:0.6rem;">
+          Interactive low-poly URP scene targeting Intel HD 520 GPU (Very Low quality preset). Live OnGUI monitor for hunger, cold, shelter warming, shivering debuffs, stamina, whistle lure [Q], and checkpoint interrogation.
+        </p>
       </div>
-      <p style="font-size:0.75rem; color:var(--text-muted); margin-top:0.4rem;">
-        <em>Bridge port:</em> <code>7890</code> | <code>SurvivalSystem.cs</code> active in scene.
-      </p>
+      <div>
+        <div class="cmd-box">
+          <code>Hub &rarr; Open unity-test/ &rarr; Play</code>
+          <button class="copy-btn" onclick="navigator.clipboard.writeText('unity-test/')">Copy</button>
+        </div>
+        <div class="cmd-box">
+          <code>SurvivalSystem.cs + ShelterZone.cs + PatrolMover.cs</code>
+          <button class="copy-btn" onclick="navigator.clipboard.writeText('unity-test/Assets/Act1/')">Copy</button>
+        </div>
+        <div class="callout">
+          <strong>Key Files:</strong> <code>unity-test/Assets/Act1/</code> holds <dfn title="SurvivalSystem.cs handles hunger/cold depletion, shivering noise, stamina regen, and OnGUI HUD.">SurvivalSystem.cs</dfn>, <dfn title="ShelterZone.cs provides warming zones (burn barrels, boiler rooms) reversing cold.">ShelterZone.cs</dfn>, <dfn title="PlayerMove.cs handles stances, sprint exhaustion, and noise radius with whistle lure.">PlayerMove.cs</dfn>, <dfn title="PatrolMover.cs implements Patrolling, Investigating, Suspicious, and Alert states with vision cones and acoustic hearing.">PatrolMover.cs</dfn>, and <dfn title="CheckpointTrigger.cs manages security gates, transit paper inspection, and guard alerts.">CheckpointTrigger.cs</dfn>.
+        </div>
+      </div>
     </div>
 
     <!-- Godot Engine Probe -->
     <div class="subcard">
-      <h4>
-        <dfn title="Godot 4.3 Compatibility engine probe in godot-test/. Runs headless or editor with Coding-Solo MCP bridge.">Godot Engine Probe</dfn>
-        <span class="status-tag status-active">Verified G-T1–G-T7</span>
-      </h4>
-      <p style="font-size:0.85rem; color:var(--text-secondary);">
-        GL Compatibility testbed running cleanly on low-spec Intel HD 520 GPU.
-      </p>
-      <div class="cmd-box">
-        <code>node scripts/mcp-session.js ... godot-test</code>
+      <div>
+        <h4>
+          <dfn title="Godot 4.3 Compatibility engine probe in godot-test/. Tested headless and via Coding-Solo MCP bridge. Lightweight fallback engine with low power consumption on dual-core laptops.">Godot Engine Probe</dfn>
+          <span class="status-tag status-active">Verified G-T1–G-T7</span>
+        </h4>
+        <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:0.6rem;">
+          GL Compatibility testbed running cleanly on low-spec Intel HD 520 graphics. Verified scene boot and debug output capture.
+        </p>
       </div>
-      <p style="font-size:0.75rem; color:var(--text-muted); margin-top:0.4rem;">
-        <em>Probe status:</em> Boot & debug capture verified.
-      </p>
+      <div>
+        <div class="cmd-box">
+          <code>node scripts/mcp-session.js ... godot-test</code>
+          <button class="copy-btn" onclick="navigator.clipboard.writeText('node scripts/mcp-session.js . node mcp-servers/godot/Coding-Solo.godot-mcp/build/index.js')">Copy</button>
+        </div>
+        <div class="cmd-box">
+          <code>python3 scripts/run_checks.py</code>
+          <button class="copy-btn" onclick="navigator.clipboard.writeText('python3 scripts/run_checks.py')">Copy</button>
+        </div>
+        <div class="callout">
+          <strong>Bridge Status:</strong> TypeScript built in <code>mcp-servers/godot/Coding-Solo.godot-mcp/build/index.js</code>.
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -316,54 +419,81 @@
 <section id="tray-servers" class="section-card">
   <div class="section-header">
     <div class="section-title">
-      <span>&#9881; 2. System Tray & Background MCP Server Manager</span>
+      <span>&#9881; 2. System Tray & Background MCP Server Controller</span>
     </div>
     <span class="badge-priority badge-high">SERVER CONTROL</span>
   </div>
-  <p style="color:var(--text-secondary); margin-bottom:1rem; font-size:0.92rem;">
-    Manages lifecycle of all background MCP bridges and servers. Shipped in <dfn title="Located at scripts/tray_manager.py. Provides GUI tray via pystray and full headless CLI arguments (--status, --stop-all, --start, --daemon).">scripts/tray_manager.py</dfn>.
+  <p style="color:var(--text-secondary); margin-bottom:1.1rem; font-size:0.92rem;">
+    Manages the lifecycle of background MCP bridges and processes. Shipped in <dfn title="Located at scripts/tray_manager.py. Provides GUI tray via pystray and full headless CLI arguments (--status, --stop-all, --start, --daemon).">scripts/tray_manager.py</dfn>. Offers one-click commands to inspect and quit running servers.
   </p>
 
   <div class="grid-2">
+    <!-- Active Server Table -->
     <div class="subcard">
-      <h4><dfn title="Current tracking state of background server processes.">Active Server Status</dfn></h4>
-      <table>
-        <tr><th>Service</th><th>Port / Channel</th><th>State</th></tr>
-        <tr>
-          <td><dfn title="Unity AnkleBreaker bridge daemon on localhost:7890.">Unity AnkleBreaker</dfn></td>
-          <td>Port <code>7890</code></td>
-          <td><span class="status-tag status-offline">Managed / Offline</span></td>
-        </tr>
-        <tr>
-          <td><dfn title="Godot Coding-Solo MCP process listening on stdio.">Godot Coding-Solo</dfn></td>
-          <td><code>stdio</code></td>
-          <td><span class="status-tag status-offline">Managed / Ready</span></td>
-        </tr>
-        <tr>
-          <td><dfn title="Unreal sam-david MCP bridge process listening on stdio.">Unreal Sam-David</dfn></td>
-          <td><code>stdio</code></td>
-          <td><span class="status-tag status-offline">Managed / Offline</span></td>
-        </tr>
-      </table>
-      <div class="btn-bar">
-        <a class="btn btn-primary" href="#tray-servers" onclick="alert('Run in terminal: python3 scripts/tray_manager.py --status')">&#9658; Check Status</a>
-        <a class="btn btn-danger" href="#tray-servers" onclick="alert('Run in terminal: python3 scripts/tray_manager.py --stop-all')">&#9632; Quit All Servers</a>
+      <div>
+        <h4>
+          <dfn title="Monitored daemon servers tracking active process IDs and listening ports.">Managed Server Services</dfn>
+          <span class="status-tag status-active">Port 7890 Controller</span>
+        </h4>
+        <table>
+          <thead>
+            <tr><th>Service ID</th><th>Channel / Port</th><th>Managed State</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><dfn title="Unity AnkleBreaker bridge daemon on localhost:7890. Exposes 338 tools for Unity editor automation.">unity-anklebreaker</dfn></td>
+              <td>Port <code>7890</code></td>
+              <td><span class="status-tag status-offline">Managed / Offline</span></td>
+            </tr>
+            <tr>
+              <td><dfn title="Godot Coding-Solo MCP process listening on stdio. Communicates with Godot editor.">godot-coding-solo</dfn></td>
+              <td><code>stdio</code></td>
+              <td><span class="status-tag status-offline">Managed / Ready</span></td>
+            </tr>
+            <tr>
+              <td><dfn title="Unreal sam-david MCP bridge process listening on stdio. Research-only bridge.">unreal-sam-david</dfn></td>
+              <td><code>stdio</code></td>
+              <td><span class="status-tag status-offline">Managed / Offline</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <div class="btn-bar">
+          <button class="btn btn-primary" onclick="alert('Run command in terminal:\npython3 scripts/tray_manager.py --status')">&#9658; Query Status</button>
+          <button class="btn btn-danger" onclick="alert('Run command in terminal:\npython3 scripts/tray_manager.py --stop-all')">&#9632; Quit All Servers</button>
+          <button class="btn" onclick="alert('Run command in terminal:\npython3 scripts/tray_manager.py --daemon')">&#9881; Run Tray Daemon</button>
+        </div>
       </div>
     </div>
 
+    <!-- CLI & Tray Command Center -->
     <div class="subcard">
-      <h4><dfn title="Command-line interface commands for server lifecycle operations.">CLI & System Tray Commands</dfn></h4>
-      <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:0.5rem;">
-        Run the tray GUI icon or execute headless daemon commands:
-      </p>
-      <div class="cmd-box">
-        <code>python3 scripts/tray_manager.py --status</code>
+      <div>
+        <h4>
+          <dfn title="Command-line interface commands for server lifecycle operations.">CLI & System Tray Operations</dfn>
+          <span class="status-tag status-active">Cross-Platform</span>
+        </h4>
+        <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:0.6rem;">
+          Control background servers from your terminal or launch the native system tray icon:
+        </p>
       </div>
-      <div class="cmd-box" style="margin-top:0.35rem;">
-        <code>python3 scripts/tray_manager.py --stop-all</code>
-      </div>
-      <div class="cmd-box" style="margin-top:0.35rem;">
-        <code>python3 scripts/tray_manager.py --daemon</code>
+      <div>
+        <div class="cmd-box">
+          <code>python3 scripts/tray_manager.py --status</code>
+          <button class="copy-btn" onclick="navigator.clipboard.writeText('python3 scripts/tray_manager.py --status')">Copy</button>
+        </div>
+        <div class="cmd-box">
+          <code>python3 scripts/tray_manager.py --stop-all</code>
+          <button class="copy-btn" onclick="navigator.clipboard.writeText('python3 scripts/tray_manager.py --stop-all')">Copy</button>
+        </div>
+        <div class="cmd-box">
+          <code>python3 scripts/tray_manager.py --start unity-anklebreaker</code>
+          <button class="copy-btn" onclick="navigator.clipboard.writeText('python3 scripts/tray_manager.py --start unity-anklebreaker')">Copy</button>
+        </div>
+        <div class="callout">
+          <strong>Tray Features:</strong> Right-click tray menu provides "Quit All Servers" and "Exit Tray Manager". Fallback daemon mode runs seamlessly when GUI libraries are absent.
+        </div>
       </div>
     </div>
   </div>
@@ -373,77 +503,77 @@
 <section id="mcp-fleet" class="section-card">
   <div class="section-header">
     <div class="section-title">
-      <span>&#129302; 3. MCP AI Fleet (23 Vendored Servers)</span>
+      <span>&#129302; 3. MCP AI Fleet Operations Console (23 Vendored Servers)</span>
     </div>
-    <span class="badge-priority badge-med">AI BRIDGES</span>
+    <span class="badge-priority badge-med">AI FLEET</span>
   </div>
-  <p style="color:var(--text-secondary); margin-bottom:1rem; font-size:0.92rem;">
-    Single-bridge rule: only one Unity bridge should connect at a time. Default active: <dfn title="Configured in .mcp.json. Exposes 338 tools for Unity editor automation.">unity-anklebreaker</dfn>.
+  <p style="color:var(--text-secondary); margin-bottom:1.1rem; font-size:0.92rem;">
+    Single-bridge rule: connect only one engine bridge at a time to prevent port/memory contention. Configured in <dfn title="Configuration file consumed by Claude Code, Cursor, and Windsurf in repo root.">.mcp.json</dfn>.
   </p>
 
   <table>
     <thead>
       <tr>
         <th>Engine</th>
-        <th>Server Name</th>
-        <th>Tools / Focus</th>
-        <th>Run Command</th>
+        <th>Server Name & Repo</th>
+        <th>Tools & Focus Area</th>
+        <th>Run / Launch Command</th>
         <th>Status</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td><strong>Unity</strong></td>
-        <td><dfn title="AnkleBreaker/unity-mcp-server: 338 tools for scenes, gameobjects, build, physics, camera.">AnkleBreaker unity-mcp-server</dfn></td>
+        <td><dfn title="AnkleBreaker/unity-mcp-server: 338 tools for scenes, gameobjects, build, physics, camera, and NavMesh. Active default bridge.">AnkleBreaker unity-mcp-server</dfn></td>
         <td>338 tools (Scenes, Builds, NavMesh)</td>
         <td><code>node mcp-servers/unity/AnkleBreaker.unity-mcp-server/src/index.js</code></td>
         <td><span class="status-tag status-active">Primary (U4)</span></td>
       </tr>
       <tr>
         <td><strong>Unity</strong></td>
-        <td><dfn title="CoplayDev/unity-mcp (~15.4k stars): Largest community bridge for Unity Editor.">CoplayDev unity-mcp</dfn></td>
+        <td><dfn title="CoplayDev/unity-mcp (~15.4k stars): Largest community bridge linking LLMs with Unity Editor.">CoplayDev unity-mcp</dfn></td>
         <td>Editor LLM Bridge (~15.4k stars)</td>
         <td><code>uvx --from mcpforunityserver mcp-for-unity --transport stdio</code></td>
         <td><span class="status-tag status-active">Available (U1)</span></td>
       </tr>
       <tr>
         <td><strong>Unity</strong></td>
-        <td><dfn title="IvanMurzak/Unity-MCP: CLI-managed per-agent setup with full toolset.">IvanMurzak Unity-MCP</dfn></td>
+        <td><dfn title="IvanMurzak/Unity-MCP (~4.5k stars): CLI-managed per-agent setup with full toolset.">IvanMurzak Unity-MCP</dfn></td>
         <td>CLI + tools + skills (~4.5k stars)</td>
         <td><code>node mcp-servers/unity/IvanMurzak.Unity-MCP/cli/bin/unity-mcp-cli.js</code></td>
         <td><span class="status-tag status-active">Available (U2)</span></td>
       </tr>
       <tr>
         <td><strong>Unity</strong></td>
-        <td><dfn title="CoderGamester, jackwrichards, isuzu-shiranui, FunplayAI, Glade-tool.">U3, U5, U6, U7, U8</dfn></td>
-        <td>CoderGamester, isuzu (no-runtime), Glade</td>
+        <td><dfn title="Vendored Unity servers: CoderGamester (U3), jackwrichards (U5), isuzu-shiranui (U6), FunplayAI (U7), Glade-tool (U8).">U3, U5, U6, U7, U8 Fleet</dfn></td>
+        <td>Lightweight, no-runtime CLI, broker mode</td>
         <td>See <code>docs/MCP_SETUP.md</code></td>
         <td><span class="status-tag status-active">Vendored (5)</span></td>
       </tr>
       <tr>
         <td><strong>Godot</strong></td>
-        <td><dfn title="Coding-Solo/godot-mcp (~6.4k stars): launches editor and captures debug output.">Coding-Solo godot-mcp</dfn></td>
+        <td><dfn title="Coding-Solo/godot-mcp (~6.4k stars): launches editor and captures debug output directly.">Coding-Solo godot-mcp</dfn></td>
         <td>Editor launch & debug capture</td>
         <td><code>node mcp-servers/godot/Coding-Solo.godot-mcp/build/index.js</code></td>
         <td><span class="status-tag status-active">Primary (G1)</span></td>
       </tr>
       <tr>
         <td><strong>Godot</strong></td>
-        <td><dfn title="hi-godot, yurineko73 Native, ee0pdt, tugcantopaloglu, tomyud1, IvanMurzak.">G2–G9 Godot Fleet</dfn></td>
-        <td>Native headless, WebSocket, ai-game.dev</td>
+        <td><dfn title="Vendored Godot servers: hi-godot (G2), yurineko73 (G3), ee0pdt (G5), tugcantopaloglu (G7), tomyud1 (G8), IvanMurzak (G9).">G2–G9 Godot Fleet</dfn></td>
+        <td>Native headless, WebSocket, FastMCP</td>
         <td>See <code>docs/MCP_SETUP.md</code></td>
         <td><span class="status-tag status-active">Vendored (6)</span></td>
       </tr>
       <tr>
         <td><strong>Unreal</strong></td>
-        <td><dfn title="sam-david/unreal-mcp: 127 tools without requiring C++ plugin compilation.">sam-david unreal-mcp</dfn></td>
+        <td><dfn title="sam-david/unreal-mcp: 127 tools without requiring C++ plugin compilation. Most laptop-friendly Unreal option.">sam-david unreal-mcp</dfn></td>
         <td>127 tools (No C++ plugin needed)</td>
         <td><code>node mcp-servers/unreal/sam-david.unreal-mcp/dist/bin.js</code></td>
         <td><span class="status-tag status-warn">Research (R8)</span></td>
       </tr>
       <tr>
         <td><strong>Unreal</strong></td>
-        <td><dfn title="chongdashu, ChiR24, kvick-games, GenOrca, runreal, IvanMurzak, appleweed.">R1–R7 Unreal Fleet</dfn></td>
+        <td><dfn title="Vendored Unreal servers: chongdashu (R1), ChiR24 (R2), kvick-games (R3), GenOrca (R4), runreal (R5), IvanMurzak (R6), appleweed (R7).">R1–R7 Unreal Fleet</dfn></td>
         <td>Automation Bridge & Python remote</td>
         <td>Research-only (no UE5 on HD 520)</td>
         <td><span class="status-tag status-warn">Research (7)</span></td>
@@ -452,7 +582,7 @@
   </table>
 </section>
 
-<!-- SECTION 4: GAME SYSTEMS & SURVIVAL MODEL -->
+<!-- SECTION 4: GAME SYSTEMS & SURVIVAL ARCHITECTURE -->
 <section id="game-systems" class="section-card">
   <div class="section-header">
     <div class="section-title">
@@ -460,102 +590,151 @@
     </div>
     <span class="badge-priority badge-med">CORE MECHANICS</span>
   </div>
+  <p style="color:var(--text-secondary); margin-bottom:1.1rem; font-size:0.92rem;">
+    Stealth mathematics and survival formulas verified in <dfn title="Pure C# implementation at prototypes/StealthSim/Program.cs">StealthSim</dfn> and implemented in <dfn title="Unity C# scripts at unity-test/Assets/Act1/">Act 1 Unity C#</dfn>.
+  </p>
 
   <div class="grid-2">
+    <!-- Exposure Model -->
     <div class="subcard">
-      <h4><dfn title="Light exposure formula defined in docs/GAME_DESIGN.md and verified in StealthSim.">Detection & Exposure Mechanics</dfn></h4>
-      <table>
-        <tr><th>Condition</th><th>Exposure Factor</th><th>Impact</th></tr>
-        <tr>
-          <td><dfn title="Direct beam from sweeping curfew spotlight.">Curfew Spotlight</dfn></td>
-          <td><code>1.00 (100%)</code></td>
-          <td>Instant suspicion surge & chase trigger</td>
-        </tr>
-        <tr>
-          <td><dfn title="Player flashlight active (drains battery).">Flashlight On</dfn></td>
-          <td><code>0.85 (85%)</code></td>
-          <td>High visibility to guards</td>
-        </tr>
-        <tr>
-          <td><dfn title="Inside perimeter radius of street lamp.">Street Lamp Glow</dfn></td>
-          <td><code>0.50 (50%)</code></td>
-          <td>Moderate visibility</td>
-        </tr>
-        <tr>
-          <td><dfn title="Deep darkness, fog, or dumpster shadow.">Alley Shadow</dfn></td>
-          <td><code>0.05 (5%)</code></td>
-          <td>Substantial stealth concealment</td>
-        </tr>
-      </table>
+      <div>
+        <h4>
+          <dfn title="Light exposure formula defined in docs/GAME_DESIGN.md and tested in StealthSim.">Dynamic Light Exposure Model</dfn>
+          <span class="status-tag status-active">Tested</span>
+        </h4>
+        <table>
+          <thead>
+            <tr><th>Condition</th><th>Exposure Factor</th><th>Gameplay Impact</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><dfn title="Direct beam from sweeping curfew spotlight. Triggers immediate alert.">Curfew Spotlight</dfn></td>
+              <td><code>1.00 (100%)</code></td>
+              <td>Instant suspicion surge & chase trigger</td>
+            </tr>
+            <tr>
+              <td><dfn title="Player flashlight active (drains battery resource).">Flashlight On</dfn></td>
+              <td><code>0.85 (85%)</code></td>
+              <td>High visibility to nearby patrols</td>
+            </tr>
+            <tr>
+              <td><dfn title="Inside perimeter radius of street lamp glow.">Street Lamp Radius</dfn></td>
+              <td><code>0.50 (50%)</code></td>
+              <td>Moderate visibility, suspicious if running</td>
+            </tr>
+            <tr>
+              <td><dfn title="Deep darkness, fog, or dumpster shadow. Maximizes concealment.">Alley Shadow / Darkness</dfn></td>
+              <td><code>0.05 (5%)</code></td>
+              <td>Concealed; guards must be within 1.5m to see</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout">
+        <strong>Formula:</strong> <code>EffectiveVisibility = StanceVisibilityMultiplier &times; ExposureFactor</code>. In shadows, crouching visibility drops to <code>0.6 &times; 0.05 = 0.03</code>.
+      </div>
     </div>
 
+    <!-- Survival & Stance Mechanics -->
     <div class="subcard">
-      <h4><dfn title="Survival resources Jun-ho must balance during the 72-hour escape window.">Survival & Stance Attributes</dfn></h4>
-      <table>
-        <tr><th>Stance</th><th>Speed</th><th>Noise Ring</th><th>Detection Multiplier</th></tr>
-        <tr><td><dfn title="Slowest movement, crawl under fences.">Prone</dfn></td><td>1.2 m/s</td><td>0.5m</td><td>0.3x</td></tr>
-        <tr><td><dfn title="Standard stealth stance.">Crouch</dfn></td><td>2.5 m/s</td><td>2.0m</td><td>0.6x</td></tr>
-        <tr><td><dfn title="Normal walking speed.">Walk</dfn></td><td>4.0 m/s</td><td>6.0m</td><td>1.0x</td></tr>
-        <tr><td><dfn title="Rapid escape; drains stamina.">Sprint</dfn></td><td>7.0 m/s</td><td>12.0m</td><td>1.5x</td></tr>
-      </table>
-      <p style="font-size:0.8rem; color:var(--text-secondary); margin-top:0.4rem;">
-        <em>Resources:</em> Hunger (+0.15/s), Cold (+0.25/s), Stamina (regenerates when resting), Whistle ([Q] lures guards).
-      </p>
+      <div>
+        <h4>
+          <dfn title="Movement stance and noise propagation rules implemented in PlayerMove.cs and StealthSim.">Stance, Noise & Resource Mechanics</dfn>
+          <span class="status-tag status-active">Integrated</span>
+        </h4>
+        <table>
+          <thead>
+            <tr><th>Stance</th><th>Speed</th><th>Noise Radius</th><th>Detection Multiplier</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><dfn title="Slowest movement, crawl under fences or obstacles. Key [1].">Prone</dfn></td>
+              <td>1.2 m/s</td>
+              <td><code>0.5m</code></td>
+              <td>0.3x</td>
+            </tr>
+            <tr>
+              <td><dfn title="Standard stealth stance. Balances speed and noise. Key [2].">Crouch</dfn></td>
+              <td>2.5 m/s</td>
+              <td><code>2.0m</code></td>
+              <td>0.6x</td>
+            </tr>
+            <tr>
+              <td><dfn title="Normal walking speed. Audible to nearby guards. Key [3].">Walk</dfn></td>
+              <td>4.0 m/s</td>
+              <td><code>5.0m</code></td>
+              <td>1.0x</td>
+            </tr>
+            <tr>
+              <td><dfn title="Rapid sprint. Drains stamina rapidly. Audible at long distance. Key [4] / Shift.">Sprint</dfn></td>
+              <td>7.0 m/s</td>
+              <td><code>12.0m</code></td>
+              <td>1.5x</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout">
+        <strong>Survival Resources:</strong> Hunger (+0.15/s), Cold (+0.25/s), Stamina (regenerates when resting), Shelter (<dfn title="Warming zones like burn barrels reduce cold by 6.0/s.">ShelterZone.cs</dfn>), Shivering (<dfn title="Cold >= 70% adds +1.5m noise and impairs stamina recovery.">Shivering debuff</dfn>), Whistle ([Q] lures guards), Rice/Meds/Tea.
+      </div>
     </div>
   </div>
 </section>
 
-<!-- SECTION 5: SCRIPTS, WRAPPERS & HEALTH -->
+<!-- SECTION 5: SCRIPTS, WRAPPERS & REPO HEALTH -->
 <section id="scripts-health" class="section-card">
   <div class="section-header">
     <div class="section-title">
-      <span>&#128269; 5. Scripts, Diagnostic Tools & Repo Health</span>
+      <span>&#128269; 5. Diagnostics, Build Scripts & Governance</span>
     </div>
     <span class="badge-priority badge-low">TOOLCHAIN</span>
   </div>
+  <p style="color:var(--text-secondary); margin-bottom:1.1rem; font-size:0.92rem;">
+    Automation scripts and diagnostic runners maintaining repository integrity and governance standards across platforms.
+  </p>
 
   <table>
     <thead>
       <tr>
-        <th>Script Path</th>
+        <th>Script File</th>
         <th>Environment</th>
-        <th>Primary Purpose</th>
+        <th>Function / Capability</th>
         <th>Execution Command</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td><code>scripts/run_checks.py</code></td>
+        <td><dfn title="Universal Python health runner validating doc links, StealthSim simulation, tray manager, and MCP bridges.">scripts/run_checks.py</dfn></td>
         <td>Python 3 (Cross-platform)</td>
         <td>Universal smoke runner: doc links + MCP health checks</td>
         <td><code>python3 scripts/run_checks.py</code></td>
       </tr>
       <tr>
-        <td><code>scripts/tray_manager.py</code></td>
+        <td><dfn title="System tray icon and background server lifecycle manager with CLI arguments.">scripts/tray_manager.py</dfn></td>
         <td>Python 3 (pystray/CLI)</td>
-        <td>System tray manager & background process lifecycle controller</td>
+        <td>System tray manager & server lifecycle controller</td>
         <td><code>python3 scripts/tray_manager.py --status</code></td>
       </tr>
       <tr>
-        <td><code>scripts/run-all-checks.ps1</code></td>
+        <td><dfn title="Windows PowerShell smoke runner for MCP servers and link integrity.">scripts/run-all-checks.ps1</dfn></td>
         <td>PowerShell 5.1+ (Windows)</td>
         <td>Windows PowerShell smoke wrapper</td>
         <td><code>powershell .\scripts\run-all-checks.ps1</code></td>
       </tr>
       <tr>
-        <td><code>scripts/mcp-run.py</code></td>
+        <td><dfn title="Persistent stdio session runner with UTF-8 encoding support and JSON inline arguments.">scripts/mcp-run.py</dfn></td>
         <td>Python 3</td>
-        <td>Persistent stdio session runner with UTF-8 support and JSON inlining</td>
-        <td><code>python3 scripts/mcp-run.py &lt;cmd&gt; -- &lt;method&gt; &lt;params.json&gt;</code></td>
+        <td>Persistent stdio session runner with UTF-8 fix</td>
+        <td><code>python3 scripts/mcp-run.py &lt;cmd&gt; -- &lt;method&gt; &lt;json&gt;</code></td>
       </tr>
       <tr>
-        <td><code>scripts/mcp-call.js</code></td>
+        <td><dfn title="Harness for executing single Model Context Protocol requests.">scripts/mcp-call.js</dfn></td>
         <td>Node.js</td>
         <td>Quick single MCP call test harness</td>
         <td><code>node scripts/mcp-call.js . &lt;cmd&gt; -- &lt;method&gt; &lt;params&gt;</code></td>
       </tr>
       <tr>
-        <td><code>scripts/install-mcp.ps1</code></td>
+        <td><dfn title="Automated dependency installer for vendored MCP servers.">scripts/install-mcp.ps1</dfn></td>
         <td>PowerShell</td>
         <td>Dependency installer for vendored servers</td>
         <td><code>powershell .\scripts\install-mcp.ps1</code></td>
@@ -563,22 +742,24 @@
     </tbody>
   </table>
 
-  <div style="background:#0d1117; border:1px solid var(--border); padding:0.75rem 1rem; border-radius:6px; margin-top:1rem;">
-    <h4 style="font-size:0.92rem; color:#fff; margin-bottom:0.25rem;">
-      <dfn title="Governance documents in repo root enforcing strict architectural and design standards.">Governance & Reference Documents</dfn>
+  <div style="background:#090d12; border:1px solid var(--border); padding:0.85rem 1.15rem; border-radius:6px; margin-top:1.1rem;">
+    <h4 style="font-size:0.95rem; color:#fff; margin-bottom:0.4rem;">
+      <dfn title="Universal project governance files enforcing architectural, memory, roadmap, and vision standards.">Governance & Architecture Catalog</dfn>
     </h4>
-    <p style="font-size:0.85rem; color:var(--text-secondary);">
-      <code>VERSION.md</code> (source of truth) | <code>CHANGELOG.md</code> | <code>ROADMAP.md</code> | <code>TODO.md</code> | <code>VISION.md</code> | <code>DEPLOY.md</code> | <code>MEMORY.md</code> | <code>IDEAS.md</code> | <code>HANDOFF.md</code>
+    <p style="font-size:0.86rem; color:var(--text-secondary); line-height: 1.7;">
+      <strong>Core Docs:</strong> <code>VERSION.md</code> (source of truth) &bull; <code>CHANGELOG.md</code> &bull; <code>ROADMAP.md</code> &bull; <code>TODO.md</code> &bull; <code>VISION.md</code> &bull; <code>DEPLOY.md</code> &bull; <code>MEMORY.md</code> &bull; <code>IDEAS.md</code> &bull; <code>HANDOFF.md</code><br>
+      <strong>Technical Design:</strong> <code>docs/GAME_DESIGN.md</code> &bull; <code>docs/ENGINE_DECISION.md</code> &bull; <code>docs/MCP_SETUP.md</code> &bull; <code>docs/MCP_TESTS.md</code>
     </p>
   </div>
 </section>
 
+<!-- FOOTER -->
 <footer>
   <div>
-    <strong>WW3: Escape from North Korea</strong> &bull; Version <code>0.3.0</code>
+    <strong>WW3: Escape from North Korea</strong> &bull; Version <code>0.3.5</code>
   </div>
   <div>
-    Autonomous Console &bull; Zero external CSS/JS dependencies &bull; Offline Ready
+    Autonomous Console &bull; Zero external CSS/JS dependencies &bull; Fully Offline Ready
   </div>
 </footer>
 
