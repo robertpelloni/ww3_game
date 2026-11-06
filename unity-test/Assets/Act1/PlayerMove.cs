@@ -10,6 +10,14 @@ public class PlayerMove : MonoBehaviour
         Sprint
     }
 
+    public enum SurfaceType
+    {
+        Dirt,           // Soft mud / packed earth (0.7x noise)
+        Concrete,       // Standard curfew pavement (1.0x noise)
+        MetalGrate,     // Ventilation grates / catwalks (1.6x noise)
+        GlassDebris     // Shattered glass / rubble (2.0x noise)
+    }
+
     [Header("Movement Speeds")]
     public float proneSpeed = 1.5f;
     public float crouchSpeed = 3.5f;
@@ -22,8 +30,10 @@ public class PlayerMove : MonoBehaviour
     public float walkNoise = 5.0f;
     public float sprintNoise = 12.0f;
 
-    [Header("Current Stance")]
+    [Header("Current Stance & Surface")]
     public Stance currentStance = Stance.Walk;
+    public SurfaceType currentSurface = SurfaceType.Concrete;
+    public float surfaceNoiseMultiplier = 1.0f;
 
     [Header("Distraction & Sound Mechanics")]
     public float whistleNoiseRadius = 20.0f;
@@ -80,6 +90,16 @@ public class PlayerMove : MonoBehaviour
         p.y = 1f;
         transform.position = p;
 
+        // Update surface material multiplier
+        surfaceNoiseMultiplier = currentSurface switch
+        {
+            SurfaceType.Dirt => 0.70f,
+            SurfaceType.Concrete => 1.00f,
+            SurfaceType.MetalGrate => 1.60f,
+            SurfaceType.GlassDebris => 2.00f,
+            _ => 1.00f
+        };
+
         // Calculate emitted noise radius
         if (whistleTimer > 0f)
         {
@@ -88,7 +108,7 @@ public class PlayerMove : MonoBehaviour
         }
         else
         {
-            float baseNoise = IsMoving ? GetBaseNoiseRadius() : 0f;
+            float baseNoise = IsMoving ? (GetBaseNoiseRadius() * surfaceNoiseMultiplier) : 0f;
 
             // Shivering chattering noise mechanic:
             // When freezing (isShivering true), teeth chattering emits a continuous +1.8m acoustic signature

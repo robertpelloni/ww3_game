@@ -2,6 +2,18 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.4.3 — 2026-11-04
+- **Surface Material Sound Propagation (`PlayerMove.cs`)**:
+  - Implemented `SurfaceType` awareness: Dirt (0.7x dampening), Concrete (1.0x baseline), MetalGrate (1.6x amplification), GlassDebris (2.0x loud crunch).
+  - Dynamically modulates movement noise radius, making route planning across rooftops and ventilation catwalks tactical.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored `SurfaceType` and ground material multipliers into pure-C# simulation.
+  - Added automated Test 19 validating dynamic acoustic movement noise scaling across all surface materials (19/19 tests passing).
+- **Single-Page Command Center Sync (`dashboard.html`)**:
+  - Bumped Command Center console to v0.4.3 with ground surface acoustic telemetry and tooltips.
+- **Documentation & Verification**:
+  - Synced `VERSION.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` to version 0.4.3.
+
 ## 0.4.2 — 2026-11-04
 - **Guard Radio Alert & Allied Convergence (`PatrolMover.cs`)**:
   - Implemented mutual guard communication: when any guard enters `Alert` state (suspicion $\ge 0.8$), they broadcast a vocal/radio alert across a 25m radius (`radioBroadcastRadius = 25.0f`).

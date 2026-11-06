@@ -11,6 +11,14 @@ namespace WW3.StealthSim
         Sprint
     }
 
+    public enum SurfaceType
+    {
+        Dirt,
+        Concrete,
+        MetalGrate,
+        GlassDebris
+    }
+
     public enum AIState
     {
         Patrol,
@@ -107,6 +115,7 @@ namespace WW3.StealthSim
     {
         public Vec2 Position { get; set; }
         public Stance CurrentStance { get; set; } = Stance.Crouch;
+        public SurfaceType CurrentSurface { get; set; } = SurfaceType.Concrete;
         public double Stamina { get; set; } = 100.0;
         public double Hunger { get; set; } = 10.0; // 0 (full) to 100 (starving)
         public double Cold { get; set; } = 15.0; // 0 (warm) to 100 (hypothermia)
@@ -131,14 +140,24 @@ namespace WW3.StealthSim
 
         public double GetNoiseRadius()
         {
-            double baseNoise = CurrentStance switch
+            double surfaceMod = CurrentSurface switch
+            {
+                SurfaceType.Dirt => 0.70,
+                SurfaceType.Concrete => 1.00,
+                SurfaceType.MetalGrate => 1.60,
+                SurfaceType.GlassDebris => 2.00,
+                _ => 1.00
+            };
+
+            double baseNoise = (CurrentStance switch
             {
                 Stance.Prone => 0.5,
                 Stance.Crouch => 2.0,
                 Stance.Walk => 6.0,
                 Stance.Sprint => 12.0,
                 _ => 2.0
-            };
+            }) * surfaceMod;
+
             if (IsShivering)
             {
                 // Freezing teeth chattering adds +1.8m acoustic signature
@@ -912,6 +931,24 @@ namespace WW3.StealthSim
 
             bool radioConverged = g1.State == AIState.Chase && g2.State == AIState.Investigate && g2.Suspicion >= 60.0;
             Assert(radioConverged, "Guard radio alert successfully converges allied patrol guards towards disturbance");
+
+            // Test 19: Surface material acoustic noise propagation scaling
+            var simSurface = new SimulationWorld();
+            simSurface.PlayerCharacter.CurrentStance = Stance.Walk;
+            simSurface.PlayerCharacter.CurrentSurface = SurfaceType.Dirt;
+            double dirtNoise = simSurface.PlayerCharacter.GetNoiseRadius();
+
+            simSurface.PlayerCharacter.CurrentSurface = SurfaceType.Concrete;
+            double concreteNoise = simSurface.PlayerCharacter.GetNoiseRadius();
+
+            simSurface.PlayerCharacter.CurrentSurface = SurfaceType.MetalGrate;
+            double metalNoise = simSurface.PlayerCharacter.GetNoiseRadius();
+
+            simSurface.PlayerCharacter.CurrentSurface = SurfaceType.GlassDebris;
+            double glassNoise = simSurface.PlayerCharacter.GetNoiseRadius();
+
+            bool surfaceScaled = (dirtNoise < concreteNoise) && (concreteNoise < metalNoise) && (metalNoise < glassNoise);
+            Assert(surfaceScaled, "Ground surface materials dynamically scale acoustic movement noise propagation");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;
