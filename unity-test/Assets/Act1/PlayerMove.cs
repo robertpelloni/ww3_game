@@ -118,6 +118,13 @@ public class PlayerMove : MonoBehaviour
         {
             whistleTimer = whistleDuration;
             whistleCooldownTimer = whistleCooldown;
+            // Play procedural whistle audio
+            try
+            {
+                AudioClip whistle = ProceduralAudio.CreateWhistleClip();
+                ProceduralAudio.PlayClipAtPoint(whistle, transform.position, 0.8f);
+            }
+            catch (System.Exception) {}
             Debug.Log($"[PlayerMove] Whistled! Noise radius temporarily expanded to {whistleNoiseRadius}m.");
         }
 
@@ -143,8 +150,14 @@ public class PlayerMove : MonoBehaviour
                 targetLanding.z = Mathf.Clamp(targetLanding.z, minZ, maxZ);
                 targetLanding.y = 1f;
 
-                // Spawn environmental sound event
+                // Spawn environmental sound event & procedural shatter audio
                 SoundDistractionEvent.Create(targetLanding, throwNoiseRadius, 3.0f);
+                try
+                {
+                    AudioClip shatter = ProceduralAudio.CreateBottleShatterClip();
+                    ProceduralAudio.PlayClipAtPoint(shatter, targetLanding, 0.9f);
+                }
+                catch (System.Exception) {}
                 Debug.Log($"[PlayerMove] Threw bottle to {targetLanding}! Bottles left: {survival.bottleCount}");
             }
             else

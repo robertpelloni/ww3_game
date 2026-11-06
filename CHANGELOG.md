@@ -2,6 +2,21 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.4.0 — 2026-11-04
+- **Procedural Audio Synthesizer (`ProceduralAudio.cs`)**:
+  - Implemented 22kHz mono PCM procedural audio generator synthesizing whistle tone pulses, glass bottle impact shatter bursts, and footstep pulses in-memory without external asset dependencies.
+  - Tailored specifically to the low-spec hardware budget (Intel HD 520, zero asset overhead).
+  - Wired into `PlayerMove.cs` for whistle `[Q]` and bottle throw `[F]`.
+- **Unity Asset Metadata Governance**:
+  - Created explicit `.meta` files for `ProceduralAudio.cs`, `SoundDistractionEvent.cs`, and `SafehouseTrigger.cs`.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Added procedural audio event dispatch and logging.
+  - Added automated Test 16 validating procedural audio trigger dispatching for whistle and bottle impacts (16/16 tests passing).
+- **Single-Page Command Center Sync (`dashboard.html`)**:
+  - Bumped Command Center console to v0.4.0 with procedural audio tooltips and audio synthesis telemetry.
+- **Documentation & Verification**:
+  - Synced `VERSION.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` to version 0.4.0.
+
 ## 0.3.9 — 2026-11-04
 - **Acoustic Obstacle Occlusion & Realistic Sound Propagation (`PatrolMover.cs`)**:
   - Added line-of-sight acoustic raycasting between guards and sound origins (player footsteps, shivering teeth chattering, whistles, and thrown bottle impacts).

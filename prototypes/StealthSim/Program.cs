@@ -190,6 +190,7 @@ namespace WW3.StealthSim
         public Vec2? ActiveDistractionPos { get; set; } = null;
         public double ActiveDistractionRadius { get; set; } = 14.0;
         public double ActiveDistractionTimer { get; set; } = 0.0;
+        public List<string> ProceduralAudioLog { get; } = new List<string>();
 
         public bool GameWon { get; set; } = false;
         public bool GameOver { get; set; } = false;
@@ -200,6 +201,7 @@ namespace WW3.StealthSim
             ActiveDistractionPos = pos;
             ActiveDistractionRadius = radius;
             ActiveDistractionTimer = duration;
+            ProceduralAudioLog.Add($"BottleShatter at ({pos.X:F1}, {pos.Y:F1})");
         }
 
         public bool ThrowBottle(Vec2 targetPos)
@@ -208,6 +210,12 @@ namespace WW3.StealthSim
             PlayerCharacter.BottleCount--;
             TriggerDistraction(targetPos, 14.0, 2.5);
             return true;
+        }
+
+        public void Whistle()
+        {
+            TriggerWhistle();
+            ProceduralAudioLog.Add($"Whistle at ({PlayerCharacter.Position.X:F1}, {PlayerCharacter.Position.Y:F1})");
         }
 
         public SimulationWorld()
@@ -835,6 +843,16 @@ namespace WW3.StealthSim
 
             Assert(unalertedBehindWall && alertedInClearSoundLine,
                 "Acoustic obstacle occlusion attenuates sound through walls while clear sound lines alert guards");
+
+            // Test 16: Procedural audio events trigger properly during whistle and bottle throw
+            var simAudio = new SimulationWorld();
+            simAudio.Whistle();
+            simAudio.ThrowBottle(new Vec2(10, 5));
+            bool audioDispatched = simAudio.ProceduralAudioLog.Count == 2 &&
+                                   simAudio.ProceduralAudioLog[0].StartsWith("Whistle") &&
+                                   simAudio.ProceduralAudioLog[1].StartsWith("BottleShatter");
+
+            Assert(audioDispatched, "Procedural audio events dispatched cleanly for whistle and bottle impacts");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;
