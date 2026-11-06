@@ -19,6 +19,9 @@ public class PatrolMover : MonoBehaviour
     [Header("Vision & Detection")]
     public float viewDistance = 12f;
     public float viewAngle = 70f; // Half-angle FOV
+    public bool isFlashlightActive = false;
+    public float flashlightSweepAngle = 45f;
+    public float flashlightSweepSpeed = 2.5f;
     public Transform targetPlayer;
     public GuardState currentState = GuardState.Patrolling;
     [Range(0f, 1f)]
@@ -149,6 +152,8 @@ public class PatrolMover : MonoBehaviour
         }
 
         // Execute behavior based on state
+        isFlashlightActive = (currentState == GuardState.Investigating || currentState == GuardState.Suspicious || currentState == GuardState.Alert);
+
         switch (currentState)
         {
             case GuardState.Patrolling:
@@ -156,33 +161,40 @@ public class PatrolMover : MonoBehaviour
                 break;
 
             case GuardState.Investigating:
-                // Move towards last heard or seen position
+                // Move towards last heard or seen position with flashlight sweeping
                 Vector3 investDir = (lastKnownPlayerPos - transform.position);
                 investDir.y = 0;
                 if (investDir.magnitude > 1.2f)
                 {
-                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(investDir.normalized), Time.deltaTime * 3.5f);
+                    Quaternion baseRot = Quaternion.LookRotation(investDir.normalized);
+                    float sweep = Mathf.Sin(Time.time * flashlightSweepSpeed) * (flashlightSweepAngle * 0.4f);
+                    Quaternion sweepRot = baseRot * Quaternion.Euler(0, sweep, 0);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, sweepRot, Time.deltaTime * 4f);
                     transform.position += transform.forward * investigateSpeed * Time.deltaTime;
                 }
                 else
                 {
-                    // Look around slowly
-                    transform.Rotate(Vector3.up, 30f * Time.deltaTime);
+                    // Arrived at search origin: execute wider sweeping look-around
+                    float wideSweep = Mathf.Sin(Time.time * flashlightSweepSpeed) * flashlightSweepAngle;
+                    transform.Rotate(Vector3.up, (35f + wideSweep * 0.5f) * Time.deltaTime);
                 }
                 break;
 
             case GuardState.Suspicious:
-                // Look toward last known position or pause
+                // Look toward last known position with alert search sweep
                 Vector3 lookDir = (lastKnownPlayerPos - transform.position);
                 lookDir.y = 0;
                 if (lookDir != Vector3.zero)
                 {
-                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(lookDir), Time.deltaTime * 3f);
+                    Quaternion targetRot = Quaternion.LookRotation(lookDir);
+                    float sweep = Mathf.Sin(Time.time * flashlightSweepSpeed * 1.5f) * (flashlightSweepAngle * 0.5f);
+                    Quaternion sweepRot = targetRot * Quaternion.Euler(0, sweep, 0);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, sweepRot, Time.deltaTime * 3.5f);
                 }
                 break;
 
             case GuardState.Alert:
-                // Move rapidly towards last known player position
+                // Move rapidly towards last known player position with beam locked forward
                 Vector3 targetDir = (lastKnownPlayerPos - transform.position);
                 targetDir.y = 0;
                 if (targetDir.magnitude > 1f)
@@ -398,5 +410,12 @@ public class PatrolMover : MonoBehaviour
         Gizmos.DrawRay(transform.position, rightRayDirection * viewDistance);
         Gizmos.DrawRay(transform.position, transform.forward * viewDistance);
         Gizmos.DrawWireSphere(transform.position, 0.5f);
+
+        // Flashlight beam visualization when active
+        if (isFlashlightActive)
+        {
+            Gizmos.color = Color.white;
+            Gizmos.DrawRay(transform.position + Vector3.up * 1.2f, transform.forward * (viewDistance * 1.15f));
+        }
     }
 }

@@ -1,6 +1,7 @@
-# TODO — granular short-term tasks (v0.4.0)
+# TODO — granular short-term tasks (v0.4.1)
 
 ## Verified working (keep green)
+- [x] Guard Flashlight Directional Search Sweeps & Look-Around Scans in `PatrolMover.cs`
 - [x] Procedural lo-fi audio generator (`ProceduralAudio.cs`) synthesizing 22kHz mono PCM clips (whistles, bottle shatter, footsteps)
 - [x] Unity Asset Metadata Governance: explicit `.meta` files for `ProceduralAudio.cs`, `SoundDistractionEvent.cs`, and `SafehouseTrigger.cs`
 - [x] Acoustic Obstacle Occlusion & Wall Sound Attenuation (0.35x) in `PatrolMover.cs`
@@ -22,7 +23,7 @@
 - [x] Sound lure mechanics: Player whistle `[Q]` producing a 20m acoustic radius in `PlayerMove.cs`
 - [x] Guard acoustic hearing & `Investigating` AI state machine in `PatrolMover.cs`
 - [x] Checkpoint security gate & interrogation system (`CheckpointTrigger.cs`) with paper checks `[E]` and bribe `[B]`
-- [x] Pure-C# console sim `prototypes/StealthSim` (.NET 10/8, 16/16 tests passing)
+- [x] Pure-C# console sim `prototypes/StealthSim` (.NET 10/8, 17/17 tests passing)
 - [x] Unity MCP round-trip U-T1–U-T14 via AnkleBreaker (`unity-test/` Act 1 starter)
 - [x] Godot G-T1–G-T7 via Coding-Solo G1 (`godot-test/` boot + debug capture + compiled TypeScript)
 - [x] Unreal R-T1–R-T2 graceful no-engine failure (sam-david R8)

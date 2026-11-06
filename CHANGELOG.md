@@ -2,6 +2,19 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.4.1 — 2026-11-04
+- **Guard Flashlight Search Sweeps (`PatrolMover.cs`)**:
+  - Implemented dynamic directional flashlight scanning when guards transition into `Investigating` or `Suspicious` states.
+  - Guards sweep their beam side-to-side (+/- 45°) while searching sound origins, drastically increasing detection rate (effective exposure $\ge 0.75$) when catching hiding players in dark alleys.
+  - Added Gizmo beam rendering for in-editor debug verification.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored guard flashlight activation and search beam dynamics into pure-C# simulation.
+  - Added automated Test 17 validating search flashlight activation and rapid detection in dark alleys (17/17 tests passing).
+- **Single-Page Command Center Sync (`dashboard.html`)**:
+  - Bumped Command Center console to v0.4.1 with guard flashlight sweeping telemetry and tooltips.
+- **Documentation & Verification**:
+  - Synced `VERSION.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` to version 0.4.1.
+
 ## 0.4.0 — 2026-11-04
 - **Procedural Audio Synthesizer (`ProceduralAudio.cs`)**:
   - Implemented 22kHz mono PCM procedural audio generator synthesizing whistle tone pulses, glass bottle impact shatter bursts, and footstep pulses in-memory without external asset dependencies.

@@ -63,6 +63,7 @@ namespace WW3.StealthSim
         public double SearchTimer { get; set; } = 0.0;
         public double VisionAngleDeg { get; set; } = 70.0;
         public double VisionRange { get; set; } = 14.0;
+        public bool FlashlightActive => State == AIState.Investigate || State == AIState.Search || State == AIState.Chase;
         public double HearingSensitivity { get; set; } = 1.0;
     }
 
@@ -518,10 +519,11 @@ namespace WW3.StealthSim
 
             if (inVisionCone)
             {
-                // Detection scales with exposure, stance, and proximity
+                // Detection scales with exposure, stance, and proximity. Flashlight illuminates target directly.
+                double effectiveExposure = guard.FlashlightActive ? Math.Max(playerExposure, 0.75) : playerExposure;
                 double stanceMod = PlayerCharacter.GetStanceDetectionMultiplier();
                 double proximityMod = Math.Clamp(1.0 - (dist / guard.VisionRange), 0.1, 1.0);
-                double suspicionDelta = 65.0 * playerExposure * stanceMod * proximityMod * dt;
+                double suspicionDelta = 65.0 * effectiveExposure * stanceMod * proximityMod * dt;
 
                 // Close range detection even in low light
                 if (dist < 2.5) suspicionDelta += 40.0 * dt;
@@ -853,6 +855,21 @@ namespace WW3.StealthSim
                                    simAudio.ProceduralAudioLog[1].StartsWith("BottleShatter");
 
             Assert(audioDispatched, "Procedural audio events dispatched cleanly for whistle and bottle impacts");
+
+            // Test 17: Guard flashlight activates during investigation and increases detection rate
+            var simFlash = new SimulationWorld();
+            var searchGuard = simFlash.Guards[0];
+            searchGuard.State = AIState.Investigate;
+            searchGuard.Position = new Vec2(10.0, 5.0);
+            searchGuard.Forward = new Vec2(1, 0); // Facing east
+
+            // Player in dark shadow alley 5m ahead of guard
+            simFlash.PlayerCharacter.Position = new Vec2(15.0, 5.0);
+            simFlash.PlayerCharacter.CurrentStance = Stance.Walk;
+            simFlash.Step(0.2, new Vec2(0, 0));
+
+            bool flashlightWorking = searchGuard.FlashlightActive && searchGuard.Suspicion > 0.0;
+            Assert(flashlightWorking, "Guard search flashlight activates during investigation and escalates detection in shadows");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

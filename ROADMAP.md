@@ -1,13 +1,14 @@
 # ROADMAP — major structural milestones
 
-**Version:** 0.4.0 (see [VERSION.md](VERSION.md)).
+**Version:** 0.4.1 (see [VERSION.md](VERSION.md)).
 
 ## M1 — Vertical slice: Act 1 Blackout Chongjin
 - 1 street 60x20m, night + fog + searchlight, 2 patrols + 1 checkpoint guard.
 - Win = reach safehouse; lose + retry < 3s; 30fps+ HD 520 Very Low.
 - State:
-  * Pure-C# console sim verified in `prototypes/StealthSim` (16/16 tests passing).
+  * Pure-C# console sim verified in `prototypes/StealthSim` (17/17 tests passing).
   * Scene + patrol/player starter scripts live in `unity-test/` (see [docs/MCP_TESTS.md](docs/MCP_TESTS.md)).
+  * Guard flashlight directional search sweeps and alert look-arounds in `PatrolMover.cs`.
   * Procedural lo-fi audio generator (`ProceduralAudio.cs`) generating 22kHz mono PCM clips (whistles, bottle shatter, footsteps).
   * Unity Survival System + IMGUI OnGUI HUD active in `unity-test/Assets/Act1/`.
   * Acoustic obstacle occlusion & realistic sound dampening (0.35x through concrete barricades) in `PatrolMover.cs`.
