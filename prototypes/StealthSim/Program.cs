@@ -43,6 +43,7 @@ namespace WW3.StealthSim
 
         public static double Distance(Vec2 a, Vec2 b) => (a - b).Magnitude();
         public static double Dot(Vec2 a, Vec2 b) => a.X * b.X + a.Y * b.Y;
+        public static Vec2 Zero => new Vec2(0, 0);
     }
 
     public class Guard
@@ -82,6 +83,7 @@ namespace WW3.StealthSim
         public double Battery { get; set; } = 80.0;
         public int RiceCount { get; set; } = 2;
         public int HotTeaCount { get; set; } = 1;
+        public int BottleCount { get; set; } = 2;
         public bool HasForgedPapers { get; set; } = true;
         public bool HasWireCutters { get; set; } = false;
         public bool FlashlightOn { get; set; } = false;
@@ -157,10 +159,28 @@ namespace WW3.StealthSim
         public Spotlight CurfewSearchlight { get; set; } = new Spotlight();
         public Vec2 SafehousePosition { get; set; } = new Vec2(56.0, 10.0);
         public Vec2 CheckpointPosition { get; set; } = new Vec2(40.0, 10.0);
+        public Vec2? ActiveDistractionPos { get; set; } = null;
+        public double ActiveDistractionRadius { get; set; } = 14.0;
+        public double ActiveDistractionTimer { get; set; } = 0.0;
 
         public bool GameWon { get; set; } = false;
         public bool GameOver { get; set; } = false;
         public string EndReason { get; set; } = "";
+
+        public void TriggerDistraction(Vec2 pos, double radius = 14.0, double duration = 2.5)
+        {
+            ActiveDistractionPos = pos;
+            ActiveDistractionRadius = radius;
+            ActiveDistractionTimer = duration;
+        }
+
+        public bool ThrowBottle(Vec2 targetPos)
+        {
+            if (PlayerCharacter.BottleCount <= 0) return false;
+            PlayerCharacter.BottleCount--;
+            TriggerDistraction(targetPos, 14.0, 2.5);
+            return true;
+        }
 
         public SimulationWorld()
         {
@@ -290,6 +310,15 @@ namespace WW3.StealthSim
 
             CurfewSearchlight.SweepTime += dt;
 
+            if (ActiveDistractionTimer > 0)
+            {
+                ActiveDistractionTimer -= dt;
+                if (ActiveDistractionTimer <= 0)
+                {
+                    ActiveDistractionPos = null;
+                }
+            }
+
             double exposure = CalculatePlayerExposure();
 
             // Player Stamina / Movement
@@ -386,10 +415,32 @@ namespace WW3.StealthSim
             double angleDeg = Math.Acos(Math.Clamp(dot, -1.0, 1.0)) * (180.0 / Math.PI);
             bool inVisionCone = angleDeg <= (guard.VisionAngleDeg / 2.0) && dist <= guard.VisionRange;
 
-            // Hearing Check
-            bool heardNoise = dist <= (playerNoiseRadius * guard.HearingSensitivity);
+            // Hearing Check - Player noise & Environmental sound distractions
+            bool heardPlayerNoise = dist <= (playerNoiseRadius * guard.HearingSensitivity);
+            bool heardDistraction = false;
+            Vec2 distractionTarget = Vec2.Zero;
 
-            if (heardNoise)
+            if (ActiveDistractionPos.HasValue && ActiveDistractionTimer > 0)
+            {
+                double distDistract = Vec2.Distance(guard.Position, ActiveDistractionPos.Value);
+                if (distDistract <= (ActiveDistractionRadius * guard.HearingSensitivity))
+                {
+                    heardDistraction = true;
+                    distractionTarget = ActiveDistractionPos.Value;
+                }
+            }
+
+            if (heardDistraction)
+            {
+                // Distracted away to investigate remote sound without locating the hidden player
+                guard.LastInvestigateTarget = distractionTarget;
+                if (guard.State != AIState.Chase)
+                {
+                    guard.State = AIState.Investigate;
+                    guard.Suspicion = Math.Max(guard.Suspicion, 40.0);
+                }
+            }
+            else if (heardPlayerNoise)
             {
                 guard.LastInvestigateTarget = PlayerCharacter.Position;
                 if (guard.State != AIState.Chase)
@@ -684,6 +735,25 @@ namespace WW3.StealthSim
 
             Assert(thermalRadiantWorking && shiveringNoiseActive && coldStaminaDepleted,
                 "Light thermal dynamics and cold stamina exhaustion fully integrated and responsive");
+
+            // Test 14: Thrown bottle distraction lure pulls patrol guard away without exposing player
+            var simDistract = new SimulationWorld();
+            var patrolGuard = simDistract.Guards[0]; // Patrol-1 at (15, 5)
+            // Player safely prone in shadows far away at (2, 2)
+            simDistract.PlayerCharacter.Position = new Vec2(2.0, 2.0);
+            simDistract.PlayerCharacter.CurrentStance = Stance.Prone;
+            simDistract.PlayerCharacter.BottleCount = 2;
+
+            Vec2 bottleTarget = new Vec2(18.0, 5.0); // 3m from patrol guard
+            bool throwSuccess = simDistract.ThrowBottle(bottleTarget);
+            simDistract.Step(0.2, new Vec2(0, 0));
+
+            bool guardInvestigatingLure = patrolGuard.State == AIState.Investigate &&
+                                          Vec2.Distance(patrolGuard.LastInvestigateTarget, bottleTarget) < 0.001 &&
+                                          simDistract.PlayerCharacter.BottleCount == 1;
+
+            Assert(throwSuccess && guardInvestigatingLure,
+                "Thrown bottle lure distracts guard away from patrol without compromising hidden player");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

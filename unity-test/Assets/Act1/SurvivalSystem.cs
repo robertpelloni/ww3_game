@@ -23,6 +23,7 @@ public class SurvivalSystem : MonoBehaviour
     public int riceCount = 3;
     public int medicineCount = 1;
     public int hotTeaCount = 2;
+    public int bottleCount = 2;
     public bool hasForgedPapers = true;
 
     [Header("Environmental Status")]
@@ -353,8 +354,8 @@ public class SurvivalSystem : MonoBehaviour
             DrinkHotTea();
         }
 
-        GUI.Label(new Rect(20, 204, 235, 18), $"Papers: {(hasForgedPapers ? "Forged ID (Valid)" : "None")}");
-        GUI.Label(new Rect(20, 222, 235, 18), "[Q] Whistle | [1] Rice | [2] Med | [3] Tea");
+        GUI.Label(new Rect(20, 204, 235, 18), $"Papers: {(hasForgedPapers ? "Forged ID (Valid)" : "None")} | Bottles: {bottleCount}");
+        GUI.Label(new Rect(20, 222, 235, 18), "[Q] Whistle | [F] Throw Bottle | [1] Rice | [2] Med | [3] Tea");
         GUI.Label(new Rect(20, 240, 235, 18), "[E] Checkpoint Papers | [B] Bribe Guard | [R] Retry");
 
         // Overlay for Game Over or Victory
