@@ -29,6 +29,7 @@ def check_doc_links():
         'unity-test/Assets/Act1/CheckpointTrigger.cs',
     "unity-test/Assets/Act1/ShelterZone.cs",
         "unity-test/Assets/Act1/LightExposureZone.cs",
+    "unity-test/Assets/Act1/SoundDistractionEvent.cs",
     ]
     missing = []
     for rel_path in required_files:

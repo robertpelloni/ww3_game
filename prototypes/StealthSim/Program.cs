@@ -43,6 +43,7 @@ namespace WW3.StealthSim
 
         public static double Distance(Vec2 a, Vec2 b) => (a - b).Magnitude();
         public static double Dot(Vec2 a, Vec2 b) => a.X * b.X + a.Y * b.Y;
+        public static Vec2 Zero => new Vec2(0, 0);
     }
 
     public class Guard
@@ -82,6 +83,7 @@ namespace WW3.StealthSim
         public double Battery { get; set; } = 80.0;
         public int RiceCount { get; set; } = 2;
         public int HotTeaCount { get; set; } = 1;
+        public int BottleCount { get; set; } = 2;
         public bool HasForgedPapers { get; set; } = true;
         public bool HasWireCutters { get; set; } = false;
         public bool FlashlightOn { get; set; } = false;
@@ -107,7 +109,11 @@ namespace WW3.StealthSim
                 Stance.Sprint => 12.0,
                 _ => 2.0
             };
-            if (IsShivering) baseNoise += 1.5; // Chattering teeth adds acoustic noise
+            if (IsShivering)
+            {
+                // Freezing teeth chattering adds +1.8m acoustic signature
+                baseNoise += 1.8;
+            }
             return baseNoise;
         }
 
@@ -153,10 +159,28 @@ namespace WW3.StealthSim
         public Spotlight CurfewSearchlight { get; set; } = new Spotlight();
         public Vec2 SafehousePosition { get; set; } = new Vec2(56.0, 10.0);
         public Vec2 CheckpointPosition { get; set; } = new Vec2(40.0, 10.0);
+        public Vec2? ActiveDistractionPos { get; set; } = null;
+        public double ActiveDistractionRadius { get; set; } = 14.0;
+        public double ActiveDistractionTimer { get; set; } = 0.0;
 
         public bool GameWon { get; set; } = false;
         public bool GameOver { get; set; } = false;
         public string EndReason { get; set; } = "";
+
+        public void TriggerDistraction(Vec2 pos, double radius = 14.0, double duration = 2.5)
+        {
+            ActiveDistractionPos = pos;
+            ActiveDistractionRadius = radius;
+            ActiveDistractionTimer = duration;
+        }
+
+        public bool ThrowBottle(Vec2 targetPos)
+        {
+            if (PlayerCharacter.BottleCount <= 0) return false;
+            PlayerCharacter.BottleCount--;
+            TriggerDistraction(targetPos, 14.0, 2.5);
+            return true;
+        }
 
         public SimulationWorld()
         {
@@ -286,12 +310,33 @@ namespace WW3.StealthSim
 
             CurfewSearchlight.SweepTime += dt;
 
+            if (ActiveDistractionTimer > 0)
+            {
+                ActiveDistractionTimer -= dt;
+                if (ActiveDistractionTimer <= 0)
+                {
+                    ActiveDistractionPos = null;
+                }
+            }
+
+            double exposure = CalculatePlayerExposure();
+
             // Player Stamina / Movement
             double speed = PlayerCharacter.GetBaseSpeed();
+
+            // Temperature-based continuous baseline exhaustion:
+            // Maintaining body temperature above 60% cold drains stamina
+            if (PlayerCharacter.Cold >= 60.0)
+            {
+                double coldExhaustionFactor = (PlayerCharacter.Cold - 60.0) / 40.0;
+                PlayerCharacter.Stamina = Math.Max(0, PlayerCharacter.Stamina - 3.5 * coldExhaustionFactor * dt);
+            }
+
             if (PlayerCharacter.CurrentStance == Stance.Sprint && moveInput.Magnitude() > 0.01)
             {
                 double starvationMult = PlayerCharacter.IsStarving ? 1.75 : 1.0;
-                PlayerCharacter.Stamina = Math.Max(0, PlayerCharacter.Stamina - 20.0 * starvationMult * dt);
+                double coldSprintMult = 1.0 + (PlayerCharacter.Cold / 100.0) * 0.75;
+                PlayerCharacter.Stamina = Math.Max(0, PlayerCharacter.Stamina - 20.0 * starvationMult * coldSprintMult * dt);
                 if (PlayerCharacter.Stamina <= 0.01)
                 {
                     PlayerCharacter.CurrentStance = Stance.Walk;
@@ -299,11 +344,11 @@ namespace WW3.StealthSim
             }
             else
             {
-                double shiveringMod = PlayerCharacter.IsShivering ? 0.4 : 1.0;
+                double shiveringMod = PlayerCharacter.IsShivering ? (PlayerCharacter.Cold >= 80.0 ? 0.15 : 0.4) : 1.0;
                 PlayerCharacter.Stamina = Math.Min(100.0, PlayerCharacter.Stamina + 10.0 * shiveringMod * dt);
             }
 
-            // Survival drain vs shelter warming
+            // Survival drain vs shelter warming & radiant thermal light dynamic
             PlayerCharacter.Hunger = Math.Min(100.0, PlayerCharacter.Hunger + 0.15 * dt);
 
             bool sheltered = IsPlayerSheltered();
@@ -313,7 +358,18 @@ namespace WW3.StealthSim
             }
             else
             {
-                PlayerCharacter.Cold = Math.Min(100.0, PlayerCharacter.Cold + 0.25 * dt);
+                // Thermal factor: halogen spotlight radiant heat slows frostbite; deep shadow wind chill accelerates it
+                double thermalFactor = 1.0;
+                if (exposure >= 0.70)
+                {
+                    thermalFactor = 0.50; // Radiant warmth
+                }
+                else if (exposure <= 0.15)
+                {
+                    thermalFactor = 1.25; // Shadow alley wind tunnel
+                }
+
+                PlayerCharacter.Cold = Math.Min(100.0, PlayerCharacter.Cold + 0.25 * thermalFactor * dt);
             }
 
             if (PlayerCharacter.FlashlightOn)
@@ -337,7 +393,7 @@ namespace WW3.StealthSim
                 return;
             }
 
-            double exposure = CalculatePlayerExposure();
+            exposure = CalculatePlayerExposure();
             double noiseRadius = moveInput.Magnitude() > 0.01 ? PlayerCharacter.GetNoiseRadius() : 0.0;
 
             // Update Guards
@@ -359,10 +415,32 @@ namespace WW3.StealthSim
             double angleDeg = Math.Acos(Math.Clamp(dot, -1.0, 1.0)) * (180.0 / Math.PI);
             bool inVisionCone = angleDeg <= (guard.VisionAngleDeg / 2.0) && dist <= guard.VisionRange;
 
-            // Hearing Check
-            bool heardNoise = dist <= (playerNoiseRadius * guard.HearingSensitivity);
+            // Hearing Check - Player noise & Environmental sound distractions
+            bool heardPlayerNoise = dist <= (playerNoiseRadius * guard.HearingSensitivity);
+            bool heardDistraction = false;
+            Vec2 distractionTarget = Vec2.Zero;
 
-            if (heardNoise)
+            if (ActiveDistractionPos.HasValue && ActiveDistractionTimer > 0)
+            {
+                double distDistract = Vec2.Distance(guard.Position, ActiveDistractionPos.Value);
+                if (distDistract <= (ActiveDistractionRadius * guard.HearingSensitivity))
+                {
+                    heardDistraction = true;
+                    distractionTarget = ActiveDistractionPos.Value;
+                }
+            }
+
+            if (heardDistraction)
+            {
+                // Distracted away to investigate remote sound without locating the hidden player
+                guard.LastInvestigateTarget = distractionTarget;
+                if (guard.State != AIState.Chase)
+                {
+                    guard.State = AIState.Investigate;
+                    guard.Suspicion = Math.Max(guard.Suspicion, 40.0);
+                }
+            }
+            else if (heardPlayerNoise)
             {
                 guard.LastInvestigateTarget = PlayerCharacter.Position;
                 if (guard.State != AIState.Chase)
@@ -629,6 +707,53 @@ namespace WW3.StealthSim
             bool resetClean = !sim8.GameOver && !sim8.GameWon && sim8.PlayerCharacter.Stamina == 100.0 &&
                               sim8.Guards[0].State == AIState.Patrol && sim8.Guards[0].Suspicion == 0.0;
             Assert(resetClean, "Quick restart resets simulation state and guard overhead alerts instantly (< 3s loop)");
+
+            // Test 13: Light exposure thermal radiant dynamics and cold-based stamina depletion
+            var simShadow = new SimulationWorld();
+            simShadow.CurfewSearchlight.Radius = 0; // Shadow alley
+            simShadow.PlayerCharacter.Position = new Vec2(2.0, 10.0);
+            simShadow.PlayerCharacter.Cold = 20.0;
+            simShadow.Step(10.0, new Vec2(0, 0)); // 10s outdoor chilling in shadow
+
+            var simSpot = new SimulationWorld();
+            simSpot.CurfewSearchlight.Center = new Vec2(2.0, 10.0);
+            simSpot.CurfewSearchlight.SweepRange = 0;
+            simSpot.CurfewSearchlight.Radius = 5.0; // Spotlight radiant warmth
+            simSpot.PlayerCharacter.Position = new Vec2(2.0, 10.0);
+            simSpot.PlayerCharacter.Cold = 20.0;
+            simSpot.Step(10.0, new Vec2(0, 0)); // 10s outdoor under warm halogen lamp
+
+            bool thermalRadiantWorking = simShadow.PlayerCharacter.Cold > simSpot.PlayerCharacter.Cold;
+
+            // Test shivering stationary noise and severe cold stamina exhaustion
+            var simCold = new SimulationWorld();
+            simCold.PlayerCharacter.Cold = 85.0;
+            simCold.PlayerCharacter.Stamina = 100.0;
+            simCold.Step(5.0, new Vec2(0, 0)); // Stationary in freezing cold
+            bool shiveringNoiseActive = simCold.PlayerCharacter.GetNoiseRadius() >= 1.8;
+            bool coldStaminaDepleted = simCold.PlayerCharacter.Stamina < 100.0;
+
+            Assert(thermalRadiantWorking && shiveringNoiseActive && coldStaminaDepleted,
+                "Light thermal dynamics and cold stamina exhaustion fully integrated and responsive");
+
+            // Test 14: Thrown bottle distraction lure pulls patrol guard away without exposing player
+            var simDistract = new SimulationWorld();
+            var patrolGuard = simDistract.Guards[0]; // Patrol-1 at (15, 5)
+            // Player safely prone in shadows far away at (2, 2)
+            simDistract.PlayerCharacter.Position = new Vec2(2.0, 2.0);
+            simDistract.PlayerCharacter.CurrentStance = Stance.Prone;
+            simDistract.PlayerCharacter.BottleCount = 2;
+
+            Vec2 bottleTarget = new Vec2(18.0, 5.0); // 3m from patrol guard
+            bool throwSuccess = simDistract.ThrowBottle(bottleTarget);
+            simDistract.Step(0.2, new Vec2(0, 0));
+
+            bool guardInvestigatingLure = patrolGuard.State == AIState.Investigate &&
+                                          Vec2.Distance(patrolGuard.LastInvestigateTarget, bottleTarget) < 0.001 &&
+                                          simDistract.PlayerCharacter.BottleCount == 1;
+
+            Assert(throwSuccess && guardInvestigatingLure,
+                "Thrown bottle lure distracts guard away from patrol without compromising hidden player");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

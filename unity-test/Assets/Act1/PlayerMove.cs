@@ -32,6 +32,12 @@ public class PlayerMove : MonoBehaviour
     public float whistleTimer = 0f;
     public float whistleCooldownTimer = 0f;
 
+    [Header("Throw Distraction (Glass Bottles)")]
+    public float throwDistance = 9.0f;
+    public float throwNoiseRadius = 14.0f;
+    public float throwCooldown = 2.0f;
+    private float throwCooldownTimer = 0f;
+
     [Header("Boundaries")]
     public float minX = -28f, maxX = 28f, minZ = -9f, maxZ = 9f;
 
@@ -49,7 +55,7 @@ public class PlayerMove : MonoBehaviour
     void Update()
     {
         HandleStanceInput();
-        HandleWhistleInput();
+        HandleDistractionInputs();
 
         float h = Input.GetAxisRaw("Horizontal");
         float v = Input.GetAxisRaw("Vertical");
@@ -82,23 +88,69 @@ public class PlayerMove : MonoBehaviour
         }
         else
         {
-            CurrentNoiseRadius = IsMoving ? GetBaseNoiseRadius() : 0f;
+            float baseNoise = IsMoving ? GetBaseNoiseRadius() : 0f;
+
+            // Shivering chattering noise mechanic:
+            // When freezing (isShivering true), teeth chattering emits a continuous +1.8m acoustic signature
+            // added to current movement noise, and at least 1.8m even if standing perfectly still in the dark.
+            if (survival != null && survival.isShivering)
+            {
+                baseNoise = IsMoving ? (baseNoise + 1.8f) : 1.8f;
+            }
+
+            CurrentNoiseRadius = baseNoise;
         }
 
         if (whistleCooldownTimer > 0f)
         {
             whistleCooldownTimer -= Time.deltaTime;
         }
+        if (throwCooldownTimer > 0f)
+        {
+            throwCooldownTimer -= Time.deltaTime;
+        }
     }
 
-    void HandleWhistleInput()
+    void HandleDistractionInputs()
     {
-        // [Q] Key triggers a loud whistle to lure or distract nearby guards
+        // [Q] Key triggers a loud whistle to lure or distract nearby guards (at player position)
         if (Input.GetKeyDown(KeyCode.Q) && whistleCooldownTimer <= 0f)
         {
             whistleTimer = whistleDuration;
             whistleCooldownTimer = whistleCooldown;
             Debug.Log($"[PlayerMove] Whistled! Noise radius temporarily expanded to {whistleNoiseRadius}m.");
+        }
+
+        // [F] Key throws a scavenged glass bottle forward to distract guards to a remote position
+        if (Input.GetKeyDown(KeyCode.F) && throwCooldownTimer <= 0f)
+        {
+            if (survival != null && survival.bottleCount > 0)
+            {
+                survival.bottleCount--;
+                throwCooldownTimer = throwCooldown;
+
+                // Determine throw landing point forward along player or movement heading
+                Vector3 throwDirection = transform.forward;
+                float h = Input.GetAxisRaw("Horizontal");
+                float v = Input.GetAxisRaw("Vertical");
+                if (Mathf.Abs(h) > 0.1f || Mathf.Abs(v) > 0.1f)
+                {
+                    throwDirection = new Vector3(h, 0f, v).normalized;
+                }
+
+                Vector3 targetLanding = transform.position + throwDirection * throwDistance;
+                targetLanding.x = Mathf.Clamp(targetLanding.x, minX, maxX);
+                targetLanding.z = Mathf.Clamp(targetLanding.z, minZ, maxZ);
+                targetLanding.y = 1f;
+
+                // Spawn environmental sound event
+                SoundDistractionEvent.Create(targetLanding, throwNoiseRadius, 3.0f);
+                Debug.Log($"[PlayerMove] Threw bottle to {targetLanding}! Bottles left: {survival.bottleCount}");
+            }
+            else
+            {
+                Debug.Log("[PlayerMove] No glass bottles left to throw!");
+            }
         }
     }
 

@@ -52,7 +52,9 @@ public class PatrolMover : MonoBehaviour
     void Update()
     {
         bool playerSeen = CheckVision();
-        bool soundHeard = CheckHearing();
+        bool playerSoundHeard = CheckHearing();
+        Vector3 distractionPos;
+        bool distractionHeard = CheckDistractionEvents(out distractionPos);
 
         // Update suspicion meter based on vision check and hearing
         if (playerSeen)
@@ -95,9 +97,22 @@ public class PatrolMover : MonoBehaviour
                 currentState = GuardState.Suspicious;
             }
         }
-        else if (soundHeard)
+        else if (distractionHeard)
         {
-            // Hearing sound immediately raises interest to Investigating or Suspicious
+            // Hearing an environmental sound distraction (e.g. shattered bottle) pulls guard away
+            // to investigate the distraction point without revealing player's true position
+            lastKnownPlayerPos = distractionPos;
+            suspicionMeter = Mathf.Clamp01(suspicionMeter + 0.40f * Time.deltaTime);
+
+            if (currentState == GuardState.Patrolling || currentState == GuardState.Suspicious)
+            {
+                currentState = GuardState.Investigating;
+                searchTimer = searchWaitTime;
+            }
+        }
+        else if (playerSoundHeard)
+        {
+            // Hearing player sound immediately raises interest to Investigating or Suspicious
             suspicionMeter = Mathf.Clamp01(suspicionMeter + 0.35f * Time.deltaTime);
             if (targetPlayer != null) lastKnownPlayerPos = targetPlayer.position;
 
@@ -189,6 +204,35 @@ public class PatrolMover : MonoBehaviour
 
         float dist = Vector3.Distance(transform.position, targetPlayer.position);
         return dist <= noiseRadius;
+    }
+
+    private bool CheckDistractionEvents(out Vector3 eventPosition)
+    {
+        eventPosition = Vector3.zero;
+        var distractions = FindObjectsByType<SoundDistractionEvent>(FindObjectsSortMode.None);
+        if (distractions == null || distractions.Length == 0) return false;
+
+        float closestDist = float.MaxValue;
+        SoundDistractionEvent closestEvent = null;
+
+        foreach (var sde in distractions)
+        {
+            if (sde == null) continue;
+            float d = Vector3.Distance(transform.position, sde.originPosition);
+            if (d <= sde.noiseRadius * hearingMultiplier && d < closestDist)
+            {
+                closestDist = d;
+                closestEvent = sde;
+            }
+        }
+
+        if (closestEvent != null)
+        {
+            eventPosition = closestEvent.originPosition;
+            return true;
+        }
+
+        return false;
     }
 
     private void PatrolMovement()
