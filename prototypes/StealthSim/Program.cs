@@ -54,6 +54,7 @@ namespace WW3.StealthSim
         public Vec2 WaypointA { get; set; }
         public Vec2 WaypointB { get; set; }
         public int WaypointDir { get; set; } = 1;
+        public double WallOcclusionFactor { get; set; } = 0.35;
         public double PatrolSpeed { get; set; } = 2.0;
         public double ChaseSpeed { get; set; } = 4.0;
         public double Suspicion { get; set; } = 0.0; // 0 to 100
@@ -71,6 +72,32 @@ namespace WW3.StealthSim
         public Vec2 Position { get; set; }
         public double Radius { get; set; } = 3.5;
         public double WarmingRate { get; set; } = 6.0;
+    }
+
+    public class ObstacleWall
+    {
+        public double MinX { get; set; }
+        public double MaxX { get; set; }
+        public double MinY { get; set; }
+        public double MaxY { get; set; }
+        public string Name { get; set; } = "Wall";
+
+        public bool BlocksSegment(Vec2 p1, Vec2 p2)
+        {
+            // Simple bounding box segment intersection
+            int steps = 20;
+            for (int i = 0; i <= steps; i++)
+            {
+                double t = (double)i / steps;
+                double x = p1.X + t * (p2.X - p1.X);
+                double y = p1.Y + t * (p2.Y - p1.Y);
+                if (x >= MinX && x <= MaxX && y >= MinY && y <= MaxY)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     public class Player
@@ -156,6 +183,7 @@ namespace WW3.StealthSim
         public List<Guard> Guards { get; } = new List<Guard>();
         public List<Lamp> Lamps { get; } = new List<Lamp>();
         public List<Shelter> Shelters { get; } = new List<Shelter>();
+        public List<ObstacleWall> Obstacles { get; } = new List<ObstacleWall>();
         public Spotlight CurfewSearchlight { get; set; } = new Spotlight();
         public Vec2 SafehousePosition { get; set; } = new Vec2(56.0, 10.0);
         public Vec2 CheckpointPosition { get; set; } = new Vec2(40.0, 10.0);
@@ -219,6 +247,16 @@ namespace WW3.StealthSim
                 Forward = new Vec2(-1, 0),
                 PatrolSpeed = 1.0,
                 VisionRange = 16.0
+            });
+
+            // Concrete security barricades & alley walls
+            Obstacles.Add(new ObstacleWall
+            {
+                Name = "Checkpoint Barricade",
+                MinX = 39.5,
+                MaxX = 40.5,
+                MinY = 2.0,
+                MaxY = 8.0
             });
 
             // Street lamps
@@ -415,15 +453,35 @@ namespace WW3.StealthSim
             double angleDeg = Math.Acos(Math.Clamp(dot, -1.0, 1.0)) * (180.0 / Math.PI);
             bool inVisionCone = angleDeg <= (guard.VisionAngleDeg / 2.0) && dist <= guard.VisionRange;
 
-            // Hearing Check - Player noise & Environmental sound distractions
-            bool heardPlayerNoise = dist <= (playerNoiseRadius * guard.HearingSensitivity);
+            // Hearing Check - Player noise & Environmental sound distractions with obstacle occlusion
+            double effectivePlayerNoise = playerNoiseRadius * guard.HearingSensitivity;
+            foreach (var obs in Obstacles)
+            {
+                if (obs.BlocksSegment(guard.Position, PlayerCharacter.Position))
+                {
+                    effectivePlayerNoise *= guard.WallOcclusionFactor;
+                    break;
+                }
+            }
+            bool heardPlayerNoise = dist <= effectivePlayerNoise;
+
             bool heardDistraction = false;
             Vec2 distractionTarget = Vec2.Zero;
 
             if (ActiveDistractionPos.HasValue && ActiveDistractionTimer > 0)
             {
                 double distDistract = Vec2.Distance(guard.Position, ActiveDistractionPos.Value);
-                if (distDistract <= (ActiveDistractionRadius * guard.HearingSensitivity))
+                double effectiveDistractRadius = ActiveDistractionRadius * guard.HearingSensitivity;
+                foreach (var obs in Obstacles)
+                {
+                    if (obs.BlocksSegment(guard.Position, ActiveDistractionPos.Value))
+                    {
+                        effectiveDistractRadius *= guard.WallOcclusionFactor;
+                        break;
+                    }
+                }
+
+                if (distDistract <= effectiveDistractRadius)
                 {
                     heardDistraction = true;
                     distractionTarget = ActiveDistractionPos.Value;
@@ -754,6 +812,29 @@ namespace WW3.StealthSim
 
             Assert(throwSuccess && guardInvestigatingLure,
                 "Thrown bottle lure distracts guard away from patrol without compromising hidden player");
+
+            // Test 15: Acoustic wall occlusion attenuates noise through concrete barricades
+            var simWall = new SimulationWorld();
+            var wallGuard = simWall.Guards[2]; // Checkpoint Guard at (42, 10)
+            // Position wallGuard near the barricade at (42, 5)
+            wallGuard.Position = new Vec2(42.0, 5.0);
+
+            // Place player on opposite side of barricade (MinX 39.5, MaxX 40.5, MinY 2, MaxY 8) at (38, 5)
+            simWall.PlayerCharacter.Position = new Vec2(38.0, 5.0);
+            simWall.PlayerCharacter.CurrentStance = Stance.Walk; // Walk noise = 6.0m
+            // Distance = 4.0m. Without wall, 4.0m <= 6.0m (heard). With 0.35 wall occlusion, effective noise = 2.1m (not heard).
+
+            simWall.Step(0.1, new Vec2(0, 0));
+            bool unalertedBehindWall = wallGuard.State == AIState.Patrol;
+
+            // Now step into open gap above barricade at (38, 9.5) and walk towards (42, 9.5) with movement input
+            simWall.PlayerCharacter.Position = new Vec2(38.0, 9.5);
+            wallGuard.Position = new Vec2(42.0, 9.5);
+            simWall.Step(0.1, new Vec2(1, 0)); // Moving emits walk noise (6.0m > 4.0m)
+            bool alertedInClearSoundLine = wallGuard.State == AIState.Investigate;
+
+            Assert(unalertedBehindWall && alertedInClearSoundLine,
+                "Acoustic obstacle occlusion attenuates sound through walls while clear sound lines alert guards");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

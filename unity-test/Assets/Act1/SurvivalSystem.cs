@@ -48,7 +48,6 @@ public class SurvivalSystem : MonoBehaviour
     private PatrolMover nearestGuard;
     private ShelterZone[] shelterZones;
     private LightExposureZone[] lightZones;
-    private SafehouseTrigger safehouseTrigger;
 
     void Awake()
     {

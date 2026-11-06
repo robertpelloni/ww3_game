@@ -29,6 +29,8 @@ public class PatrolMover : MonoBehaviour
     [Header("Acoustic / Hearing Settings")]
     public float hearingMultiplier = 1.0f;
     public float searchWaitTime = 4.0f;
+    [Tooltip("Acoustic transmission factor through solid walls and concrete obstacles (0.35 = 65% dampening).")]
+    public float wallSoundOcclusionFactor = 0.35f;
     private float searchTimer = 0f;
 
     private float t;
@@ -199,11 +201,31 @@ public class PatrolMover : MonoBehaviour
         var pm = targetPlayer.GetComponent<PlayerMove>();
         if (pm == null) return false;
 
-        float noiseRadius = pm.CurrentNoiseRadius * hearingMultiplier;
-        if (noiseRadius <= 0f) return false;
+        float baseNoise = pm.CurrentNoiseRadius * hearingMultiplier;
+        if (baseNoise <= 0f) return false;
 
         float dist = Vector3.Distance(transform.position, targetPlayer.position);
-        return dist <= noiseRadius;
+        if (dist > baseNoise) return false;
+
+        // Acoustic ray occlusion check: if solid obstacle intervenes, attenuate effective hearing radius
+        float effectiveRadius = baseNoise;
+        Vector3 soundOrigin = targetPlayer.position + Vector3.up * 0.5f;
+        Vector3 guardEar = transform.position + Vector3.up * 1.5f;
+        Vector3 soundDir = soundOrigin - guardEar;
+        float rayDist = soundDir.magnitude;
+
+        RaycastHit hit;
+        if (Physics.Raycast(guardEar, soundDir.normalized, out hit, rayDist))
+        {
+            // Ignore hits against guard itself or target player
+            if (hit.transform != transform && !hit.transform.IsChildOf(transform) &&
+                hit.transform != targetPlayer && !hit.transform.IsChildOf(targetPlayer))
+            {
+                effectiveRadius *= wallSoundOcclusionFactor;
+            }
+        }
+
+        return dist <= effectiveRadius;
     }
 
     private bool CheckDistractionEvents(out Vector3 eventPosition)
@@ -219,7 +241,28 @@ public class PatrolMover : MonoBehaviour
         {
             if (sde == null) continue;
             float d = Vector3.Distance(transform.position, sde.originPosition);
-            if (d <= sde.noiseRadius * hearingMultiplier && d < closestDist)
+            float baseRadius = sde.noiseRadius * hearingMultiplier;
+            if (d > baseRadius) continue;
+
+            // Acoustic ray occlusion check for environmental sound
+            float effectiveRadius = baseRadius;
+            Vector3 soundOrigin = sde.originPosition + Vector3.up * 0.5f;
+            Vector3 guardEar = transform.position + Vector3.up * 1.5f;
+            Vector3 soundDir = soundOrigin - guardEar;
+            float rayDist = soundDir.magnitude;
+
+            RaycastHit hit;
+            if (Physics.Raycast(guardEar, soundDir.normalized, out hit, rayDist))
+            {
+                // Ignore hits against guard itself or the distraction event object
+                if (hit.transform != transform && !hit.transform.IsChildOf(transform) &&
+                    hit.transform != sde.transform && !hit.transform.IsChildOf(sde.transform))
+                {
+                    effectiveRadius *= wallSoundOcclusionFactor;
+                }
+            }
+
+            if (d <= effectiveRadius && d < closestDist)
             {
                 closestDist = d;
                 closestEvent = sde;

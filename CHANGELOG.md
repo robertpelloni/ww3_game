@@ -2,6 +2,18 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.3.9 — 2026-11-04
+- **Acoustic Obstacle Occlusion & Realistic Sound Propagation (`PatrolMover.cs`)**:
+  - Added line-of-sight acoustic raycasting between guards and sound origins (player footsteps, shivering teeth chattering, whistles, and thrown bottle impacts).
+  - Concrete barricades, buildings, and solid walls attenuate transmitted acoustic volume by 65% (`wallSoundOcclusionFactor = 0.35f`).
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Implemented `ObstacleWall` bounding-box geometry and sound ray occlusion logic in `prototypes/StealthSim/Program.cs`.
+  - Added automated Test 15 validating acoustic wall dampening (player walking 4m away behind concrete barricade remains unheard, but alerts guard when stepping into an unoccluded opening). Expanded test suite to 15/15 passing tests.
+- **Single-Page Command Center Sync (`dashboard.html`)**:
+  - Bumped Command Center console to v0.3.9 with sound occlusion tooltips and updated telemetry.
+- **Governance & Verification**:
+  - Synced `VERSION.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` to version 0.3.9.
+
 ## 0.3.8 — 2026-11-04
 - **Thrown Bottle Distraction Lure (`PlayerMove.cs` + `SoundDistractionEvent.cs`)**: Added scavenged glass bottle inventory item (`bottleCount = 2`) and throw impulse trigger (`[F]` key) that spawns a temporary `SoundDistractionEvent` at the impact location with a 14m acoustic noise radius.
 - **Guard AI Remote Distraction Investigation (`PatrolMover.cs`)**: Upgraded guard state machine to listen for environmental acoustic distraction events. Hearing a shattered bottle transitions guards to `GuardState.Investigating` and routes them directly to the impact location without discovering the player's true position.

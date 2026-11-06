@@ -1,6 +1,7 @@
-# TODO — granular short-term tasks (v0.3.8)
+# TODO — granular short-term tasks (v0.3.9)
 
 ## Verified working (keep green)
+- [x] Acoustic Obstacle Occlusion & Wall Sound Attenuation (0.35x) in `PatrolMover.cs`
 - [x] Thrown Bottle Sound Distraction Lure (`[F]`, 14m radius) in `PlayerMove.cs` & `SoundDistractionEvent.cs`
 - [x] Guard AI Remote Sound Distraction Investigation without player disclosure (`PatrolMover.cs`)
 - [x] Temperature-Stamina Coupling & Light Radiant Thermodynamics in `SurvivalSystem.cs` (spotlight halogen radiant heat vs shadow alley wind chill)
@@ -19,7 +20,7 @@
 - [x] Sound lure mechanics: Player whistle `[Q]` producing a 20m acoustic radius in `PlayerMove.cs`
 - [x] Guard acoustic hearing & `Investigating` AI state machine in `PatrolMover.cs`
 - [x] Checkpoint security gate & interrogation system (`CheckpointTrigger.cs`) with paper checks `[E]` and bribe `[B]`
-- [x] Pure-C# console sim `prototypes/StealthSim` (.NET 10/8, 14/14 tests passing)
+- [x] Pure-C# console sim `prototypes/StealthSim` (.NET 10/8, 15/15 tests passing)
 - [x] Unity MCP round-trip U-T1–U-T14 via AnkleBreaker (`unity-test/` Act 1 starter)
 - [x] Godot G-T1–G-T7 via Coding-Solo G1 (`godot-test/` boot + debug capture + compiled TypeScript)
 - [x] Unreal R-T1–R-T2 graceful no-engine failure (sam-david R8)
