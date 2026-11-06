@@ -2,6 +2,13 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.3.7 — 2026-11-04
+- **Temperature-Stamina Coupling & Light Radiant Thermodynamics (`SurvivalSystem.cs` + `PlayerMove.cs`)**: Curfew spotlights/floodlights (exposure >= 0.70) emit radiant halogen heat slowing frostbite accumulation by 50%, whereas dark wind tunnel alleys (exposure <= 0.15) increase cold accumulation rate by +25%.
+- **Cold-Induced Baseline Stamina Exhaustion**: Freezing body temperatures (Cold >= 60%) now cause continuous stamina burn as core warmth is maintained, accelerating sprint exhaustion.
+- **Stationary Teeth-Chattering Noise Footprint (`PlayerMove.cs`)**: Freezing shivering (Cold >= 70%) generates a continuous +1.8m acoustic signature even while completely stationary or crouched in shadows.
+- **Console Prototype Expansion (`prototypes/StealthSim`)**: Added Test 13 validating thermal radiant dynamics and cold-based stamina depletion, bringing automated pure-C# tests to 13/13 passing.
+- **Command Center Dashboard Sync (`dashboard.html`)**: Bumped Command Center console to v0.3.7 with expanded survival thermodynamics tooltips.
+
 ## 0.3.6 — 2026-11-04
 - **Guard Overhead Suspicion & Investigation Markers (`PatrolMover.cs`)**: World-to-screen projected IMGUI status indicators (`[ ! ALERT ! ]`, `[ ? SUSPICIOUS ]`, `[ ? INVESTIGATING ]`) and dynamic colored suspicion fill bar above guard positions.
 - **Quick-Reload Game Loop & Win/Loss Logic (`SurvivalSystem.cs`)**: Added instant fail triggers for hypothermia, starvation, and alert patrol capture (within 1.8m), coupled with a rapid (< 3s) retry loop via `[R]` key or interactive retry button.

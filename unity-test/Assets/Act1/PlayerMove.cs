@@ -82,7 +82,17 @@ public class PlayerMove : MonoBehaviour
         }
         else
         {
-            CurrentNoiseRadius = IsMoving ? GetBaseNoiseRadius() : 0f;
+            float baseNoise = IsMoving ? GetBaseNoiseRadius() : 0f;
+
+            // Shivering chattering noise mechanic:
+            // When freezing (isShivering true), teeth chattering emits a continuous +1.8m acoustic signature
+            // added to current movement noise, and at least 1.8m even if standing perfectly still in the dark.
+            if (survival != null && survival.isShivering)
+            {
+                baseNoise = IsMoving ? (baseNoise + 1.8f) : 1.8f;
+            }
+
+            CurrentNoiseRadius = baseNoise;
         }
 
         if (whistleCooldownTimer > 0f)

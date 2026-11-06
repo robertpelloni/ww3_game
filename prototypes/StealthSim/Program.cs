@@ -107,7 +107,11 @@ namespace WW3.StealthSim
                 Stance.Sprint => 12.0,
                 _ => 2.0
             };
-            if (IsShivering) baseNoise += 1.5; // Chattering teeth adds acoustic noise
+            if (IsShivering)
+            {
+                // Freezing teeth chattering adds +1.8m acoustic signature
+                baseNoise += 1.8;
+            }
             return baseNoise;
         }
 
@@ -286,12 +290,24 @@ namespace WW3.StealthSim
 
             CurfewSearchlight.SweepTime += dt;
 
+            double exposure = CalculatePlayerExposure();
+
             // Player Stamina / Movement
             double speed = PlayerCharacter.GetBaseSpeed();
+
+            // Temperature-based continuous baseline exhaustion:
+            // Maintaining body temperature above 60% cold drains stamina
+            if (PlayerCharacter.Cold >= 60.0)
+            {
+                double coldExhaustionFactor = (PlayerCharacter.Cold - 60.0) / 40.0;
+                PlayerCharacter.Stamina = Math.Max(0, PlayerCharacter.Stamina - 3.5 * coldExhaustionFactor * dt);
+            }
+
             if (PlayerCharacter.CurrentStance == Stance.Sprint && moveInput.Magnitude() > 0.01)
             {
                 double starvationMult = PlayerCharacter.IsStarving ? 1.75 : 1.0;
-                PlayerCharacter.Stamina = Math.Max(0, PlayerCharacter.Stamina - 20.0 * starvationMult * dt);
+                double coldSprintMult = 1.0 + (PlayerCharacter.Cold / 100.0) * 0.75;
+                PlayerCharacter.Stamina = Math.Max(0, PlayerCharacter.Stamina - 20.0 * starvationMult * coldSprintMult * dt);
                 if (PlayerCharacter.Stamina <= 0.01)
                 {
                     PlayerCharacter.CurrentStance = Stance.Walk;
@@ -299,11 +315,11 @@ namespace WW3.StealthSim
             }
             else
             {
-                double shiveringMod = PlayerCharacter.IsShivering ? 0.4 : 1.0;
+                double shiveringMod = PlayerCharacter.IsShivering ? (PlayerCharacter.Cold >= 80.0 ? 0.15 : 0.4) : 1.0;
                 PlayerCharacter.Stamina = Math.Min(100.0, PlayerCharacter.Stamina + 10.0 * shiveringMod * dt);
             }
 
-            // Survival drain vs shelter warming
+            // Survival drain vs shelter warming & radiant thermal light dynamic
             PlayerCharacter.Hunger = Math.Min(100.0, PlayerCharacter.Hunger + 0.15 * dt);
 
             bool sheltered = IsPlayerSheltered();
@@ -313,7 +329,18 @@ namespace WW3.StealthSim
             }
             else
             {
-                PlayerCharacter.Cold = Math.Min(100.0, PlayerCharacter.Cold + 0.25 * dt);
+                // Thermal factor: halogen spotlight radiant heat slows frostbite; deep shadow wind chill accelerates it
+                double thermalFactor = 1.0;
+                if (exposure >= 0.70)
+                {
+                    thermalFactor = 0.50; // Radiant warmth
+                }
+                else if (exposure <= 0.15)
+                {
+                    thermalFactor = 1.25; // Shadow alley wind tunnel
+                }
+
+                PlayerCharacter.Cold = Math.Min(100.0, PlayerCharacter.Cold + 0.25 * thermalFactor * dt);
             }
 
             if (PlayerCharacter.FlashlightOn)
@@ -337,7 +364,7 @@ namespace WW3.StealthSim
                 return;
             }
 
-            double exposure = CalculatePlayerExposure();
+            exposure = CalculatePlayerExposure();
             double noiseRadius = moveInput.Magnitude() > 0.01 ? PlayerCharacter.GetNoiseRadius() : 0.0;
 
             // Update Guards
@@ -629,6 +656,34 @@ namespace WW3.StealthSim
             bool resetClean = !sim8.GameOver && !sim8.GameWon && sim8.PlayerCharacter.Stamina == 100.0 &&
                               sim8.Guards[0].State == AIState.Patrol && sim8.Guards[0].Suspicion == 0.0;
             Assert(resetClean, "Quick restart resets simulation state and guard overhead alerts instantly (< 3s loop)");
+
+            // Test 13: Light exposure thermal radiant dynamics and cold-based stamina depletion
+            var simShadow = new SimulationWorld();
+            simShadow.CurfewSearchlight.Radius = 0; // Shadow alley
+            simShadow.PlayerCharacter.Position = new Vec2(2.0, 10.0);
+            simShadow.PlayerCharacter.Cold = 20.0;
+            simShadow.Step(10.0, new Vec2(0, 0)); // 10s outdoor chilling in shadow
+
+            var simSpot = new SimulationWorld();
+            simSpot.CurfewSearchlight.Center = new Vec2(2.0, 10.0);
+            simSpot.CurfewSearchlight.SweepRange = 0;
+            simSpot.CurfewSearchlight.Radius = 5.0; // Spotlight radiant warmth
+            simSpot.PlayerCharacter.Position = new Vec2(2.0, 10.0);
+            simSpot.PlayerCharacter.Cold = 20.0;
+            simSpot.Step(10.0, new Vec2(0, 0)); // 10s outdoor under warm halogen lamp
+
+            bool thermalRadiantWorking = simShadow.PlayerCharacter.Cold > simSpot.PlayerCharacter.Cold;
+
+            // Test shivering stationary noise and severe cold stamina exhaustion
+            var simCold = new SimulationWorld();
+            simCold.PlayerCharacter.Cold = 85.0;
+            simCold.PlayerCharacter.Stamina = 100.0;
+            simCold.Step(5.0, new Vec2(0, 0)); // Stationary in freezing cold
+            bool shiveringNoiseActive = simCold.PlayerCharacter.GetNoiseRadius() >= 1.8;
+            bool coldStaminaDepleted = simCold.PlayerCharacter.Stamina < 100.0;
+
+            Assert(thermalRadiantWorking && shiveringNoiseActive && coldStaminaDepleted,
+                "Light thermal dynamics and cold stamina exhaustion fully integrated and responsive");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

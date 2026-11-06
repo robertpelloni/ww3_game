@@ -76,19 +76,31 @@ public class SurvivalSystem : MonoBehaviour
         // Base hunger accumulation
         hunger = Mathf.Clamp(hunger + hungerRate * dt, 0f, 100f);
 
-        // Cold accumulation / recovery based on shelter
+        // Cold accumulation / recovery based on shelter & radiant light exposure
         if (isSheltered)
         {
-            // Recover from cold while near warmth source
+            // Recover from cold while inside shelter or near fire/heaters
             cold = Mathf.Max(0f, cold - 6.0f * dt);
         }
         else
         {
-            // Suffer outdoor curfew frostbite
-            cold = Mathf.Clamp(cold + coldRate * dt, 0f, 100f);
+            // Outdoor curfew frostbite with light-exposure thermal radiant dynamic:
+            // High exposure (spotlights/lamps, >= 0.70) emits radiant halogen heat slowing frostbite (-50%),
+            // whereas pitch-black wind tunnels (<= 0.15) induce increased wind chill (+25%).
+            float exposureThermalFactor = 1.0f;
+            if (currentLightExposure >= 0.70f)
+            {
+                exposureThermalFactor = 0.5f; // Radiant heat from industrial curfew lamps
+            }
+            else if (currentLightExposure <= 0.15f)
+            {
+                exposureThermalFactor = 1.25f; // Shadow alley wind tunnel chill
+            }
+
+            cold = Mathf.Clamp(cold + coldRate * exposureThermalFactor * dt, 0f, 100f);
         }
 
-        // Shivering mechanic (Cold > 70%): generates acoustic noise & reduces stamina regen
+        // Shivering mechanic (Cold >= 70%): generates acoustic noise & reduces stamina regen
         isShivering = cold >= 70f;
         isStarving = hunger >= 80f;
 
@@ -98,15 +110,25 @@ public class SurvivalSystem : MonoBehaviour
             health = Mathf.Max(0f, health - 2f * dt);
         }
 
-        // Stamina logic
+        // Stamina logic: temperature-based drain and shivering exhaustion
         bool isMoving = playerMove != null && playerMove.IsMoving;
         bool isSprinting = playerMove != null && playerMove.currentStance == PlayerMove.Stance.Sprint && isMoving;
 
+        // Temperature-based continuous baseline exhaustion:
+        // As cold rises above 60%, maintaining body temperature burns stamina continuously.
+        if (cold >= 60f)
+        {
+            float coldExhaustionFactor = (cold - 60f) / 40f; // 0.0 at 60% cold -> 1.0 at 100% cold
+            float coldStaminaBurn = 3.5f * coldExhaustionFactor;
+            stamina = Mathf.Max(0f, stamina - coldStaminaBurn * dt);
+        }
+
         if (isSprinting)
         {
-            // Starvation increases sprint drain significantly
+            // Starvation and extreme cold compound sprint exhaustion
             float starvationMultiplier = isStarving ? 1.75f : 1.0f;
-            float drain = staminaDrainRate * (1f + (hunger / 100f) * 0.5f) * starvationMultiplier;
+            float coldSprintMultiplier = 1f + (cold / 100f) * 0.75f;
+            float drain = staminaDrainRate * (1f + (hunger / 100f) * 0.5f) * starvationMultiplier * coldSprintMultiplier;
             stamina = Mathf.Max(0f, stamina - drain * dt);
             if (stamina <= 0.5f && playerMove != null)
             {
@@ -115,9 +137,9 @@ public class SurvivalSystem : MonoBehaviour
         }
         else
         {
-            // Cold shivering reduces recovery rate
-            float shiveringPenalty = isShivering ? 0.4f : 1.0f;
-            float recovery = staminaRecoverRate * (1f - (cold / 100f) * 0.4f) * shiveringPenalty;
+            // Cold shivering sharply reduces recovery rate; extreme shivering (>=80%) nearly halts it
+            float shiveringPenalty = isShivering ? (cold >= 80f ? 0.15f : 0.4f) : 1.0f;
+            float recovery = staminaRecoverRate * (1f - (cold / 100f) * 0.5f) * shiveringPenalty;
             stamina = Mathf.Min(100f, stamina + recovery * dt);
         }
 
@@ -302,7 +324,6 @@ public class SurvivalSystem : MonoBehaviour
 
         string stanceName = playerMove != null ? playerMove.currentStance.ToString() : "N/A";
         float noise = playerMove != null ? playerMove.CurrentNoiseRadius : 0f;
-        if (isShivering) noise += 1.5f; // Teeth chattering noise footprint
         string whistleNote = (playerMove != null && playerMove.IsWhistling) ? " [WHISTLE!]" : "";
         GUI.Label(new Rect(20, 104, 235, 18), $"Stance:   {stanceName} (Noise: {noise:F1}m){whistleNote}");
 
