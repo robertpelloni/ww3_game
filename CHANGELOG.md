@@ -2,6 +2,18 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.4.2 — 2026-11-04
+- **Guard Radio Alert & Allied Convergence (`PatrolMover.cs`)**:
+  - Implemented mutual guard communication: when any guard enters `Alert` state (suspicion $\ge 0.8$), they broadcast a vocal/radio alert across a 25m radius (`radioBroadcastRadius = 25.0f`).
+  - Allied guards within range receive the alert, transition to `Suspicious` or `Investigating` states, and converge on the disturbance coordinates.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Implemented `BroadcastRadioAlert` in `SimulationWorld`.
+  - Added automated Test 18 validating that an alert from one guard successfully routes nearby patrolling guards to converge on the target coordinates (18/18 tests passing).
+- **Single-Page Command Center Sync (`dashboard.html`)**:
+  - Bumped Command Center console to v0.4.2 with guard radio alert convergence telemetry and tooltips.
+- **Documentation & Verification**:
+  - Synced `VERSION.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` to version 0.4.2.
+
 ## 0.4.1 — 2026-11-04
 - **Guard Flashlight Search Sweeps (`PatrolMover.cs`)**:
   - Implemented dynamic directional flashlight scanning when guards transition into `Investigating` or `Suspicious` states.

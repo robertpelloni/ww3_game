@@ -55,12 +55,14 @@ namespace WW3.StealthSim
         public Vec2 WaypointB { get; set; }
         public int WaypointDir { get; set; } = 1;
         public double WallOcclusionFactor { get; set; } = 0.35;
+        public double RadioBroadcastRadius { get; set; } = 25.0;
         public double PatrolSpeed { get; set; } = 2.0;
         public double ChaseSpeed { get; set; } = 4.0;
         public double Suspicion { get; set; } = 0.0; // 0 to 100
         public AIState State { get; set; } = AIState.Patrol;
         public Vec2 LastInvestigateTarget { get; set; }
         public double SearchTimer { get; set; } = 0.0;
+        public double AlertBroadcastCooldown { get; set; } = 0.0;
         public double VisionAngleDeg { get; set; } = 70.0;
         public double VisionRange { get; set; } = 14.0;
         public bool FlashlightActive => State == AIState.Investigate || State == AIState.Search || State == AIState.Chase;
@@ -534,6 +536,7 @@ namespace WW3.StealthSim
                 if (guard.Suspicion >= 85.0)
                 {
                     guard.State = AIState.Chase;
+                    BroadcastRadioAlert(guard);
                 }
                 else if (guard.Suspicion >= 30.0 && guard.State == AIState.Patrol)
                 {
@@ -612,6 +615,25 @@ namespace WW3.StealthSim
             Vec2 dir = diff.Normalized();
             guard.Position = guard.Position + dir * (guard.PatrolSpeed * dt);
             guard.Forward = dir;
+        }
+
+        public void BroadcastRadioAlert(Guard callingGuard)
+        {
+            if (callingGuard.AlertBroadcastCooldown > 0) return;
+            callingGuard.AlertBroadcastCooldown = 3.0;
+
+            foreach (var other in Guards)
+            {
+                if (other == callingGuard) continue;
+                double d = Vec2.Distance(callingGuard.Position, other.Position);
+                if (d <= callingGuard.RadioBroadcastRadius)
+                {
+                    other.LastInvestigateTarget = callingGuard.LastInvestigateTarget;
+                    other.Suspicion = Math.Max(other.Suspicion, 60.0);
+                    other.State = AIState.Investigate;
+                    other.SearchTimer = 4.0;
+                }
+            }
         }
 
         private void ExecuteMoveTowards(Guard guard, Vec2 target, double speed, double dt)
@@ -870,6 +892,26 @@ namespace WW3.StealthSim
 
             bool flashlightWorking = searchGuard.FlashlightActive && searchGuard.Suspicion > 0.0;
             Assert(flashlightWorking, "Guard search flashlight activates during investigation and escalates detection in shadows");
+
+            // Test 18: Guard radio alert broadcast converges allied guards towards disturbance
+            var simRadio = new SimulationWorld();
+            var g1 = simRadio.Guards[0]; // Patrol-1 at (15, 5)
+            var g2 = simRadio.Guards[1]; // Patrol-2 at (28, 15)
+            // Distance = sqrt(13^2 + 10^2) = 16.4m <= 25m radio radius
+
+            // Position player directly in front of g1 in bright searchlight to trigger Alert/Chase
+            simRadio.PlayerCharacter.Position = new Vec2(16.0, 5.0);
+            g1.Forward = new Vec2(1, 0);
+            simRadio.CurfewSearchlight.Center = new Vec2(16.0, 5.0);
+            simRadio.CurfewSearchlight.Radius = 6.0;
+
+            // Directly trigger BroadcastRadioAlert on g1
+            g1.State = AIState.Chase;
+            g1.LastInvestigateTarget = new Vec2(16.0, 5.0);
+            simRadio.BroadcastRadioAlert(g1);
+
+            bool radioConverged = g1.State == AIState.Chase && g2.State == AIState.Investigate && g2.Suspicion >= 60.0;
+            Assert(radioConverged, "Guard radio alert successfully converges allied patrol guards towards disturbance");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

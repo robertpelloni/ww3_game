@@ -34,7 +34,9 @@ public class PatrolMover : MonoBehaviour
     public float searchWaitTime = 4.0f;
     [Tooltip("Acoustic transmission factor through solid walls and concrete obstacles (0.35 = 65% dampening).")]
     public float wallSoundOcclusionFactor = 0.35f;
+    public float radioBroadcastRadius = 25.0f;
     private float searchTimer = 0f;
+    private float alertBroadcastCooldown = 0f;
 
     private float t;
     private int dir = 1;
@@ -96,6 +98,7 @@ public class PatrolMover : MonoBehaviour
             if (suspicionMeter >= 0.8f)
             {
                 currentState = GuardState.Alert;
+                BroadcastRadioAlert();
             }
             else if (suspicionMeter >= 0.25f)
             {
@@ -149,6 +152,11 @@ public class PatrolMover : MonoBehaviour
             {
                 currentState = GuardState.Suspicious;
             }
+        }
+
+        if (alertBroadcastCooldown > 0f)
+        {
+            alertBroadcastCooldown -= Time.deltaTime;
         }
 
         // Execute behavior based on state
@@ -238,6 +246,39 @@ public class PatrolMover : MonoBehaviour
         }
 
         return dist <= effectiveRadius;
+    }
+
+    private void BroadcastRadioAlert()
+    {
+        if (alertBroadcastCooldown > 0f) return;
+        alertBroadcastCooldown = 3.0f;
+
+        var allGuards = FindObjectsByType<PatrolMover>(FindObjectsSortMode.None);
+        if (allGuards == null) return;
+
+        foreach (var other in allGuards)
+        {
+            if (other == null || other == this) continue;
+            float d = Vector3.Distance(transform.position, other.transform.position);
+            if (d <= radioBroadcastRadius)
+            {
+                other.ReceiveRadioAlert(lastKnownPlayerPos);
+            }
+        }
+    }
+
+    public void ReceiveRadioAlert(Vector3 targetLocation)
+    {
+        // When receiving a radio / vocal shout from an allied guard, investigate the disturbance
+        lastKnownPlayerPos = targetLocation;
+        suspicionMeter = Mathf.Max(suspicionMeter, 0.60f);
+
+        if (currentState == GuardState.Patrolling || currentState == GuardState.Investigating)
+        {
+            currentState = GuardState.Suspicious;
+            searchTimer = searchWaitTime;
+            Debug.Log($"[PatrolMover] {gameObject.name} received radio alert! Converging on {targetLocation}");
+        }
     }
 
     private bool CheckDistractionEvents(out Vector3 eventPosition)
