@@ -1,12 +1,26 @@
-# HANDOFF — session 2026-11-04 (v0.5.0)
+# HANDOFF — session 2026-11-04 (v0.5.4)
 
 ## What was accomplished this session
+- **Checkpoint Interrogation, Rice Bowl Bribery & Alarm Sirens (`CheckpointTrigger.cs` & `ProceduralAudio.cs`)**:
+  * Implemented 2-rice-bowl bribery mechanics allowing players to barter scarce food rations with corrupt checkpoint guards to secure passage through Sector 4.
+  * Added perimeter security siren escalation: unauthorized gate breach or failed inspection synthesizes a procedural alarm siren (`CreateAlarmSirenClip`) and alerts all patrol guards within 35m.
+  * Pure-C# simulation updated with 30/30 automated tests passing (`prototypes/StealthSim`).
+- **Low-Spec Dynamic LOD & Spatial Entity Sleep for 30fps+ (`PatrolMover.cs` & `SurvivalSystem.cs`)**:
+  * Guards beyond 35m from the player drop to a lightweight 2Hz sensory sleep mode, skipping all vision cone raycasts and trigonometric angles while cruising on patrol.
+  * Throttled survival environmental checks (`CheckShelterStatus`, `CheckLightExposure`) to 10Hz in `SurvivalSystem.cs` instead of per-frame, eliminating CPU bottlenecks on the target dual-core Intel HD 520 hardware.
+  * Pure-C# simulation updated with 29/29 automated tests passing (`prototypes/StealthSim`).
+- **Guard Searchlight Synergy & Power Grid Flicker (`PatrolMover.cs` & `LightExposureZone.cs`)**:
+  * Guard patrol AI in `PatrolMover.cs` dynamically glances and reorients towards lingering searchlight disturbance hotspots within 25m.
+  * Added power grid flicker and strobe state in `LightExposureZone.cs` (`TriggerGridFlicker`) with smooth lerped recovery to standard oscillation after disturbance lingers expire.
+  * Pure-C# simulation updated with 28/28 automated tests passing (`prototypes/StealthSim`).
+- **Searchlight 60Hz Electrical Hum Audio & Whistle Alley Reverberation (`ProceduralAudio.cs` & `PlayerMove.cs`)**:
+  * Synthesized 60Hz transformer electrical hum with harmonic buzzing in `ProceduralAudio.cs` (`CreateSearchlightHumClip`) for spotlights and perimeter wire.
+  * Added urban concrete/metal alley acoustic reverberation bonus: whistle lures (`[Q]`) echoing between solid alley walls sustain an acoustic detection footprint +0.5s longer than open dirt fields.
+- **Pure-C# Simulation Prototype (`prototypes/StealthSim`)**:
+  * Mirrored whistle reverberation bonus in `SimulationWorld`.
+  * Added automated Test 27 validating whistle acoustic reverberation in enclosed concrete alleys (27/27 tests passing).
 - **Curfew Searchlight Target Tracking & Focused Linger (`LightExposureZone.cs` & `PatrolMover.cs`)**:
   * Implemented `FocusOnTarget`: nearby sweeping searchlights interrupt regular oscillation when guards become `Suspicious` or `Alert`, locking onto disturbance coordinates for 5 seconds before resuming patrol sweeps.
-  * Signal propagation: guards signal nearby searchlights within 20m when investigating suspicious player sightings or acoustic disturbances.
-- **Pure-C# Simulation Prototype (`prototypes/StealthSim`)**:
-  * Mirrored searchlight target focusing and linger timers in `CurfewSearchlight` and `SimulationWorld`.
-  * Added automated Test 26 validating searchlight target tracking and focused beam lingering (26/26 tests passing).
 - **Backlit Silhouette Detection & Guard Glare Blindness (`PatrolMover.cs`)**:
   * Implemented `CheckSilhouetteBacklit`: when a player is positioned between a guard and a powerful light source, high-contrast back-illumination overrides crouch/prone invisibility and amplifies detection rate by 1.8x.
   * Implemented guard glare blindness: guards looking directly into active floodlights or spotlights within 6m suffer a 30% reduction in effective vision distance (`glareBlindnessDistanceReduction = 0.30f`).
@@ -33,11 +47,11 @@
 - **Procedural Lo-Fi Audio Synthesizer (`ProceduralAudio.cs`)**:
   * Generates 22kHz mono PCM audio clips directly in memory without external asset overhead.
 - **Unified Command Center & Governance Sync**:
-  * Synchronized `dashboard.html` to `v0.5.0`.
-  * Updated `scripts/run_checks.py` to track 26/26 passing StealthSim tests.
+  * Synchronized `dashboard.html` to `v0.5.4`.
+  * Updated `scripts/run_checks.py` to track 30/30 passing StealthSim tests.
   * Updated `VERSION.md`, `CHANGELOG.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md`.
 
 ## For the successor
-1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (26/26 StealthSim tests, docs, server statuses).
+1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (30/30 StealthSim tests, docs, server statuses).
 2. Open `dashboard.html` in a web browser to inspect the updated Command Center console.
 3. Next priority: Unity URP scaffold in `unity-project/` (Hub 2022.3 LTS, 3D URP, Very Low preset locked).

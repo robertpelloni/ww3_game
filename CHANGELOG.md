@@ -2,6 +2,54 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.5.4 — 2026-11-04
+- **Checkpoint Interrogation & Food Bribery Polish (`CheckpointTrigger.cs`)**:
+  - Implemented 2-rice-bowl bribery mechanics allowing players to barter scarce food rations with corrupt checkpoint guards to secure safe passage through Sector 4.
+  - Added perimeter security siren escalation: unauthorized gate breach or failed inspection synthesizes a procedural alarm siren (`ProceduralAudio.cs`) and alerts all patrol guards within 35m.
+- **Audio Synthesis Expansion (`ProceduralAudio.cs`)**:
+  - Added `CreateAlarmSirenClip`: synthesizes a dual-frequency modulated warble siren (600Hz-900Hz) in-memory without external audio files.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored rice bowl bribery and checkpoint alarm sirens in `SimulationWorld`.
+  - Added automated Test 30 validating rice bribery and siren alarm propagation to guards within 35m (30/30 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` and governance docs to version 0.5.4.
+
+## 0.5.3 — 2026-11-04
+- **Low-Spec Dynamic LOD & Spatial Entity Sleep (`PatrolMover.cs`)**:
+  - Guards beyond 35m from the player drop to a lightweight 2Hz sensory sleep mode, skipping all raycasts and trigonometric angles while cruising on patrol to preserve a solid 30fps+ on low-spec hardware (Intel HD 520).
+  - Distant guards awaken instantly to full 60Hz evaluation upon player proximity or receiving an allied radio alert.
+- **Throttled Environmental Evaluations (`SurvivalSystem.cs`)**:
+  - Throttled shelter proximity and light exposure checks to 10Hz instead of running per-frame, eliminating unnecessary CPU overhead.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored dynamic spatial sleep LOD heuristics in `SimulationWorld`.
+  - Added automated Test 29 validating low-spec spatial sleep LOD and instant wake-up upon alert (29/29 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` and governance docs to version 0.5.3.
+
+## 0.5.2 — 2026-11-04
+- **Guard & Searchlight Synergy (`PatrolMover.cs` & `LightExposureZone.cs`)**:
+  - Implemented searchlight beam glance synergy: patrolling guards dynamically glance and orient towards lingering searchlight disturbance hotspots within 25m.
+  - Added power grid flicker and strobe state in `LightExposureZone.cs` (`TriggerGridFlicker`) with smooth lerped recovery to standard oscillation after disturbance lingers expire.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Added searchlight beam glance orientation and power flicker state in `SimulationWorld`.
+  - Added automated Test 28 validating guard searchlight beam glance synergy and searchlight sweep recovery (28/28 tests passing).
+- **Single-Page Command Center Sync (`dashboard.html`)**:
+  - Bumped Command Center console to v0.5.2 with searchlight-guard synergy telemetry and tooltips.
+- **Documentation & Verification**:
+  - Synced `VERSION.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` to version 0.5.2.
+
+## 0.5.1 — 2026-11-04
+- **Searchlight Electrical Hum Audio & Whistle Reverberation (`ProceduralAudio.cs` & `PlayerMove.cs`)**:
+  - Synthesized 60Hz industrial electrical transformer hum and harmonics in `ProceduralAudio.cs` (`CreateSearchlightHumClip`).
+  - Added urban concrete/metal alley acoustic reverberation bonus: whistle lures (`[Q]`) echoing between solid alley walls sustain an acoustic detection footprint +0.5s longer than open dirt fields.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored whistle reverberation bonus in `SimulationWorld`.
+  - Added automated Test 27 validating whistle acoustic reverberation in enclosed concrete alleys (27/27 tests passing).
+- **Single-Page Command Center Sync (`dashboard.html`)**:
+  - Bumped Command Center console to v0.5.1 with acoustic reverberation telemetry and tooltips.
+- **Documentation & Verification**:
+  - Synced `VERSION.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` to version 0.5.1.
+
 ## 0.5.0 — 2026-11-04
 - **Curfew Searchlight Target Tracking & Focused Linger (`LightExposureZone.cs` & `PatrolMover.cs`)**:
   - Implemented `FocusOnTarget`: nearby sweeping searchlights interrupt regular oscillation when guards become `Suspicious` or `Alert`, locking onto disturbance coordinates for 5 seconds before resuming patrol sweeps.

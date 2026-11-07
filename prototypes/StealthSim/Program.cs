@@ -76,6 +76,8 @@ namespace WW3.StealthSim
         public bool FlashlightActive => State == AIState.Investigate || State == AIState.Search || State == AIState.Chase;
         public double HearingSensitivity { get; set; } = 1.0;
         public double SensorInterval { get; set; } = 0.066; // 15Hz when cruising
+        public double SpatialSleepDistance { get; set; } = 35.0; // >35m drops to 2Hz
+        public double SleepInterval { get; set; } = 0.50; // 2Hz sensory sleep
         public double SensorTimer { get; set; } = 0.0;
         public int SensorEvaluationCount { get; set; } = 0;
     }
@@ -145,6 +147,7 @@ namespace WW3.StealthSim
         public bool IsStarving => Hunger >= 80.0;
         public bool IsExhausted { get; set; } = false;
         public double ExhaustionTimer { get; set; } = 0.0;
+        public double WhistleTimer { get; set; } = 0.0;
 
         public double GetBaseSpeed() => CurrentStance switch
         {
@@ -215,6 +218,8 @@ namespace WW3.StealthSim
         public double SweepTime { get; set; } = 0.0;
         public Vec2? FocusTarget { get; set; } = null;
         public double FocusTimer { get; set; } = 0.0;
+        public bool IsFlickering { get; set; } = false;
+        public double FlickerTimer { get; set; } = 0.0;
 
         public Vec2 GetCurrentPosition()
         {
@@ -231,6 +236,12 @@ namespace WW3.StealthSim
             FocusTarget = target;
             FocusTimer = duration;
         }
+
+        public void TriggerFlicker(double duration = 2.0)
+        {
+            IsFlickering = true;
+            FlickerTimer = duration;
+        }
     }
 
     public class SimulationWorld
@@ -246,6 +257,8 @@ namespace WW3.StealthSim
         public Spotlight CurfewSearchlight { get; set; } = new Spotlight();
         public Vec2 SafehousePosition { get; set; } = new Vec2(56.0, 10.0);
         public Vec2 CheckpointPosition { get; set; } = new Vec2(40.0, 10.0);
+        public bool CheckpointBribed { get; set; } = false;
+        public bool CheckpointAlarmTripped { get; set; } = false;
         public Vec2? ActiveDistractionPos { get; set; } = null;
         public double ActiveDistractionRadius { get; set; } = 14.0;
         public double ActiveDistractionTimer { get; set; } = 0.0;
@@ -271,10 +284,37 @@ namespace WW3.StealthSim
             return true;
         }
 
+        public bool BribeCheckpointGuard()
+        {
+            if (PlayerCharacter.RiceCount < 2) return false;
+            PlayerCharacter.RiceCount -= 2;
+            CheckpointBribed = true;
+            ProceduralAudioLog.Add("CheckpointBribeAccepted");
+            return true;
+        }
+
+        public void TriggerCheckpointAlarm()
+        {
+            CheckpointAlarmTripped = true;
+            ProceduralAudioLog.Add("CheckpointAlarmSiren");
+            foreach (var g in Guards)
+            {
+                if (Vec2.Distance(CheckpointPosition, g.Position) <= 35.0)
+                {
+                    g.State = AIState.Chase;
+                    g.Suspicion = 100.0;
+                    g.LastInvestigateTarget = CheckpointPosition;
+                }
+            }
+        }
+
         public void Whistle()
         {
             TriggerWhistle();
-            ProceduralAudioLog.Add($"Whistle at ({PlayerCharacter.Position.X:F1}, {PlayerCharacter.Position.Y:F1})");
+            // Reverberation bonus in enclosed concrete/metal areas
+            double duration = (PlayerCharacter.CurrentSurface == SurfaceType.Concrete || PlayerCharacter.CurrentSurface == SurfaceType.MetalGrate) ? 1.5 : 1.0;
+            PlayerCharacter.WhistleTimer = duration;
+            ProceduralAudioLog.Add($"Whistle at ({PlayerCharacter.Position.X:F1}, {PlayerCharacter.Position.Y:F1}) [duration={duration:F1}s]");
         }
 
         public SimulationWorld()
@@ -416,6 +456,8 @@ namespace WW3.StealthSim
         {
             Vec2 pPos = PlayerCharacter.Position;
             double whistleNoise = 20.0; // audible within 20m
+            double duration = (PlayerCharacter.CurrentSurface == SurfaceType.Concrete || PlayerCharacter.CurrentSurface == SurfaceType.MetalGrate) ? 1.5 : 1.0;
+            PlayerCharacter.WhistleTimer = duration;
 
             foreach (var guard in Guards)
             {
@@ -572,7 +614,17 @@ namespace WW3.StealthSim
 
             // Adaptive sensor budgeting: evaluate full physics rays every tick only when suspicious or active
             guard.SensorTimer += dt;
-            double currentInterval = (guard.State == AIState.Patrol && guard.Suspicion <= 5.0) ? guard.SensorInterval : 0.0;
+            bool isDistant = dist > guard.SpatialSleepDistance && guard.State == AIState.Patrol && guard.Suspicion <= 5.0;
+            double currentInterval = 0.0;
+            if (isDistant)
+            {
+                currentInterval = guard.SleepInterval; // 2Hz sleep
+            }
+            else if (guard.State == AIState.Patrol && guard.Suspicion <= 5.0)
+            {
+                currentInterval = guard.SensorInterval; // 15Hz cruising
+            }
+
             bool evaluateSensors = guard.SensorTimer >= currentInterval;
 
             bool inVisionCone = false;
@@ -772,6 +824,17 @@ namespace WW3.StealthSim
 
         private void ExecutePatrol(Guard guard, double dt)
         {
+            // Searchlight beam glance synergy: if searchlight is lingering on disturbance nearby, turn towards it
+            if (CurfewSearchlight.FocusTimer > 0 && CurfewSearchlight.FocusTarget.HasValue)
+            {
+                double distToBeam = Vec2.Distance(guard.Position, CurfewSearchlight.FocusTarget.Value);
+                if (distToBeam <= 25.0)
+                {
+                    Vec2 beamDir = (CurfewSearchlight.FocusTarget.Value - guard.Position).Normalized();
+                    guard.Forward = beamDir;
+                }
+            }
+
             Vec2 target = guard.WaypointDir > 0 ? guard.WaypointB : guard.WaypointA;
             Vec2 diff = target - guard.Position;
             double dist = diff.Magnitude();
@@ -784,7 +847,10 @@ namespace WW3.StealthSim
 
             Vec2 dir = diff.Normalized();
             guard.Position = guard.Position + dir * (guard.PatrolSpeed * dt);
-            guard.Forward = dir;
+            if (CurfewSearchlight.FocusTimer <= 0)
+            {
+                guard.Forward = dir;
+            }
         }
 
         public void BroadcastRadioAlert(Guard callingGuard)
@@ -1268,6 +1334,90 @@ namespace WW3.StealthSim
 
             Assert(searchlightTracking && searchlightResumedSweep,
                 "Curfew searchlights interrupt sweep to linger on guard disturbances before resuming sweep");
+
+            // Test 27: Whistle acoustic reverberation in enclosed concrete alleys
+            var simReverb = new SimulationWorld();
+            simReverb.PlayerCharacter.CurrentSurface = SurfaceType.Dirt;
+            simReverb.Whistle();
+            double dirtDuration = simReverb.PlayerCharacter.WhistleTimer;
+
+            simReverb.PlayerCharacter.CurrentSurface = SurfaceType.Concrete;
+            simReverb.Whistle();
+            double concreteDuration = simReverb.PlayerCharacter.WhistleTimer;
+
+            bool reverbBonusApplied = concreteDuration > dirtDuration && Math.Abs(concreteDuration - 1.5) < 0.01;
+            Assert(reverbBonusApplied, "Enclosed concrete alleys sustain acoustic whistle reverberation echoes (+0.5s)");
+
+            // Test 28: Searchlight guard beam glance synergy and grid flicker
+            var simSynergy = new SimulationWorld();
+            var gPatrol = simSynergy.Guards[0]; // Patrol-1 at (15, 5)
+            Vec2 initialForward = gPatrol.Forward;
+
+            // Trigger searchlight focus near guard at (18, 5)
+            Vec2 beamSpot = new Vec2(18.0, 5.0);
+            simSynergy.CurfewSearchlight.FocusOn(beamSpot, 4.0);
+            simSynergy.CurfewSearchlight.TriggerFlicker(2.0);
+
+            simSynergy.Step(0.2, new Vec2(0, 0));
+
+            // Guard forward should orient east towards the beam spot (18, 5) from (15, 5)
+            bool guardFacingSearchlight = gPatrol.Forward.X > 0.8 && simSynergy.CurfewSearchlight.IsFlickering;
+
+            // Step past linger timer to verify return to standard patrol orientation
+            simSynergy.Step(4.5, new Vec2(0, 0));
+            bool sweepResumed = simSynergy.CurfewSearchlight.FocusTimer <= 0;
+
+            Assert(guardFacingSearchlight && sweepResumed,
+                "Patrolling guards dynamically orient towards lingering searchlight beams and searchlight sweeps recover cleanly");
+
+            // Test 29: Low-spec dynamic spatial sleep LOD & instant alert wake-up
+            var simLOD = new SimulationWorld();
+            var farGuard = simLOD.Guards[2]; // Checkpoint Guard at (42, 10)
+            simLOD.PlayerCharacter.Position = new Vec2(2.0, 10.0); // 40m away (> 35m spatial sleep)
+            farGuard.SensorEvaluationCount = 0;
+
+            // Step 60 ticks of 0.016s (~1s of game time)
+            for (int i = 0; i < 60; i++)
+            {
+                simLOD.Step(0.016, new Vec2(0, 0));
+            }
+
+            // At 2Hz sleep LOD, distant guard should execute <= 4 sensory evaluations instead of 60
+            bool distantGuardSleeping = farGuard.SensorEvaluationCount <= 4;
+
+            // Trigger radio alert on mid-street Patrol-2 at (28, 15), well within 25m of farGuard (42, 10):
+            // dist = sqrt(14^2 + 5^2) = sqrt(196 + 25) = sqrt(221) = 14.8m <= 25m
+            var midGuard = simLOD.Guards[1];
+            midGuard.State = AIState.Chase;
+            midGuard.LastInvestigateTarget = new Vec2(28.0, 15.0);
+            farGuard.SensorEvaluationCount = 0;
+            simLOD.BroadcastRadioAlert(midGuard);
+
+            // After radio alert, distant guard is awake in Investigate state
+            bool guardAwakened = farGuard.State == AIState.Investigate && farGuard.Suspicion >= 60.0;
+
+            Assert(distantGuardSleeping && guardAwakened,
+                "Low-spec spatial sleep LOD throttles distant guards to 2Hz and wakes them immediately upon alert");
+
+            // Test 30: Checkpoint interrogation, rice bowl bribery, and siren alarm propagation
+            var simCheck = new SimulationWorld();
+            simCheck.PlayerCharacter.Position = simCheck.CheckpointPosition;
+            simCheck.PlayerCharacter.RiceCount = 3;
+
+            // Bribe checkpoint guard with 2 rice bowls
+            bool bribePassed = simCheck.BribeCheckpointGuard();
+            bool bribeRecorded = simCheck.CheckpointBribed && simCheck.PlayerCharacter.RiceCount == 1;
+
+            // Trigger alarm on un-bribed breach
+            var simAlarm = new SimulationWorld();
+            simAlarm.TriggerCheckpointAlarm();
+            var checkGuard = simAlarm.Guards[2]; // Checkpoint Guard at (42, 10)
+            bool alarmAlerted = simAlarm.CheckpointAlarmTripped &&
+                                checkGuard.State == AIState.Chase &&
+                                checkGuard.Suspicion >= 99.0;
+
+            Assert(bribePassed && bribeRecorded && alarmAlerted,
+                "Checkpoint guard accepts 2-rice bribe and security sirens escalate guards within 35m to full Alert");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

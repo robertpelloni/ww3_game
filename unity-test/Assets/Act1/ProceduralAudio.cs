@@ -33,6 +33,29 @@ public static class ProceduralAudio
     }
 
     /// <summary>
+    /// Synthesizes a curfew perimeter security siren: warbling dual-frequency alarm tone.
+    /// Used when a checkpoint security gate is breached or alarm is tripped.
+    /// </summary>
+    public static AudioClip CreateAlarmSirenClip(float duration = 1.5f)
+    {
+        int sampleCount = (int)(SampleRate * duration);
+        float[] samples = new float[sampleCount];
+
+        for (int i = 0; i < sampleCount; i++)
+        {
+            float t = (float)i / SampleRate;
+            // Modulated warble between 600Hz and 900Hz at 3Hz
+            float freq = 750f + Mathf.Sin(2f * Mathf.PI * 3f * t) * 150f;
+            float tone = Mathf.Sin(2f * Mathf.PI * freq * t);
+            samples[i] = tone * 0.35f;
+        }
+
+        AudioClip clip = AudioClip.Create("CheckpointSecuritySiren", sampleCount, 1, SampleRate, false);
+        clip.SetData(samples, 0);
+        return clip;
+    }
+
+    /// <summary>
     /// Generates a sharp noise burst simulating shattered glass / thrown bottle impact.
     /// </summary>
     public static AudioClip CreateBottleShatterClip(float duration = 0.4f)
@@ -71,6 +94,29 @@ public static class ProceduralAudio
         }
 
         AudioClip clip = AudioClip.Create("Procedural_Footstep", sampleCount, 1, SampleRate, false);
+        clip.SetData(samples, 0);
+        return clip;
+    }
+
+    /// <summary>
+    /// Generates a low-frequency 60Hz transformer electrical hum with slight harmonic buzzing.
+    /// Used for active industrial curfew spotlights and high-voltage perimeter fences.
+    /// </summary>
+    public static AudioClip CreateSearchlightHumClip(float duration = 1.0f)
+    {
+        int sampleCount = Mathf.CeilToInt(SampleRate * duration);
+        float[] samples = new float[sampleCount];
+
+        for (int i = 0; i < sampleCount; i++)
+        {
+            float t = (float)i / SampleRate;
+            float fundamental = Mathf.Sin(2f * Mathf.PI * 60f * t);
+            float harmonic = Mathf.Sin(2f * Mathf.PI * 120f * t) * 0.35f;
+            float buzz = Mathf.Sin(2f * Mathf.PI * 180f * t) * 0.15f;
+            samples[i] = (fundamental + harmonic + buzz) * 0.25f;
+        }
+
+        AudioClip clip = AudioClip.Create("Procedural_SearchlightHum", sampleCount, 1, SampleRate, false);
         clip.SetData(samples, 0);
         return clip;
     }
