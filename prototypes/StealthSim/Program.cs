@@ -564,8 +564,19 @@ namespace WW3.StealthSim
 
                 Vec2 dirToPlayer = toPlayer.Normalized();
 
-                // Distance-culled Vision Check - skip raycasting if beyond vision range
-                if (dist <= guard.VisionRange)
+                // Distance-culled Vision Check with Glare Blindness
+                double effectiveVisionRange = guard.VisionRange;
+                Vec2 toSearchlight = CurfewSearchlight.GetCurrentPosition() - guard.Position;
+                if (toSearchlight.Magnitude() <= 6.0)
+                {
+                    double glareDot = Vec2.Dot(guard.Forward, toSearchlight.Normalized());
+                    if (glareDot > 0.70) // Guard looking directly into intense glare
+                    {
+                        effectiveVisionRange *= 0.70; // 30% glare distance reduction
+                    }
+                }
+
+                if (dist <= effectiveVisionRange)
                 {
                     bool rayBlocked = false;
                     foreach (var obs in Obstacles)
@@ -647,6 +658,19 @@ namespace WW3.StealthSim
                 double effectiveExposure = guard.FlashlightActive ? Math.Max(playerExposure, 0.75) : playerExposure;
                 double lightFactor = effectiveExposure >= 0.75 ? effectiveExposure * 2.5 : effectiveExposure;
                 double stanceMod = PlayerCharacter.GetStanceDetectionMultiplier();
+
+                // Backlit Silhouette Check: if light source is directly behind player relative to guard
+                Vec2 toLight = CurfewSearchlight.GetCurrentPosition() - PlayerCharacter.Position;
+                if (toLight.Magnitude() <= CurfewSearchlight.Radius * 1.5)
+                {
+                    double silhouetteDot = Vec2.Dot(toPlayer.Normalized(), toLight.Normalized());
+                    if (silhouetteDot > 0.50)
+                    {
+                        stanceMod = Math.Max(stanceMod, 0.75); // Negates prone/crouch invisibility in silhouette
+                        lightFactor *= 1.8;
+                    }
+                }
+
                 double proximityMod = Math.Clamp(1.0 - (dist / guard.VisionRange), 0.1, 1.0);
                 double suspicionDelta = 65.0 * lightFactor * stanceMod * proximityMod * dt;
 
@@ -1162,6 +1186,39 @@ namespace WW3.StealthSim
 
             Assert(exhaustionTriggered && exhaustionRecovered,
                 "Sprint exhaustion triggers heavy-breathing acoustic signature and 1.5s recovery cooldown");
+
+            // Test 25: Backlit silhouette detection & guard searchlight glare blindness
+            var simSilh = new SimulationWorld();
+            var gSilh = simSilh.Guards[0]; // Patrol-1 at (15, 5)
+            gSilh.Position = new Vec2(10.0, 5.0);
+            gSilh.Forward = new Vec2(1, 0); // Guard facing east
+
+            // Position player at (14, 5) and spotlight behind player at (18, 5) -> Back-lit silhouette!
+            simSilh.PlayerCharacter.Position = new Vec2(14.0, 5.0);
+            simSilh.PlayerCharacter.CurrentStance = Stance.Prone; // Prone would usually be 0.3x
+            simSilh.CurfewSearchlight.Center = new Vec2(18.0, 5.0);
+            simSilh.CurfewSearchlight.SweepRange = 0;
+            simSilh.CurfewSearchlight.Radius = 5.0;
+
+            simSilh.Step(0.2, new Vec2(0, 0));
+            double silhouetteSuspicion = gSilh.Suspicion;
+
+            // Test glare blindness: guard at (15, 5) facing east directly into searchlight at (18, 5)
+            // Player standing at 11m (normally within 14m range, but > 14*0.7 = 9.8m glare limit)
+            var simBlind = new SimulationWorld();
+            var gBlind = simBlind.Guards[0];
+            gBlind.Position = new Vec2(10.0, 5.0);
+            gBlind.Forward = new Vec2(1, 0);
+            simBlind.CurfewSearchlight.Center = new Vec2(13.0, 5.0); // 3m in front of guard (intense glare)
+            simBlind.CurfewSearchlight.SweepRange = 0;
+            simBlind.CurfewSearchlight.Radius = 5.0;
+
+            simBlind.PlayerCharacter.Position = new Vec2(21.0, 5.0); // 11m away from guard (> 9.8m effective)
+            simBlind.Step(0.2, new Vec2(0, 0));
+            bool blindedFromDistantPlayer = gBlind.Suspicion == 0.0;
+
+            Assert(silhouetteSuspicion > 0.0 && blindedFromDistantPlayer,
+                "Backlit silhouette elevates detection and searchlight glare temporarily blinds guard vision");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

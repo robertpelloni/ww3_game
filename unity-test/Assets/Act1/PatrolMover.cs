@@ -23,6 +23,8 @@ public class PatrolMover : MonoBehaviour
     public float flashlightSweepAngle = 45f;
     public float flashlightSweepSpeed = 2.5f;
     public float searchlightAlertMultiplier = 2.5f;
+    public float silhouetteDetectionMultiplier = 1.8f;
+    public float glareBlindnessDistanceReduction = 0.30f; // -30% view distance when looking into light source
     public Transform targetPlayer;
     public GuardState currentState = GuardState.Patrolling;
     [Range(0f, 1f)]
@@ -117,6 +119,13 @@ public class PatrolMover : MonoBehaviour
             {
                 // Spotlight glare alert: high-visibility searchlight direct exposure
                 lightFactor *= searchlightAlertMultiplier;
+            }
+
+            // Silhouette detection: if player is back-lit by an intense light source behind them
+            if (CheckSilhouetteBacklit())
+            {
+                stanceModifier = Mathf.Max(stanceModifier, 0.75f); // Negates prone/crouch invisibility in silhouette
+                lightFactor *= silhouetteDetectionMultiplier;
             }
 
             float detectionMultiplier = stanceModifier * lightFactor;
@@ -376,6 +385,27 @@ public class PatrolMover : MonoBehaviour
         transform.position = targetPos;
     }
 
+    private bool CheckSilhouetteBacklit()
+    {
+        if (targetPlayer == null) return false;
+        var lights = FindObjectsByType<LightExposureZone>(FindObjectsSortMode.None);
+        if (lights == null) return false;
+
+        Vector3 toPlayer = (targetPlayer.position - transform.position).normalized;
+
+        foreach (var lz in lights)
+        {
+            if (lz == null || lz.exposureLevel < 0.70f) continue;
+            Vector3 toLight = (lz.transform.position - targetPlayer.position).normalized;
+            // If light is behind the player from guard's perspective (dot product > 0.5)
+            if (Vector3.Dot(toPlayer, toLight) > 0.5f && Vector3.Distance(lz.transform.position, targetPlayer.position) <= lz.radius * 1.5f)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private bool CheckVision()
     {
         if (targetPlayer == null) return false;
@@ -383,7 +413,26 @@ public class PatrolMover : MonoBehaviour
         Vector3 toPlayer = targetPlayer.position - transform.position;
         float dist = toPlayer.magnitude;
 
-        if (dist > viewDistance) return false;
+        // Apply glare blindness if guard is looking directly into an intense light beam within 6m
+        float effectiveViewDistance = viewDistance;
+        var lights = FindObjectsByType<LightExposureZone>(FindObjectsSortMode.None);
+        if (lights != null)
+        {
+            foreach (var lz in lights)
+            {
+                if (lz != null && lz.exposureLevel >= 0.75f)
+                {
+                    Vector3 toLight = lz.transform.position - transform.position;
+                    if (toLight.magnitude <= 6.0f && Vector3.Angle(transform.forward, toLight) <= 35f)
+                    {
+                        effectiveViewDistance *= (1f - glareBlindnessDistanceReduction);
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (dist > effectiveViewDistance) return false;
 
         float angle = Vector3.Angle(transform.forward, toPlayer);
         if (angle > viewAngle) return false;
