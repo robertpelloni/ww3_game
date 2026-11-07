@@ -22,6 +22,7 @@ public class PatrolMover : MonoBehaviour
     public bool isFlashlightActive = false;
     public float flashlightSweepAngle = 45f;
     public float flashlightSweepSpeed = 2.5f;
+    public float searchlightAlertMultiplier = 2.5f;
     public Transform targetPlayer;
     public GuardState currentState = GuardState.Patrolling;
     [Range(0f, 1f)]
@@ -91,7 +92,14 @@ public class PatrolMover : MonoBehaviour
                 }
             }
 
-            float detectionMultiplier = stanceModifier * Mathf.Lerp(0.3f, 1.8f, lightExposure);
+            float lightFactor = Mathf.Lerp(0.3f, 1.8f, lightExposure);
+            if (lightExposure >= 0.75f)
+            {
+                // Spotlight glare alert: high-visibility searchlight direct exposure
+                lightFactor *= searchlightAlertMultiplier;
+            }
+
+            float detectionMultiplier = stanceModifier * lightFactor;
             suspicionMeter = Mathf.Clamp01(suspicionMeter + (suspicionRate * detectionMultiplier) * Time.deltaTime);
             if (targetPlayer != null) lastKnownPlayerPos = targetPlayer.position;
 

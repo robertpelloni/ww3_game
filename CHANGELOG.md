@@ -2,6 +2,18 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.4.6 — 2026-11-04
+- **Searchlight Glare Suspicion Escalation (`PatrolMover.cs`)**:
+  - Implemented `searchlightAlertMultiplier = 2.5f`: when a player is illuminated directly under searchlight glare (exposure $\ge 0.75$), guard suspicion accumulation multiplies by 2.5x.
+  - Catches caught out in the open escalate suspicion near-instantaneously, making light timing essential.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored searchlight glare alert escalation dynamics into pure-C# simulation.
+  - Added automated Test 22 validating that direct searchlight glare accelerates guard suspicion accumulation by over 3x compared to ambient shadow (22/22 tests passing).
+- **Single-Page Command Center Sync (`dashboard.html`)**:
+  - Bumped Command Center console to v0.4.6 with searchlight glare escalation tooltips and updated telemetry.
+- **Documentation & Verification**:
+  - Synced `VERSION.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` to version 0.4.6.
+
 ## 0.4.5 — 2026-11-04
 - **Curfew Spotlight Sweeps & Dynamic Shadow Occlusion (`LightExposureZone.cs` & `PatrolMover.cs`)**:
   - Implemented horizontal oscillating searchlight sweeping in `LightExposureZone.cs` (`isSweepingSpotlight = true`, `sweepRangeX = 8.0f`).

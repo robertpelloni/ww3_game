@@ -597,9 +597,10 @@ namespace WW3.StealthSim
             {
                 // Detection scales with exposure, stance, and proximity. Flashlight illuminates target directly.
                 double effectiveExposure = guard.FlashlightActive ? Math.Max(playerExposure, 0.75) : playerExposure;
+                double lightFactor = effectiveExposure >= 0.75 ? effectiveExposure * 2.5 : effectiveExposure;
                 double stanceMod = PlayerCharacter.GetStanceDetectionMultiplier();
                 double proximityMod = Math.Clamp(1.0 - (dist / guard.VisionRange), 0.1, 1.0);
-                double suspicionDelta = 65.0 * effectiveExposure * stanceMod * proximityMod * dt;
+                double suspicionDelta = 65.0 * lightFactor * stanceMod * proximityMod * dt;
 
                 // Close range detection even in low light
                 if (dist < 2.5) suspicionDelta += 40.0 * dt;
@@ -1052,6 +1053,36 @@ namespace WW3.StealthSim
 
             Assert(protectedByShadow && detectedInClearSight,
                 "Obstacle walls project true occlusion shadows protecting players from sweeping searchlights and guard vision");
+
+            // Test 22: Searchlight glare multiplies guard suspicion accumulation
+            var simGlare = new SimulationWorld();
+            var gGlare = simGlare.Guards[0]; // Patrol-1 at (15, 5)
+            gGlare.Position = new Vec2(10.0, 5.0);
+            gGlare.Forward = new Vec2(1, 0); // Facing east towards player
+
+            // Player 5m in front of guard under spotlight glare
+            simGlare.PlayerCharacter.Position = new Vec2(15.0, 5.0);
+            simGlare.PlayerCharacter.CurrentStance = Stance.Walk;
+            simGlare.CurfewSearchlight.Center = new Vec2(15.0, 5.0);
+            simGlare.CurfewSearchlight.Radius = 5.0; // Exposure 1.0 >= 0.75 (glare)
+
+            simGlare.Step(0.2, new Vec2(0, 0));
+            double glareSuspicion = gGlare.Suspicion;
+
+            // Compare with baseline shadow
+            var simDim = new SimulationWorld();
+            var gDim = simDim.Guards[0];
+            gDim.Position = new Vec2(10.0, 5.0);
+            gDim.Forward = new Vec2(1, 0);
+            simDim.PlayerCharacter.Position = new Vec2(15.0, 5.0);
+            simDim.PlayerCharacter.CurrentStance = Stance.Walk;
+            simDim.CurfewSearchlight.Radius = 0; // Deep shadow exposure 0.05
+
+            simDim.Step(0.2, new Vec2(0, 0));
+            double dimSuspicion = gDim.Suspicion;
+
+            bool glareAccelerated = glareSuspicion > (dimSuspicion * 3.0);
+            Assert(glareAccelerated, "Searchlight direct glare accelerates guard suspicion accumulation by over 3x");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

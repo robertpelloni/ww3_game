@@ -1,6 +1,7 @@
-# TODO — granular short-term tasks (v0.4.5)
+# TODO — granular short-term tasks (v0.4.6)
 
 ## Verified working (keep green)
+- [x] Searchlight Glare Suspicion Acceleration (2.5x multiplier) in `PatrolMover.cs`
 - [x] Oscillating Searchlight Sweeps (`LightExposureZone.cs`) & Obstacle Shadow Occlusion in `PatrolMover.cs`
 - [x] Environmental Surface Trigger Zones (`SurfaceZone.cs` & `.meta`) for catwalks and debris
 - [x] Surface Material Footstep Noise Scaling (Dirt 0.7x, Metal 1.6x, Glass 2.0x) in `PlayerMove.cs`
@@ -27,7 +28,7 @@
 - [x] Sound lure mechanics: Player whistle `[Q]` producing a 20m acoustic radius in `PlayerMove.cs`
 - [x] Guard acoustic hearing & `Investigating` AI state machine in `PatrolMover.cs`
 - [x] Checkpoint security gate & interrogation system (`CheckpointTrigger.cs`) with paper checks `[E]` and bribe `[B]`
-- [x] Pure-C# console sim `prototypes/StealthSim` (.NET 10/8, 21/21 tests passing)
+- [x] Pure-C# console sim `prototypes/StealthSim` (.NET 10/8, 22/22 tests passing)
 - [x] Unity MCP round-trip U-T1–U-T14 via AnkleBreaker (`unity-test/` Act 1 starter)
 - [x] Godot G-T1–G-T7 via Coding-Solo G1 (`godot-test/` boot + debug capture + compiled TypeScript)
 - [x] Unreal R-T1–R-T2 graceful no-engine failure (sam-david R8)
