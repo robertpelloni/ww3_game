@@ -143,6 +143,8 @@ namespace WW3.StealthSim
         public bool FlashlightOn { get; set; } = false;
         public bool IsShivering => Cold >= 70.0;
         public bool IsStarving => Hunger >= 80.0;
+        public bool IsExhausted { get; set; } = false;
+        public double ExhaustionTimer { get; set; } = 0.0;
 
         public double GetBaseSpeed() => CurrentStance switch
         {
@@ -178,6 +180,13 @@ namespace WW3.StealthSim
                 // Freezing teeth chattering adds +1.8m acoustic signature
                 baseNoise += 1.8;
             }
+
+            if (IsExhausted)
+            {
+                // Heavy breathing from sprint exhaustion adds acoustic signature
+                baseNoise = Math.Max(baseNoise, 2.5);
+            }
+
             return baseNoise;
         }
 
@@ -437,6 +446,16 @@ namespace WW3.StealthSim
             }
             PlayerCharacter.CurrentSurface = detectedSurface;
 
+            // Handle sprint exhaustion cooldown
+            if (PlayerCharacter.ExhaustionTimer > 0)
+            {
+                PlayerCharacter.ExhaustionTimer -= dt;
+                if (PlayerCharacter.ExhaustionTimer <= 0)
+                {
+                    PlayerCharacter.IsExhausted = false;
+                }
+            }
+
             // Player Stamina / Movement
             double speed = PlayerCharacter.GetBaseSpeed();
 
@@ -456,12 +475,15 @@ namespace WW3.StealthSim
                 if (PlayerCharacter.Stamina <= 0.01)
                 {
                     PlayerCharacter.CurrentStance = Stance.Walk;
+                    PlayerCharacter.IsExhausted = true;
+                    PlayerCharacter.ExhaustionTimer = 1.5;
                 }
             }
             else
             {
                 double shiveringMod = PlayerCharacter.IsShivering ? (PlayerCharacter.Cold >= 80.0 ? 0.15 : 0.4) : 1.0;
-                PlayerCharacter.Stamina = Math.Min(100.0, PlayerCharacter.Stamina + 10.0 * shiveringMod * dt);
+                double exhaustionMod = PlayerCharacter.IsExhausted ? 0.5 : 1.0;
+                PlayerCharacter.Stamina = Math.Min(100.0, PlayerCharacter.Stamina + 10.0 * shiveringMod * exhaustionMod * dt);
             }
 
             // Survival drain vs shelter warming & radiant thermal light dynamic
@@ -1123,6 +1145,23 @@ namespace WW3.StealthSim
             // At 15Hz budgeting on calm patrol, sensor evaluations should be ~15-20 instead of 60
             bool sensorBudgeted = guardCruise.SensorEvaluationCount < 30 && guardCruise.SensorEvaluationCount > 0;
             Assert(sensorBudgeted, "Frame-budgeted sensor evaluation and distance culling conserve CPU cycles");
+
+            // Test 24: Sprint exhaustion recovery delay and heavy breathing acoustic footprint
+            var simExhaust = new SimulationWorld();
+            simExhaust.PlayerCharacter.Stamina = 2.0;
+            simExhaust.PlayerCharacter.CurrentStance = Stance.Sprint;
+            simExhaust.Step(0.2, new Vec2(1, 0)); // Drains stamina to 0
+
+            bool exhaustionTriggered = simExhaust.PlayerCharacter.IsExhausted &&
+                                       simExhaust.PlayerCharacter.CurrentStance == Stance.Walk &&
+                                       simExhaust.PlayerCharacter.GetNoiseRadius() >= 2.5;
+
+            // Wait 1.6s for cooldown to elapse
+            simExhaust.Step(1.6, new Vec2(0, 0));
+            bool exhaustionRecovered = !simExhaust.PlayerCharacter.IsExhausted;
+
+            Assert(exhaustionTriggered && exhaustionRecovered,
+                "Sprint exhaustion triggers heavy-breathing acoustic signature and 1.5s recovery cooldown");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

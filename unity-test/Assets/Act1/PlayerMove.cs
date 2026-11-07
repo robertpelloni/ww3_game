@@ -110,12 +110,17 @@ public class PlayerMove : MonoBehaviour
         {
             float baseNoise = IsMoving ? (GetBaseNoiseRadius() * surfaceNoiseMultiplier) : 0f;
 
-            // Shivering chattering noise mechanic:
-            // When freezing (isShivering true), teeth chattering emits a continuous +1.8m acoustic signature
-            // added to current movement noise, and at least 1.8m even if standing perfectly still in the dark.
-            if (survival != null && survival.isShivering)
+            // Shivering chattering noise & exhaustion heavy breathing:
+            if (survival != null)
             {
-                baseNoise = IsMoving ? (baseNoise + 1.8f) : 1.8f;
+                if (survival.isShivering)
+                {
+                    baseNoise = IsMoving ? (baseNoise + 1.8f) : 1.8f;
+                }
+                if (survival.isExhausted)
+                {
+                    baseNoise = Mathf.Max(baseNoise, 2.5f);
+                }
             }
 
             CurrentNoiseRadius = baseNoise;
@@ -199,10 +204,10 @@ public class PlayerMove : MonoBehaviour
         {
             currentStance = currentStance == Stance.Prone ? Stance.Walk : Stance.Prone;
         }
-        // Sprint when holding Shift (if sufficient stamina available)
+        // Sprint when holding Shift (if sufficient stamina available and not exhausted)
         else if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
         {
-            if (survival == null || survival.stamina > 5f)
+            if (survival == null || (survival.stamina > 10f && !survival.isExhausted))
             {
                 currentStance = Stance.Sprint;
             }

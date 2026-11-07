@@ -2,6 +2,18 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.4.8 — 2026-11-04
+- **Sprint Exhaustion Cooldown & Heavy-Breathing Audio (`PlayerMove.cs` & `SurvivalSystem.cs`)**:
+  - Implemented 1.5s recovery cooldown delay when player completely exhausts stamina (drops to 0). Sprint cannot be immediately spammed until the cooldown expires.
+  - Added heavy-breathing acoustic signature (+2.5m noise radius) while exhausted, punishing reckless sprinting in narrow alleys.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored sprint exhaustion cooldown delay and heavy-breathing acoustic footprint in `SimulationWorld`.
+  - Added automated Test 24 validating sprint exhaustion recovery delay and heavy-breathing noise footprint (24/24 tests passing).
+- **Single-Page Command Center Sync (`dashboard.html`)**:
+  - Bumped Command Center console to v0.4.8 with sprint exhaustion telemetry and tooltips.
+- **Documentation & Verification**:
+  - Synced `VERSION.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` to version 0.4.8.
+
 ## 0.4.7 — 2026-11-04
 - **Adaptive Frame-Budgeted Sensor Optimization (`PatrolMover.cs`)**:
   - Implemented dynamic sensor interval budgeting (15Hz when far / patrolling, 60Hz when suspicious or alert) to minimize physics raycasts.
