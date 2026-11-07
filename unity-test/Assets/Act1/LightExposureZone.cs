@@ -19,6 +19,8 @@ public class LightExposureZone : MonoBehaviour
     public bool isSweepingSpotlight = false;
     public float sweepRangeX = 8.0f;
     public float sweepSpeed = 1.2f;
+    public float focusLingerTimer = 0f;
+    private Vector3 focusTargetPos;
     private Vector3 initialPosition;
 
     [Tooltip("Light exposure factor when within radius (0.0 = deep shadow, 1.0 = full direct glare).")]
@@ -45,12 +47,24 @@ public class LightExposureZone : MonoBehaviour
 
     void Update()
     {
-        if (isSweepingSpotlight)
+        if (focusLingerTimer > 0f)
+        {
+            focusLingerTimer -= Time.deltaTime;
+            // Smoothly track towards focused disturbance location
+            transform.position = Vector3.Lerp(transform.position, focusTargetPos, Time.deltaTime * 3.0f);
+        }
+        else if (isSweepingSpotlight)
         {
             // Oscillate spotlight beam horizontally across alley
             float offsetX = Mathf.Sin(Time.time * sweepSpeed) * sweepRangeX;
             transform.position = new Vector3(initialPosition.x + offsetX, initialPosition.y, initialPosition.z);
         }
+    }
+
+    public void FocusOnTarget(Vector3 targetPos, float duration = 5.0f)
+    {
+        focusTargetPos = new Vector3(targetPos.x, transform.position.y, targetPos.z);
+        focusLingerTimer = duration;
     }
 
     /// <summary>

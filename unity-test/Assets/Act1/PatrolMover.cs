@@ -136,10 +136,12 @@ public class PatrolMover : MonoBehaviour
             {
                 currentState = GuardState.Alert;
                 BroadcastRadioAlert();
+                SignalNearbySearchlights(lastKnownPlayerPos, 5.0f);
             }
             else if (suspicionMeter >= 0.25f)
             {
                 currentState = GuardState.Suspicious;
+                SignalNearbySearchlights(lastKnownPlayerPos, 3.5f);
             }
         }
         else if (distractionHeard)
@@ -300,6 +302,24 @@ public class PatrolMover : MonoBehaviour
             if (d <= radioBroadcastRadius)
             {
                 other.ReceiveRadioAlert(lastKnownPlayerPos);
+            }
+        }
+    }
+
+    private void SignalNearbySearchlights(Vector3 targetPos, float lingerDuration)
+    {
+        var lights = FindObjectsByType<LightExposureZone>(FindObjectsSortMode.None);
+        if (lights == null) return;
+
+        foreach (var lz in lights)
+        {
+            if (lz != null && lz.isSweepingSpotlight)
+            {
+                float dist = Vector3.Distance(transform.position, lz.transform.position);
+                if (dist <= 20.0f)
+                {
+                    lz.FocusOnTarget(targetPos, lingerDuration);
+                }
             }
         }
     }

@@ -1,12 +1,15 @@
-# HANDOFF — session 2026-11-04 (v0.4.9)
+# HANDOFF — session 2026-11-04 (v0.5.0)
 
 ## What was accomplished this session
+- **Curfew Searchlight Target Tracking & Focused Linger (`LightExposureZone.cs` & `PatrolMover.cs`)**:
+  * Implemented `FocusOnTarget`: nearby sweeping searchlights interrupt regular oscillation when guards become `Suspicious` or `Alert`, locking onto disturbance coordinates for 5 seconds before resuming patrol sweeps.
+  * Signal propagation: guards signal nearby searchlights within 20m when investigating suspicious player sightings or acoustic disturbances.
+- **Pure-C# Simulation Prototype (`prototypes/StealthSim`)**:
+  * Mirrored searchlight target focusing and linger timers in `CurfewSearchlight` and `SimulationWorld`.
+  * Added automated Test 26 validating searchlight target tracking and focused beam lingering (26/26 tests passing).
 - **Backlit Silhouette Detection & Guard Glare Blindness (`PatrolMover.cs`)**:
   * Implemented `CheckSilhouetteBacklit`: when a player is positioned between a guard and a powerful light source, high-contrast back-illumination overrides crouch/prone invisibility and amplifies detection rate by 1.8x.
   * Implemented guard glare blindness: guards looking directly into active floodlights or spotlights within 6m suffer a 30% reduction in effective vision distance (`glareBlindnessDistanceReduction = 0.30f`).
-- **Pure-C# Simulation Prototype (`prototypes/StealthSim`)**:
-  * Mirrored silhouette detection and guard glare blindness in `SimulationWorld`.
-  * Added automated Test 25 validating backlit silhouette detection and searchlight glare blindness (25/25 tests passing).
 - **Sprint Exhaustion Cooldown & Heavy-Breathing Audio (`PlayerMove.cs` & `SurvivalSystem.cs`)**:
   * Implemented 1.5s recovery cooldown delay when player completely exhausts stamina (drops to 0). Sprint cannot be immediately spammed until the cooldown expires.
   * Added heavy-breathing acoustic signature (+2.5m noise radius) while exhausted, punishing reckless sprinting in narrow alleys.
@@ -21,7 +24,6 @@
   * Added chest-level raycast line-of-sight checks in `PatrolMover.cs` ensuring solid barricades and concrete walls cast vision-blocking shadows even when searchlights sweep nearby.
 - **Environmental Surface Zones (`SurfaceZone.cs` & `.meta`)**:
   * Created `SurfaceZone` trigger component for authoring metal catwalk grates, puddles/mud, and shattered glass debris in Act 1 levels.
-  * Automatically modulates `PlayerMove.cs` `currentSurface` when stepping into the zone bounds without manual tag setup.
 - **Surface Material Footstep Noise Scaling (`PlayerMove.cs`)**:
   * Added `SurfaceType` awareness: Dirt (0.7x dampening), Concrete (1.0x baseline), MetalGrate (1.6x amplification), GlassDebris (2.0x loud crunch).
 - **Guard Radio Alert Broadcast & Allied Patrol Convergence (`PatrolMover.cs`)**:
@@ -31,11 +33,11 @@
 - **Procedural Lo-Fi Audio Synthesizer (`ProceduralAudio.cs`)**:
   * Generates 22kHz mono PCM audio clips directly in memory without external asset overhead.
 - **Unified Command Center & Governance Sync**:
-  * Synchronized `dashboard.html` to `v0.4.9`.
-  * Updated `scripts/run_checks.py` to track 25/25 passing StealthSim tests.
+  * Synchronized `dashboard.html` to `v0.5.0`.
+  * Updated `scripts/run_checks.py` to track 26/26 passing StealthSim tests.
   * Updated `VERSION.md`, `CHANGELOG.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md`.
 
 ## For the successor
-1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (25/25 StealthSim tests, docs, server statuses).
+1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (26/26 StealthSim tests, docs, server statuses).
 2. Open `dashboard.html` in a web browser to inspect the updated Command Center console.
 3. Next priority: Unity URP scaffold in `unity-project/` (Hub 2022.3 LTS, 3D URP, Very Low preset locked).

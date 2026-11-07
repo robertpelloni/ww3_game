@@ -213,11 +213,23 @@ namespace WW3.StealthSim
         public double SweepRange { get; set; } = 10.0;
         public double SweepSpeed { get; set; } = 1.5;
         public double SweepTime { get; set; } = 0.0;
+        public Vec2? FocusTarget { get; set; } = null;
+        public double FocusTimer { get; set; } = 0.0;
 
         public Vec2 GetCurrentPosition()
         {
+            if (FocusTarget.HasValue && FocusTimer > 0)
+            {
+                return FocusTarget.Value;
+            }
             double offset = Math.Sin(SweepTime * SweepSpeed) * SweepRange;
             return new Vec2(Center.X + offset, Center.Y);
+        }
+
+        public void FocusOn(Vec2 target, double duration = 5.0)
+        {
+            FocusTarget = target;
+            FocusTimer = duration;
         }
     }
 
@@ -421,7 +433,18 @@ namespace WW3.StealthSim
         {
             if (GameOver || GameWon) return;
 
-            CurfewSearchlight.SweepTime += dt;
+            if (CurfewSearchlight.FocusTimer > 0)
+            {
+                CurfewSearchlight.FocusTimer -= dt;
+                if (CurfewSearchlight.FocusTimer <= 0)
+                {
+                    CurfewSearchlight.FocusTarget = null;
+                }
+            }
+            else
+            {
+                CurfewSearchlight.SweepTime += dt;
+            }
 
             if (ActiveDistractionTimer > 0)
             {
@@ -768,6 +791,12 @@ namespace WW3.StealthSim
         {
             if (callingGuard.AlertBroadcastCooldown > 0) return;
             callingGuard.AlertBroadcastCooldown = 3.0;
+
+            // Signal nearby sweeping searchlights to focus beam
+            if (Vec2.Distance(callingGuard.Position, CurfewSearchlight.Center) <= 25.0)
+            {
+                CurfewSearchlight.FocusOn(callingGuard.LastInvestigateTarget, 5.0);
+            }
 
             foreach (var other in Guards)
             {
@@ -1219,6 +1248,26 @@ namespace WW3.StealthSim
 
             Assert(silhouetteSuspicion > 0.0 && blindedFromDistantPlayer,
                 "Backlit silhouette elevates detection and searchlight glare temporarily blinds guard vision");
+
+            // Test 26: Searchlight target tracking and focused beam linger
+            var simTrack = new SimulationWorld();
+            var gAlert = simTrack.Guards[0]; // Patrol-1 at (15, 5)
+            Vec2 disturbancePos = new Vec2(22.0, 5.0);
+            gAlert.LastInvestigateTarget = disturbancePos;
+
+            // Trigger radio alert & searchlight focus call
+            simTrack.BroadcastRadioAlert(gAlert);
+
+            bool searchlightTracking = simTrack.CurfewSearchlight.FocusTimer > 0 &&
+                                       Vec2.Distance(simTrack.CurfewSearchlight.GetCurrentPosition(), disturbancePos) < 0.001;
+
+            // Advance 5.5s so linger timer expires and regular sweep resumes
+            simTrack.Step(5.5, new Vec2(0, 0));
+            bool searchlightResumedSweep = simTrack.CurfewSearchlight.FocusTimer <= 0 &&
+                                           simTrack.CurfewSearchlight.FocusTarget == null;
+
+            Assert(searchlightTracking && searchlightResumedSweep,
+                "Curfew searchlights interrupt sweep to linger on guard disturbances before resuming sweep");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

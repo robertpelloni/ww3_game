@@ -2,6 +2,18 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.5.0 — 2026-11-04
+- **Curfew Searchlight Target Tracking & Focused Linger (`LightExposureZone.cs` & `PatrolMover.cs`)**:
+  - Implemented `FocusOnTarget`: nearby sweeping searchlights interrupt regular oscillation when guards become `Suspicious` or `Alert`, locking onto disturbance coordinates for 5 seconds before resuming patrol sweeps.
+  - Signal propagation: guards signal nearby searchlights within 20m when investigating suspicious player sightings or acoustic disturbances.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored searchlight target focusing and linger timers in `CurfewSearchlight` and `SimulationWorld`.
+  - Added automated Test 26 validating searchlight target tracking and focused beam lingering (26/26 tests passing).
+- **Single-Page Command Center Sync (`dashboard.html`)**:
+  - Bumped Command Center console to v0.5.0 with searchlight target locking telemetry and tooltips.
+- **Documentation & Verification**:
+  - Synced `VERSION.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` to version 0.5.0 (Milestone 1 Core Polish Release).
+
 ## 0.4.9 — 2026-11-04
 - **Backlit Silhouette Detection & Guard Glare Blindness (`PatrolMover.cs`)**:
   - Implemented `CheckSilhouetteBacklit`: when a player is positioned between a guard and a powerful light source, high-contrast back-illumination overrides crouch/prone invisibility and amplifies detection rate by 1.8x.
