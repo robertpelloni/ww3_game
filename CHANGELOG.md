@@ -2,6 +2,18 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.5.1 — 2026-11-04
+- **Searchlight Electrical Hum Audio & Whistle Reverberation (`ProceduralAudio.cs` & `PlayerMove.cs`)**:
+  - Synthesized 60Hz industrial electrical transformer hum and harmonics in `ProceduralAudio.cs` (`CreateSearchlightHumClip`).
+  - Added urban concrete/metal alley acoustic reverberation bonus: whistle lures (`[Q]`) echoing between solid alley walls sustain an acoustic detection footprint +0.5s longer than open dirt fields.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored whistle reverberation bonus in `SimulationWorld`.
+  - Added automated Test 27 validating whistle acoustic reverberation in enclosed concrete alleys (27/27 tests passing).
+- **Single-Page Command Center Sync (`dashboard.html`)**:
+  - Bumped Command Center console to v0.5.1 with acoustic reverberation telemetry and tooltips.
+- **Documentation & Verification**:
+  - Synced `VERSION.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` to version 0.5.1.
+
 ## 0.5.0 — 2026-11-04
 - **Curfew Searchlight Target Tracking & Focused Linger (`LightExposureZone.cs` & `PatrolMover.cs`)**:
   - Implemented `FocusOnTarget`: nearby sweeping searchlights interrupt regular oscillation when guards become `Suspicious` or `Alert`, locking onto disturbance coordinates for 5 seconds before resuming patrol sweeps.

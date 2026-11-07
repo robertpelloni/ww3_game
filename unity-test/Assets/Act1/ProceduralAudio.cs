@@ -76,6 +76,29 @@ public static class ProceduralAudio
     }
 
     /// <summary>
+    /// Generates a low-frequency 60Hz transformer electrical hum with slight harmonic buzzing.
+    /// Used for active industrial curfew spotlights and high-voltage perimeter fences.
+    /// </summary>
+    public static AudioClip CreateSearchlightHumClip(float duration = 1.0f)
+    {
+        int sampleCount = Mathf.CeilToInt(SampleRate * duration);
+        float[] samples = new float[sampleCount];
+
+        for (int i = 0; i < sampleCount; i++)
+        {
+            float t = (float)i / SampleRate;
+            float fundamental = Mathf.Sin(2f * Mathf.PI * 60f * t);
+            float harmonic = Mathf.Sin(2f * Mathf.PI * 120f * t) * 0.35f;
+            float buzz = Mathf.Sin(2f * Mathf.PI * 180f * t) * 0.15f;
+            samples[i] = (fundamental + harmonic + buzz) * 0.25f;
+        }
+
+        AudioClip clip = AudioClip.Create("Procedural_SearchlightHum", sampleCount, 1, SampleRate, false);
+        clip.SetData(samples, 0);
+        return clip;
+    }
+
+    /// <summary>
     /// Helper to play an AudioClip at a point in world space.
     /// </summary>
     public static void PlayClipAtPoint(AudioClip clip, Vector3 position, float volume = 1f)

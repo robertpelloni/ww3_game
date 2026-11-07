@@ -141,8 +141,11 @@ public class PlayerMove : MonoBehaviour
         // [Q] Key triggers a loud whistle to lure or distract nearby guards (at player position)
         if (Input.GetKeyDown(KeyCode.Q) && whistleCooldownTimer <= 0f)
         {
-            whistleTimer = whistleDuration;
+            // Urban concrete alley reverberation: enclosed spaces sustain an acoustic echo bonus (+0.5s)
+            float reverberationBonus = (currentSurface == SurfaceType.Concrete || currentSurface == SurfaceType.MetalGrate) ? 0.5f : 0f;
+            whistleTimer = whistleDuration + reverberationBonus;
             whistleCooldownTimer = whistleCooldown;
+
             // Play procedural whistle audio
             try
             {
@@ -150,7 +153,7 @@ public class PlayerMove : MonoBehaviour
                 ProceduralAudio.PlayClipAtPoint(whistle, transform.position, 0.8f);
             }
             catch (System.Exception) {}
-            Debug.Log($"[PlayerMove] Whistled! Noise radius temporarily expanded to {whistleNoiseRadius}m.");
+            Debug.Log($"[PlayerMove] Whistled! Noise radius temporarily expanded to {whistleNoiseRadius}m (duration: {whistleTimer:F1}s).");
         }
 
         // [F] Key throws a scavenged glass bottle forward to distract guards to a remote position

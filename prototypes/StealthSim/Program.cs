@@ -145,6 +145,7 @@ namespace WW3.StealthSim
         public bool IsStarving => Hunger >= 80.0;
         public bool IsExhausted { get; set; } = false;
         public double ExhaustionTimer { get; set; } = 0.0;
+        public double WhistleTimer { get; set; } = 0.0;
 
         public double GetBaseSpeed() => CurrentStance switch
         {
@@ -274,7 +275,10 @@ namespace WW3.StealthSim
         public void Whistle()
         {
             TriggerWhistle();
-            ProceduralAudioLog.Add($"Whistle at ({PlayerCharacter.Position.X:F1}, {PlayerCharacter.Position.Y:F1})");
+            // Reverberation bonus in enclosed concrete/metal areas
+            double duration = (PlayerCharacter.CurrentSurface == SurfaceType.Concrete || PlayerCharacter.CurrentSurface == SurfaceType.MetalGrate) ? 1.5 : 1.0;
+            PlayerCharacter.WhistleTimer = duration;
+            ProceduralAudioLog.Add($"Whistle at ({PlayerCharacter.Position.X:F1}, {PlayerCharacter.Position.Y:F1}) [duration={duration:F1}s]");
         }
 
         public SimulationWorld()
@@ -416,6 +420,8 @@ namespace WW3.StealthSim
         {
             Vec2 pPos = PlayerCharacter.Position;
             double whistleNoise = 20.0; // audible within 20m
+            double duration = (PlayerCharacter.CurrentSurface == SurfaceType.Concrete || PlayerCharacter.CurrentSurface == SurfaceType.MetalGrate) ? 1.5 : 1.0;
+            PlayerCharacter.WhistleTimer = duration;
 
             foreach (var guard in Guards)
             {
@@ -1268,6 +1274,19 @@ namespace WW3.StealthSim
 
             Assert(searchlightTracking && searchlightResumedSweep,
                 "Curfew searchlights interrupt sweep to linger on guard disturbances before resuming sweep");
+
+            // Test 27: Whistle acoustic reverberation in enclosed concrete alleys
+            var simReverb = new SimulationWorld();
+            simReverb.PlayerCharacter.CurrentSurface = SurfaceType.Dirt;
+            simReverb.Whistle();
+            double dirtDuration = simReverb.PlayerCharacter.WhistleTimer;
+
+            simReverb.PlayerCharacter.CurrentSurface = SurfaceType.Concrete;
+            simReverb.Whistle();
+            double concreteDuration = simReverb.PlayerCharacter.WhistleTimer;
+
+            bool reverbBonusApplied = concreteDuration > dirtDuration && Math.Abs(concreteDuration - 1.5) < 0.01;
+            Assert(reverbBonusApplied, "Enclosed concrete alleys sustain acoustic whistle reverberation echoes (+0.5s)");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;
