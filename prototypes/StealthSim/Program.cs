@@ -111,6 +111,18 @@ namespace WW3.StealthSim
         }
     }
 
+    public class SurfaceZone
+    {
+        public double MinX { get; set; }
+        public double MaxX { get; set; }
+        public double MinY { get; set; }
+        public double MaxY { get; set; }
+        public SurfaceType Surface { get; set; } = SurfaceType.MetalGrate;
+        public string Name { get; set; } = "SurfaceZone";
+
+        public bool Contains(Vec2 p) => p.X >= MinX && p.X <= MaxX && p.Y >= MinY && p.Y <= MaxY;
+    }
+
     public class Player
     {
         public Vec2 Position { get; set; }
@@ -206,6 +218,7 @@ namespace WW3.StealthSim
         public List<Lamp> Lamps { get; } = new List<Lamp>();
         public List<Shelter> Shelters { get; } = new List<Shelter>();
         public List<ObstacleWall> Obstacles { get; } = new List<ObstacleWall>();
+        public List<SurfaceZone> SurfaceZones { get; } = new List<SurfaceZone>();
         public Spotlight CurfewSearchlight { get; set; } = new Spotlight();
         public Vec2 SafehousePosition { get; set; } = new Vec2(56.0, 10.0);
         public Vec2 CheckpointPosition { get; set; } = new Vec2(40.0, 10.0);
@@ -287,6 +300,26 @@ namespace WW3.StealthSim
                 MaxX = 40.5,
                 MinY = 2.0,
                 MaxY = 8.0
+            });
+
+            // Catwalk metal grates & rubble glass debris
+            SurfaceZones.Add(new SurfaceZone
+            {
+                Name = "Catwalk Metal Grate",
+                MinX = 20.0,
+                MaxX = 24.0,
+                MinY = 8.0,
+                MaxY = 12.0,
+                Surface = SurfaceType.MetalGrate
+            });
+            SurfaceZones.Add(new SurfaceZone
+            {
+                Name = "Broken Bottle Rubble",
+                MinX = 32.0,
+                MaxX = 35.0,
+                MinY = 8.0,
+                MaxY = 12.0,
+                Surface = SurfaceType.GlassDebris
             });
 
             // Street lamps
@@ -388,6 +421,18 @@ namespace WW3.StealthSim
             }
 
             double exposure = CalculatePlayerExposure();
+
+            // Detect current surface material
+            SurfaceType detectedSurface = SurfaceType.Concrete;
+            foreach (var sz in SurfaceZones)
+            {
+                if (sz.Contains(PlayerCharacter.Position))
+                {
+                    detectedSurface = sz.Surface;
+                    break;
+                }
+            }
+            PlayerCharacter.CurrentSurface = detectedSurface;
 
             // Player Stamina / Movement
             double speed = PlayerCharacter.GetBaseSpeed();
@@ -949,6 +994,26 @@ namespace WW3.StealthSim
 
             bool surfaceScaled = (dirtNoise < concreteNoise) && (concreteNoise < metalNoise) && (metalNoise < glassNoise);
             Assert(surfaceScaled, "Ground surface materials dynamically scale acoustic movement noise propagation");
+
+            // Test 20: Environmental surface zones automatically update player surface and noise
+            var simZone = new SimulationWorld();
+            // Start on default concrete at (5, 10)
+            simZone.PlayerCharacter.Position = new Vec2(5.0, 10.0);
+            simZone.Step(0.1, new Vec2(0, 0));
+            bool initialConcrete = simZone.PlayerCharacter.CurrentSurface == SurfaceType.Concrete;
+
+            // Move into Catwalk Metal Grate zone at (22, 10)
+            simZone.PlayerCharacter.Position = new Vec2(22.0, 10.0);
+            simZone.Step(0.1, new Vec2(0, 0));
+            bool enteredMetalGrate = simZone.PlayerCharacter.CurrentSurface == SurfaceType.MetalGrate;
+
+            // Move into Broken Bottle Rubble zone at (33, 10)
+            simZone.PlayerCharacter.Position = new Vec2(33.0, 10.0);
+            simZone.Step(0.1, new Vec2(0, 0));
+            bool enteredGlassDebris = simZone.PlayerCharacter.CurrentSurface == SurfaceType.GlassDebris;
+
+            Assert(initialConcrete && enteredMetalGrate && enteredGlassDebris,
+                "Environmental surface zones dynamically update player terrain and noise footprint");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

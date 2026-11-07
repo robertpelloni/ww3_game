@@ -2,6 +2,18 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.4.4 — 2026-11-04
+- **Environmental Surface Zones (`SurfaceZone.cs` & `.meta`)**:
+  - Created `SurfaceZone` trigger component for authoring metal catwalk grates, puddles/mud, and shattered glass debris in Act 1 levels.
+  - Automatically modulates `PlayerMove.cs` `currentSurface` when stepping into the zone bounds without manual tag setup.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Implemented `SurfaceZone` world geometry in `SimulationWorld`.
+  - Added automated Test 20 validating dynamic surface transitions (concrete $\to$ metal catwalk $\to$ broken bottle rubble) and subsequent acoustic movement noise expansion (20/20 tests passing).
+- **Single-Page Command Center Sync (`dashboard.html`)**:
+  - Bumped Command Center console to v0.4.4 with surface trigger zone telemetry and tooltips.
+- **Documentation & Verification**:
+  - Synced `VERSION.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` to version 0.4.4.
+
 ## 0.4.3 — 2026-11-04
 - **Surface Material Sound Propagation (`PlayerMove.cs`)**:
   - Implemented `SurfaceType` awareness: Dirt (0.7x dampening), Concrete (1.0x baseline), MetalGrate (1.6x amplification), GlassDebris (2.0x loud crunch).
