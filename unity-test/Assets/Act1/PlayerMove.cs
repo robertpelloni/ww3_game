@@ -10,6 +10,14 @@ public class PlayerMove : MonoBehaviour
         Sprint
     }
 
+    public enum SurfaceType
+    {
+        Dirt,           // Soft mud / packed earth (0.7x noise)
+        Concrete,       // Standard curfew pavement (1.0x noise)
+        MetalGrate,     // Ventilation grates / catwalks (1.6x noise)
+        GlassDebris     // Shattered glass / rubble (2.0x noise)
+    }
+
     [Header("Movement Speeds")]
     public float proneSpeed = 1.5f;
     public float crouchSpeed = 3.5f;
@@ -22,8 +30,10 @@ public class PlayerMove : MonoBehaviour
     public float walkNoise = 5.0f;
     public float sprintNoise = 12.0f;
 
-    [Header("Current Stance")]
+    [Header("Current Stance & Surface")]
     public Stance currentStance = Stance.Walk;
+    public SurfaceType currentSurface = SurfaceType.Concrete;
+    public float surfaceNoiseMultiplier = 1.0f;
 
     [Header("Distraction & Sound Mechanics")]
     public float whistleNoiseRadius = 20.0f;
@@ -80,6 +90,16 @@ public class PlayerMove : MonoBehaviour
         p.y = 1f;
         transform.position = p;
 
+        // Update surface material multiplier
+        surfaceNoiseMultiplier = currentSurface switch
+        {
+            SurfaceType.Dirt => 0.70f,
+            SurfaceType.Concrete => 1.00f,
+            SurfaceType.MetalGrate => 1.60f,
+            SurfaceType.GlassDebris => 2.00f,
+            _ => 1.00f
+        };
+
         // Calculate emitted noise radius
         if (whistleTimer > 0f)
         {
@@ -88,14 +108,19 @@ public class PlayerMove : MonoBehaviour
         }
         else
         {
-            float baseNoise = IsMoving ? GetBaseNoiseRadius() : 0f;
+            float baseNoise = IsMoving ? (GetBaseNoiseRadius() * surfaceNoiseMultiplier) : 0f;
 
-            // Shivering chattering noise mechanic:
-            // When freezing (isShivering true), teeth chattering emits a continuous +1.8m acoustic signature
-            // added to current movement noise, and at least 1.8m even if standing perfectly still in the dark.
-            if (survival != null && survival.isShivering)
+            // Shivering chattering noise & exhaustion heavy breathing:
+            if (survival != null)
             {
-                baseNoise = IsMoving ? (baseNoise + 1.8f) : 1.8f;
+                if (survival.isShivering)
+                {
+                    baseNoise = IsMoving ? (baseNoise + 1.8f) : 1.8f;
+                }
+                if (survival.isExhausted)
+                {
+                    baseNoise = Mathf.Max(baseNoise, 2.5f);
+                }
             }
 
             CurrentNoiseRadius = baseNoise;
@@ -118,6 +143,13 @@ public class PlayerMove : MonoBehaviour
         {
             whistleTimer = whistleDuration;
             whistleCooldownTimer = whistleCooldown;
+            // Play procedural whistle audio
+            try
+            {
+                AudioClip whistle = ProceduralAudio.CreateWhistleClip();
+                ProceduralAudio.PlayClipAtPoint(whistle, transform.position, 0.8f);
+            }
+            catch (System.Exception) {}
             Debug.Log($"[PlayerMove] Whistled! Noise radius temporarily expanded to {whistleNoiseRadius}m.");
         }
 
@@ -143,8 +175,14 @@ public class PlayerMove : MonoBehaviour
                 targetLanding.z = Mathf.Clamp(targetLanding.z, minZ, maxZ);
                 targetLanding.y = 1f;
 
-                // Spawn environmental sound event
+                // Spawn environmental sound event & procedural shatter audio
                 SoundDistractionEvent.Create(targetLanding, throwNoiseRadius, 3.0f);
+                try
+                {
+                    AudioClip shatter = ProceduralAudio.CreateBottleShatterClip();
+                    ProceduralAudio.PlayClipAtPoint(shatter, targetLanding, 0.9f);
+                }
+                catch (System.Exception) {}
                 Debug.Log($"[PlayerMove] Threw bottle to {targetLanding}! Bottles left: {survival.bottleCount}");
             }
             else
@@ -166,10 +204,10 @@ public class PlayerMove : MonoBehaviour
         {
             currentStance = currentStance == Stance.Prone ? Stance.Walk : Stance.Prone;
         }
-        // Sprint when holding Shift (if sufficient stamina available)
+        // Sprint when holding Shift (if sufficient stamina available and not exhausted)
         else if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
         {
-            if (survival == null || survival.stamina > 5f)
+            if (survival == null || (survival.stamina > 10f && !survival.isExhausted))
             {
                 currentStance = Stance.Sprint;
             }

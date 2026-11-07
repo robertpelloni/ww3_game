@@ -2,6 +2,154 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.5.0 — 2026-11-04
+- **Curfew Searchlight Target Tracking & Focused Linger (`LightExposureZone.cs` & `PatrolMover.cs`)**:
+  - Implemented `FocusOnTarget`: nearby sweeping searchlights interrupt regular oscillation when guards become `Suspicious` or `Alert`, locking onto disturbance coordinates for 5 seconds before resuming patrol sweeps.
+  - Signal propagation: guards signal nearby searchlights within 20m when investigating suspicious player sightings or acoustic disturbances.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored searchlight target focusing and linger timers in `CurfewSearchlight` and `SimulationWorld`.
+  - Added automated Test 26 validating searchlight target tracking and focused beam lingering (26/26 tests passing).
+- **Single-Page Command Center Sync (`dashboard.html`)**:
+  - Bumped Command Center console to v0.5.0 with searchlight target locking telemetry and tooltips.
+- **Documentation & Verification**:
+  - Synced `VERSION.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` to version 0.5.0 (Milestone 1 Core Polish Release).
+
+## 0.4.9 — 2026-11-04
+- **Backlit Silhouette Detection & Guard Glare Blindness (`PatrolMover.cs`)**:
+  - Implemented `CheckSilhouetteBacklit`: when a player is positioned between a guard and a powerful light source, high-contrast back-illumination overrides crouch/prone invisibility and amplifies detection rate by 1.8x.
+  - Implemented guard glare blindness: guards looking directly into active floodlights or spotlights within 6m suffer a 30% reduction in effective vision distance (`glareBlindnessDistanceReduction = 0.30f`).
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored silhouette detection and guard glare blindness in `SimulationWorld`.
+  - Added automated Test 25 validating backlit silhouette detection and searchlight glare blindness (25/25 tests passing).
+- **Single-Page Command Center Sync (`dashboard.html`)**:
+  - Bumped Command Center console to v0.4.9 with silhouette detection and glare blindness telemetry and tooltips.
+- **Documentation & Verification**:
+  - Synced `VERSION.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` to version 0.4.9.
+
+## 0.4.8 — 2026-11-04
+- **Sprint Exhaustion Cooldown & Heavy-Breathing Audio (`PlayerMove.cs` & `SurvivalSystem.cs`)**:
+  - Implemented 1.5s recovery cooldown delay when player completely exhausts stamina (drops to 0). Sprint cannot be immediately spammed until the cooldown expires.
+  - Added heavy-breathing acoustic signature (+2.5m noise radius) while exhausted, punishing reckless sprinting in narrow alleys.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored sprint exhaustion cooldown delay and heavy-breathing acoustic footprint in `SimulationWorld`.
+  - Added automated Test 24 validating sprint exhaustion recovery delay and heavy-breathing noise footprint (24/24 tests passing).
+- **Single-Page Command Center Sync (`dashboard.html`)**:
+  - Bumped Command Center console to v0.4.8 with sprint exhaustion telemetry and tooltips.
+- **Documentation & Verification**:
+  - Synced `VERSION.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` to version 0.4.8.
+
+## 0.4.7 — 2026-11-04
+- **Adaptive Frame-Budgeted Sensor Optimization (`PatrolMover.cs`)**:
+  - Implemented dynamic sensor interval budgeting (15Hz when far / patrolling, 60Hz when suspicious or alert) to minimize physics raycasts.
+  - Added distance-based raycast culling, conserving CPU cycles on the low-spec Intel HD 520 hardware target to guarantee 30fps+ performance.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored sensor interval evaluation and distance culling in `SimulationWorld`.
+  - Added automated Test 23 validating frame-budgeted sensor evaluation and distance culling (23/23 tests passing).
+- **Single-Page Command Center Sync (`dashboard.html`)**:
+  - Bumped Command Center console to v0.4.7 with sensor frequency budgeting and potato-hardware performance telemetry.
+- **Documentation & Verification**:
+  - Synced `VERSION.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` to version 0.4.7.
+
+## 0.4.6 — 2026-11-04
+- **Searchlight Glare Suspicion Escalation (`PatrolMover.cs`)**:
+  - Implemented `searchlightAlertMultiplier = 2.5f`: when a player is illuminated directly under searchlight glare (exposure $\ge 0.75$), guard suspicion accumulation multiplies by 2.5x.
+  - Catches caught out in the open escalate suspicion near-instantaneously, making light timing essential.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored searchlight glare alert escalation dynamics into pure-C# simulation.
+  - Added automated Test 22 validating that direct searchlight glare accelerates guard suspicion accumulation by over 3x compared to ambient shadow (22/22 tests passing).
+- **Single-Page Command Center Sync (`dashboard.html`)**:
+  - Bumped Command Center console to v0.4.6 with searchlight glare escalation tooltips and updated telemetry.
+- **Documentation & Verification**:
+  - Synced `VERSION.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` to version 0.4.6.
+
+## 0.4.5 — 2026-11-04
+- **Curfew Spotlight Sweeps & Dynamic Shadow Occlusion (`LightExposureZone.cs` & `PatrolMover.cs`)**:
+  - Implemented horizontal oscillating searchlight sweeping in `LightExposureZone.cs` (`isSweepingSpotlight = true`, `sweepRangeX = 8.0f`).
+  - Added chest-level raycast line-of-sight checks in `PatrolMover.cs` ensuring solid barricades and concrete walls cast vision-blocking shadows even when searchlights sweep nearby.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Implemented obstacle wall line-of-sight ray occlusion against guard vision cones.
+  - Added automated Test 21 validating that solid barricades project protective shadows against sweeping spotlights and guard vision (21/21 tests passing).
+- **Single-Page Command Center Sync (`dashboard.html`)**:
+  - Bumped Command Center console to v0.4.5 with sweeping searchlight telemetry and shadow projection tooltips.
+- **Documentation & Verification**:
+  - Synced `VERSION.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` to version 0.4.5.
+
+## 0.4.4 — 2026-11-04
+- **Environmental Surface Zones (`SurfaceZone.cs` & `.meta`)**:
+  - Created `SurfaceZone` trigger component for authoring metal catwalk grates, puddles/mud, and shattered glass debris in Act 1 levels.
+  - Automatically modulates `PlayerMove.cs` `currentSurface` when stepping into the zone bounds without manual tag setup.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Implemented `SurfaceZone` world geometry in `SimulationWorld`.
+  - Added automated Test 20 validating dynamic surface transitions (concrete $\to$ metal catwalk $\to$ broken bottle rubble) and subsequent acoustic movement noise expansion (20/20 tests passing).
+- **Single-Page Command Center Sync (`dashboard.html`)**:
+  - Bumped Command Center console to v0.4.4 with surface trigger zone telemetry and tooltips.
+- **Documentation & Verification**:
+  - Synced `VERSION.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` to version 0.4.4.
+
+## 0.4.3 — 2026-11-04
+- **Surface Material Sound Propagation (`PlayerMove.cs`)**:
+  - Implemented `SurfaceType` awareness: Dirt (0.7x dampening), Concrete (1.0x baseline), MetalGrate (1.6x amplification), GlassDebris (2.0x loud crunch).
+  - Dynamically modulates movement noise radius, making route planning across rooftops and ventilation catwalks tactical.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored `SurfaceType` and ground material multipliers into pure-C# simulation.
+  - Added automated Test 19 validating dynamic acoustic movement noise scaling across all surface materials (19/19 tests passing).
+- **Single-Page Command Center Sync (`dashboard.html`)**:
+  - Bumped Command Center console to v0.4.3 with ground surface acoustic telemetry and tooltips.
+- **Documentation & Verification**:
+  - Synced `VERSION.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` to version 0.4.3.
+
+## 0.4.2 — 2026-11-04
+- **Guard Radio Alert & Allied Convergence (`PatrolMover.cs`)**:
+  - Implemented mutual guard communication: when any guard enters `Alert` state (suspicion $\ge 0.8$), they broadcast a vocal/radio alert across a 25m radius (`radioBroadcastRadius = 25.0f`).
+  - Allied guards within range receive the alert, transition to `Suspicious` or `Investigating` states, and converge on the disturbance coordinates.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Implemented `BroadcastRadioAlert` in `SimulationWorld`.
+  - Added automated Test 18 validating that an alert from one guard successfully routes nearby patrolling guards to converge on the target coordinates (18/18 tests passing).
+- **Single-Page Command Center Sync (`dashboard.html`)**:
+  - Bumped Command Center console to v0.4.2 with guard radio alert convergence telemetry and tooltips.
+- **Documentation & Verification**:
+  - Synced `VERSION.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` to version 0.4.2.
+
+## 0.4.1 — 2026-11-04
+- **Guard Flashlight Search Sweeps (`PatrolMover.cs`)**:
+  - Implemented dynamic directional flashlight scanning when guards transition into `Investigating` or `Suspicious` states.
+  - Guards sweep their beam side-to-side (+/- 45°) while searching sound origins, drastically increasing detection rate (effective exposure $\ge 0.75$) when catching hiding players in dark alleys.
+  - Added Gizmo beam rendering for in-editor debug verification.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored guard flashlight activation and search beam dynamics into pure-C# simulation.
+  - Added automated Test 17 validating search flashlight activation and rapid detection in dark alleys (17/17 tests passing).
+- **Single-Page Command Center Sync (`dashboard.html`)**:
+  - Bumped Command Center console to v0.4.1 with guard flashlight sweeping telemetry and tooltips.
+- **Documentation & Verification**:
+  - Synced `VERSION.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` to version 0.4.1.
+
+## 0.4.0 — 2026-11-04
+- **Procedural Audio Synthesizer (`ProceduralAudio.cs`)**:
+  - Implemented 22kHz mono PCM procedural audio generator synthesizing whistle tone pulses, glass bottle impact shatter bursts, and footstep pulses in-memory without external asset dependencies.
+  - Tailored specifically to the low-spec hardware budget (Intel HD 520, zero asset overhead).
+  - Wired into `PlayerMove.cs` for whistle `[Q]` and bottle throw `[F]`.
+- **Unity Asset Metadata Governance**:
+  - Created explicit `.meta` files for `ProceduralAudio.cs`, `SoundDistractionEvent.cs`, and `SafehouseTrigger.cs`.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Added procedural audio event dispatch and logging.
+  - Added automated Test 16 validating procedural audio trigger dispatching for whistle and bottle impacts (16/16 tests passing).
+- **Single-Page Command Center Sync (`dashboard.html`)**:
+  - Bumped Command Center console to v0.4.0 with procedural audio tooltips and audio synthesis telemetry.
+- **Documentation & Verification**:
+  - Synced `VERSION.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` to version 0.4.0.
+
+## 0.3.9 — 2026-11-04
+- **Acoustic Obstacle Occlusion & Realistic Sound Propagation (`PatrolMover.cs`)**:
+  - Added line-of-sight acoustic raycasting between guards and sound origins (player footsteps, shivering teeth chattering, whistles, and thrown bottle impacts).
+  - Concrete barricades, buildings, and solid walls attenuate transmitted acoustic volume by 65% (`wallSoundOcclusionFactor = 0.35f`).
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Implemented `ObstacleWall` bounding-box geometry and sound ray occlusion logic in `prototypes/StealthSim/Program.cs`.
+  - Added automated Test 15 validating acoustic wall dampening (player walking 4m away behind concrete barricade remains unheard, but alerts guard when stepping into an unoccluded opening). Expanded test suite to 15/15 passing tests.
+- **Single-Page Command Center Sync (`dashboard.html`)**:
+  - Bumped Command Center console to v0.3.9 with sound occlusion tooltips and updated telemetry.
+- **Governance & Verification**:
+  - Synced `VERSION.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` to version 0.3.9.
+
 ## 0.3.8 — 2026-11-04
 - **Thrown Bottle Distraction Lure (`PlayerMove.cs` + `SoundDistractionEvent.cs`)**: Added scavenged glass bottle inventory item (`bottleCount = 2`) and throw impulse trigger (`[F]` key) that spawns a temporary `SoundDistractionEvent` at the impact location with a 14m acoustic noise radius.
 - **Guard AI Remote Distraction Investigation (`PatrolMover.cs`)**: Upgraded guard state machine to listen for environmental acoustic distraction events. Hearing a shattered bottle transitions guards to `GuardState.Investigating` and routes them directly to the impact location without discovering the player's true position.

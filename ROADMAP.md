@@ -1,14 +1,26 @@
 # ROADMAP — major structural milestones
 
-**Version:** 0.3.8 (see [VERSION.md](VERSION.md)).
+**Version:** 0.5.0 (see [VERSION.md](VERSION.md)).
 
-## M1 — Vertical slice: Act 1 Blackout Chongjin
+## M1 — Vertical slice: Act 1 Blackout Chongjin (Milestone Polish Completed)
 - 1 street 60x20m, night + fog + searchlight, 2 patrols + 1 checkpoint guard.
 - Win = reach safehouse; lose + retry < 3s; 30fps+ HD 520 Very Low.
 - State:
-  * Pure-C# console sim verified in `prototypes/StealthSim` (14/14 tests passing).
+  * Pure-C# console sim verified in `prototypes/StealthSim` (26/26 tests passing).
   * Scene + patrol/player starter scripts live in `unity-test/` (see [docs/MCP_TESTS.md](docs/MCP_TESTS.md)).
+  * Searchlight target tracking and focused beam lingering on guard disturbances (`LightExposureZone.cs`).
+  * Backlit silhouette detection & guard searchlight glare blindness (-30% range) in `PatrolMover.cs`.
+  * Sprint exhaustion 1.5s recovery cooldown delay and heavy-breathing acoustic signature in `PlayerMove.cs`.
+  * Frame-budgeted adaptive sensor ticking (15Hz patrol / 60Hz alert) and distance culling in `PatrolMover.cs`.
+  * Searchlight glare suspicion escalation (2.5x) and directional alerts in `PatrolMover.cs`.
+  * Oscillating Curfew Searchlight Sweeps (`LightExposureZone.cs`) and obstacle vision shadow projection.
+  * Environmental Surface Trigger Zones (`SurfaceZone.cs`) for metal catwalks and glass debris.
+  * Surface material acoustic noise propagation (Dirt 0.7x, Metal 1.6x, Glass 2.0x) in `PlayerMove.cs`.
+  * Guard radio alert communication & 25m allied patrol convergence in `PatrolMover.cs`.
+  * Guard flashlight directional search sweeps and alert look-arounds in `PatrolMover.cs`.
+  * Procedural lo-fi audio generator (`ProceduralAudio.cs`) generating 22kHz mono PCM clips (whistles, bottle shatter, footsteps).
   * Unity Survival System + IMGUI OnGUI HUD active in `unity-test/Assets/Act1/`.
+  * Acoustic obstacle occlusion & realistic sound dampening (0.35x through concrete barricades) in `PatrolMover.cs`.
   * Thrown bottle sound distraction lure (`[F]`, 14m radius) and `SoundDistractionEvent.cs`.
   * Guard AI remote sound investigation without revealing player's position in `PatrolMover.cs`.
   * Temperature-Stamina Coupling & Light Radiant Thermodynamics in `SurvivalSystem.cs` and `PlayerMove.cs`.

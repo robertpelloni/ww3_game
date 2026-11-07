@@ -1,6 +1,19 @@
-# TODO — granular short-term tasks (v0.3.8)
+# TODO — granular short-term tasks (v0.5.0)
 
 ## Verified working (keep green)
+- [x] Searchlight Target Tracking & Focused Linger on Disturbances in `LightExposureZone.cs` & `PatrolMover.cs`
+- [x] Backlit Silhouette Detection & Guard Searchlight Glare Blindness in `PatrolMover.cs`
+- [x] Sprint Exhaustion Cooldown Delay (1.5s) & Heavy-Breathing Audio Footprint in `PlayerMove.cs`
+- [x] Frame-Budgeted Adaptive Sensor Ticking (15Hz patrol / 60Hz alert) & Distance Culling in `PatrolMover.cs`
+- [x] Searchlight Glare Suspicion Acceleration (2.5x multiplier) in `PatrolMover.cs`
+- [x] Oscillating Searchlight Sweeps (`LightExposureZone.cs`) & Obstacle Shadow Occlusion in `PatrolMover.cs`
+- [x] Environmental Surface Trigger Zones (`SurfaceZone.cs` & `.meta`) for catwalks and debris
+- [x] Surface Material Footstep Noise Scaling (Dirt 0.7x, Metal 1.6x, Glass 2.0x) in `PlayerMove.cs`
+- [x] Guard Radio Alert Broadcast & 25m Allied Patrol Convergence in `PatrolMover.cs`
+- [x] Guard Flashlight Directional Search Sweeps & Look-Around Scans in `PatrolMover.cs`
+- [x] Procedural lo-fi audio generator (`ProceduralAudio.cs`) synthesizing 22kHz mono PCM clips (whistles, bottle shatter, footsteps)
+- [x] Unity Asset Metadata Governance: explicit `.meta` files for `ProceduralAudio.cs`, `SoundDistractionEvent.cs`, and `SafehouseTrigger.cs`
+- [x] Acoustic Obstacle Occlusion & Wall Sound Attenuation (0.35x) in `PatrolMover.cs`
 - [x] Thrown Bottle Sound Distraction Lure (`[F]`, 14m radius) in `PlayerMove.cs` & `SoundDistractionEvent.cs`
 - [x] Guard AI Remote Sound Distraction Investigation without player disclosure (`PatrolMover.cs`)
 - [x] Temperature-Stamina Coupling & Light Radiant Thermodynamics in `SurvivalSystem.cs` (spotlight halogen radiant heat vs shadow alley wind chill)
@@ -19,7 +32,7 @@
 - [x] Sound lure mechanics: Player whistle `[Q]` producing a 20m acoustic radius in `PlayerMove.cs`
 - [x] Guard acoustic hearing & `Investigating` AI state machine in `PatrolMover.cs`
 - [x] Checkpoint security gate & interrogation system (`CheckpointTrigger.cs`) with paper checks `[E]` and bribe `[B]`
-- [x] Pure-C# console sim `prototypes/StealthSim` (.NET 10/8, 14/14 tests passing)
+- [x] Pure-C# console sim `prototypes/StealthSim` (.NET 10/8, 26/26 tests passing)
 - [x] Unity MCP round-trip U-T1–U-T14 via AnkleBreaker (`unity-test/` Act 1 starter)
 - [x] Godot G-T1–G-T7 via Coding-Solo G1 (`godot-test/` boot + debug capture + compiled TypeScript)
 - [x] Unreal R-T1–R-T2 graceful no-engine failure (sam-david R8)
@@ -27,7 +40,6 @@
 ## Next, highest value first
 - [ ] Unity URP scaffold in `unity-project/` (Hub 2022.3 LTS, 3D URP, Very Low preset)
 - [ ] Godot editor path: `launch_editor` on `godot-test`, author test scene
-- [ ] Procedural sound generation / audio clips for whistle & footstep pulses
 
 ## Hygiene (nondestructive)
 - [ ] Re-run `python3 scripts/run_checks.py` after any submodule pull

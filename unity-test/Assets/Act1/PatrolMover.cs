@@ -19,6 +19,12 @@ public class PatrolMover : MonoBehaviour
     [Header("Vision & Detection")]
     public float viewDistance = 12f;
     public float viewAngle = 70f; // Half-angle FOV
+    public bool isFlashlightActive = false;
+    public float flashlightSweepAngle = 45f;
+    public float flashlightSweepSpeed = 2.5f;
+    public float searchlightAlertMultiplier = 2.5f;
+    public float silhouetteDetectionMultiplier = 1.8f;
+    public float glareBlindnessDistanceReduction = 0.30f; // -30% view distance when looking into light source
     public Transform targetPlayer;
     public GuardState currentState = GuardState.Patrolling;
     [Range(0f, 1f)]
@@ -29,7 +35,19 @@ public class PatrolMover : MonoBehaviour
     [Header("Acoustic / Hearing Settings")]
     public float hearingMultiplier = 1.0f;
     public float searchWaitTime = 4.0f;
+    [Tooltip("Acoustic transmission factor through solid walls and concrete obstacles (0.35 = 65% dampening).")]
+    public float wallSoundOcclusionFactor = 0.35f;
+    public float radioBroadcastRadius = 25.0f;
     private float searchTimer = 0f;
+    private float alertBroadcastCooldown = 0f;
+
+    [Header("Performance & Sensor Budgeting (Intel HD 520 / Potato Target)")]
+    public float sensorTickInterval = 0.066f; // ~15Hz sensor update when patrolling far
+    private float sensorTickTimer = 0f;
+    private bool cachedPlayerSeen = false;
+    private bool cachedSoundHeard = false;
+    private bool cachedDistractionHeard = false;
+    private Vector3 cachedDistractionPos = Vector3.zero;
 
     private float t;
     private int dir = 1;
@@ -51,10 +69,22 @@ public class PatrolMover : MonoBehaviour
 
     void Update()
     {
-        bool playerSeen = CheckVision();
-        bool playerSoundHeard = CheckHearing();
-        Vector3 distractionPos;
-        bool distractionHeard = CheckDistractionEvents(out distractionPos);
+        // Adaptive sensor frequency: 60Hz when active / suspicious, 15Hz when cruising on patrol
+        float currentSensorInterval = (currentState == GuardState.Patrolling && suspicionMeter <= 0.1f) ? sensorTickInterval : 0f;
+        sensorTickTimer += Time.deltaTime;
+
+        if (sensorTickTimer >= currentSensorInterval)
+        {
+            sensorTickTimer = 0f;
+            cachedPlayerSeen = CheckVision();
+            cachedSoundHeard = CheckHearing();
+            cachedDistractionHeard = CheckDistractionEvents(out cachedDistractionPos);
+        }
+
+        bool playerSeen = cachedPlayerSeen;
+        bool playerSoundHeard = cachedSoundHeard;
+        bool distractionHeard = cachedDistractionHeard;
+        Vector3 distractionPos = cachedDistractionPos;
 
         // Update suspicion meter based on vision check and hearing
         if (playerSeen)
@@ -84,17 +114,34 @@ public class PatrolMover : MonoBehaviour
                 }
             }
 
-            float detectionMultiplier = stanceModifier * Mathf.Lerp(0.3f, 1.8f, lightExposure);
+            float lightFactor = Mathf.Lerp(0.3f, 1.8f, lightExposure);
+            if (lightExposure >= 0.75f)
+            {
+                // Spotlight glare alert: high-visibility searchlight direct exposure
+                lightFactor *= searchlightAlertMultiplier;
+            }
+
+            // Silhouette detection: if player is back-lit by an intense light source behind them
+            if (CheckSilhouetteBacklit())
+            {
+                stanceModifier = Mathf.Max(stanceModifier, 0.75f); // Negates prone/crouch invisibility in silhouette
+                lightFactor *= silhouetteDetectionMultiplier;
+            }
+
+            float detectionMultiplier = stanceModifier * lightFactor;
             suspicionMeter = Mathf.Clamp01(suspicionMeter + (suspicionRate * detectionMultiplier) * Time.deltaTime);
             if (targetPlayer != null) lastKnownPlayerPos = targetPlayer.position;
 
             if (suspicionMeter >= 0.8f)
             {
                 currentState = GuardState.Alert;
+                BroadcastRadioAlert();
+                SignalNearbySearchlights(lastKnownPlayerPos, 5.0f);
             }
             else if (suspicionMeter >= 0.25f)
             {
                 currentState = GuardState.Suspicious;
+                SignalNearbySearchlights(lastKnownPlayerPos, 3.5f);
             }
         }
         else if (distractionHeard)
@@ -146,7 +193,14 @@ public class PatrolMover : MonoBehaviour
             }
         }
 
+        if (alertBroadcastCooldown > 0f)
+        {
+            alertBroadcastCooldown -= Time.deltaTime;
+        }
+
         // Execute behavior based on state
+        isFlashlightActive = (currentState == GuardState.Investigating || currentState == GuardState.Suspicious || currentState == GuardState.Alert);
+
         switch (currentState)
         {
             case GuardState.Patrolling:
@@ -154,33 +208,40 @@ public class PatrolMover : MonoBehaviour
                 break;
 
             case GuardState.Investigating:
-                // Move towards last heard or seen position
+                // Move towards last heard or seen position with flashlight sweeping
                 Vector3 investDir = (lastKnownPlayerPos - transform.position);
                 investDir.y = 0;
                 if (investDir.magnitude > 1.2f)
                 {
-                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(investDir.normalized), Time.deltaTime * 3.5f);
+                    Quaternion baseRot = Quaternion.LookRotation(investDir.normalized);
+                    float sweep = Mathf.Sin(Time.time * flashlightSweepSpeed) * (flashlightSweepAngle * 0.4f);
+                    Quaternion sweepRot = baseRot * Quaternion.Euler(0, sweep, 0);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, sweepRot, Time.deltaTime * 4f);
                     transform.position += transform.forward * investigateSpeed * Time.deltaTime;
                 }
                 else
                 {
-                    // Look around slowly
-                    transform.Rotate(Vector3.up, 30f * Time.deltaTime);
+                    // Arrived at search origin: execute wider sweeping look-around
+                    float wideSweep = Mathf.Sin(Time.time * flashlightSweepSpeed) * flashlightSweepAngle;
+                    transform.Rotate(Vector3.up, (35f + wideSweep * 0.5f) * Time.deltaTime);
                 }
                 break;
 
             case GuardState.Suspicious:
-                // Look toward last known position or pause
+                // Look toward last known position with alert search sweep
                 Vector3 lookDir = (lastKnownPlayerPos - transform.position);
                 lookDir.y = 0;
                 if (lookDir != Vector3.zero)
                 {
-                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(lookDir), Time.deltaTime * 3f);
+                    Quaternion targetRot = Quaternion.LookRotation(lookDir);
+                    float sweep = Mathf.Sin(Time.time * flashlightSweepSpeed * 1.5f) * (flashlightSweepAngle * 0.5f);
+                    Quaternion sweepRot = targetRot * Quaternion.Euler(0, sweep, 0);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, sweepRot, Time.deltaTime * 3.5f);
                 }
                 break;
 
             case GuardState.Alert:
-                // Move rapidly towards last known player position
+                // Move rapidly towards last known player position with beam locked forward
                 Vector3 targetDir = (lastKnownPlayerPos - transform.position);
                 targetDir.y = 0;
                 if (targetDir.magnitude > 1f)
@@ -199,11 +260,82 @@ public class PatrolMover : MonoBehaviour
         var pm = targetPlayer.GetComponent<PlayerMove>();
         if (pm == null) return false;
 
-        float noiseRadius = pm.CurrentNoiseRadius * hearingMultiplier;
-        if (noiseRadius <= 0f) return false;
+        float baseNoise = pm.CurrentNoiseRadius * hearingMultiplier;
+        if (baseNoise <= 0f) return false;
 
         float dist = Vector3.Distance(transform.position, targetPlayer.position);
-        return dist <= noiseRadius;
+        if (dist > baseNoise) return false;
+
+        // Acoustic ray occlusion check: if solid obstacle intervenes, attenuate effective hearing radius
+        float effectiveRadius = baseNoise;
+        Vector3 soundOrigin = targetPlayer.position + Vector3.up * 0.5f;
+        Vector3 guardEar = transform.position + Vector3.up * 1.5f;
+        Vector3 soundDir = soundOrigin - guardEar;
+        float rayDist = soundDir.magnitude;
+
+        RaycastHit hit;
+        if (Physics.Raycast(guardEar, soundDir.normalized, out hit, rayDist))
+        {
+            // Ignore hits against guard itself or target player
+            if (hit.transform != transform && !hit.transform.IsChildOf(transform) &&
+                hit.transform != targetPlayer && !hit.transform.IsChildOf(targetPlayer))
+            {
+                effectiveRadius *= wallSoundOcclusionFactor;
+            }
+        }
+
+        return dist <= effectiveRadius;
+    }
+
+    private void BroadcastRadioAlert()
+    {
+        if (alertBroadcastCooldown > 0f) return;
+        alertBroadcastCooldown = 3.0f;
+
+        var allGuards = FindObjectsByType<PatrolMover>(FindObjectsSortMode.None);
+        if (allGuards == null) return;
+
+        foreach (var other in allGuards)
+        {
+            if (other == null || other == this) continue;
+            float d = Vector3.Distance(transform.position, other.transform.position);
+            if (d <= radioBroadcastRadius)
+            {
+                other.ReceiveRadioAlert(lastKnownPlayerPos);
+            }
+        }
+    }
+
+    private void SignalNearbySearchlights(Vector3 targetPos, float lingerDuration)
+    {
+        var lights = FindObjectsByType<LightExposureZone>(FindObjectsSortMode.None);
+        if (lights == null) return;
+
+        foreach (var lz in lights)
+        {
+            if (lz != null && lz.isSweepingSpotlight)
+            {
+                float dist = Vector3.Distance(transform.position, lz.transform.position);
+                if (dist <= 20.0f)
+                {
+                    lz.FocusOnTarget(targetPos, lingerDuration);
+                }
+            }
+        }
+    }
+
+    public void ReceiveRadioAlert(Vector3 targetLocation)
+    {
+        // When receiving a radio / vocal shout from an allied guard, investigate the disturbance
+        lastKnownPlayerPos = targetLocation;
+        suspicionMeter = Mathf.Max(suspicionMeter, 0.60f);
+
+        if (currentState == GuardState.Patrolling || currentState == GuardState.Investigating)
+        {
+            currentState = GuardState.Suspicious;
+            searchTimer = searchWaitTime;
+            Debug.Log($"[PatrolMover] {gameObject.name} received radio alert! Converging on {targetLocation}");
+        }
     }
 
     private bool CheckDistractionEvents(out Vector3 eventPosition)
@@ -219,7 +351,28 @@ public class PatrolMover : MonoBehaviour
         {
             if (sde == null) continue;
             float d = Vector3.Distance(transform.position, sde.originPosition);
-            if (d <= sde.noiseRadius * hearingMultiplier && d < closestDist)
+            float baseRadius = sde.noiseRadius * hearingMultiplier;
+            if (d > baseRadius) continue;
+
+            // Acoustic ray occlusion check for environmental sound
+            float effectiveRadius = baseRadius;
+            Vector3 soundOrigin = sde.originPosition + Vector3.up * 0.5f;
+            Vector3 guardEar = transform.position + Vector3.up * 1.5f;
+            Vector3 soundDir = soundOrigin - guardEar;
+            float rayDist = soundDir.magnitude;
+
+            RaycastHit hit;
+            if (Physics.Raycast(guardEar, soundDir.normalized, out hit, rayDist))
+            {
+                // Ignore hits against guard itself or the distraction event object
+                if (hit.transform != transform && !hit.transform.IsChildOf(transform) &&
+                    hit.transform != sde.transform && !hit.transform.IsChildOf(sde.transform))
+                {
+                    effectiveRadius *= wallSoundOcclusionFactor;
+                }
+            }
+
+            if (d <= effectiveRadius && d < closestDist)
             {
                 closestDist = d;
                 closestEvent = sde;
@@ -252,6 +405,27 @@ public class PatrolMover : MonoBehaviour
         transform.position = targetPos;
     }
 
+    private bool CheckSilhouetteBacklit()
+    {
+        if (targetPlayer == null) return false;
+        var lights = FindObjectsByType<LightExposureZone>(FindObjectsSortMode.None);
+        if (lights == null) return false;
+
+        Vector3 toPlayer = (targetPlayer.position - transform.position).normalized;
+
+        foreach (var lz in lights)
+        {
+            if (lz == null || lz.exposureLevel < 0.70f) continue;
+            Vector3 toLight = (lz.transform.position - targetPlayer.position).normalized;
+            // If light is behind the player from guard's perspective (dot product > 0.5)
+            if (Vector3.Dot(toPlayer, toLight) > 0.5f && Vector3.Distance(lz.transform.position, targetPlayer.position) <= lz.radius * 1.5f)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private bool CheckVision()
     {
         if (targetPlayer == null) return false;
@@ -259,14 +433,38 @@ public class PatrolMover : MonoBehaviour
         Vector3 toPlayer = targetPlayer.position - transform.position;
         float dist = toPlayer.magnitude;
 
-        if (dist > viewDistance) return false;
+        // Apply glare blindness if guard is looking directly into an intense light beam within 6m
+        float effectiveViewDistance = viewDistance;
+        var lights = FindObjectsByType<LightExposureZone>(FindObjectsSortMode.None);
+        if (lights != null)
+        {
+            foreach (var lz in lights)
+            {
+                if (lz != null && lz.exposureLevel >= 0.75f)
+                {
+                    Vector3 toLight = lz.transform.position - transform.position;
+                    if (toLight.magnitude <= 6.0f && Vector3.Angle(transform.forward, toLight) <= 35f)
+                    {
+                        effectiveViewDistance *= (1f - glareBlindnessDistanceReduction);
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (dist > effectiveViewDistance) return false;
 
         float angle = Vector3.Angle(transform.forward, toPlayer);
         if (angle > viewAngle) return false;
 
         // Raycast check to ensure line of sight isn't blocked by obstacles (clamped to dist)
+        Vector3 guardEye = transform.position + Vector3.up * 1.5f;
+        Vector3 playerChest = targetPlayer.position + Vector3.up * 0.7f;
+        Vector3 rayDir = playerChest - guardEye;
+        float rayDist = rayDir.magnitude;
+
         RaycastHit hit;
-        if (Physics.Raycast(transform.position + Vector3.up * 0.5f, toPlayer.normalized, out hit, dist))
+        if (Physics.Raycast(guardEye, rayDir.normalized, out hit, rayDist))
         {
             if (hit.transform == targetPlayer || hit.transform.IsChildOf(targetPlayer))
             {
@@ -355,5 +553,12 @@ public class PatrolMover : MonoBehaviour
         Gizmos.DrawRay(transform.position, rightRayDirection * viewDistance);
         Gizmos.DrawRay(transform.position, transform.forward * viewDistance);
         Gizmos.DrawWireSphere(transform.position, 0.5f);
+
+        // Flashlight beam visualization when active
+        if (isFlashlightActive)
+        {
+            Gizmos.color = Color.white;
+            Gizmos.DrawRay(transform.position + Vector3.up * 1.2f, transform.forward * (viewDistance * 1.15f));
+        }
     }
 }

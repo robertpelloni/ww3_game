@@ -35,6 +35,8 @@ public class SurvivalSystem : MonoBehaviour
     [Header("Debuffs & Condition")]
     public bool isShivering = false;
     public bool isStarving = false;
+    public bool isExhausted = false;
+    public float exhaustionCooldown = 0f;
 
     [Header("Game Loop State")]
     public bool isGameOver = false;
@@ -48,7 +50,6 @@ public class SurvivalSystem : MonoBehaviour
     private PatrolMover nearestGuard;
     private ShelterZone[] shelterZones;
     private LightExposureZone[] lightZones;
-    private SafehouseTrigger safehouseTrigger;
 
     void Awake()
     {
@@ -134,13 +135,26 @@ public class SurvivalSystem : MonoBehaviour
             if (stamina <= 0.5f && playerMove != null)
             {
                 playerMove.currentStance = PlayerMove.Stance.Walk;
+                isExhausted = true;
+                exhaustionCooldown = 1.5f; // Enforce 1.5s recovery before sprint can resume
             }
         }
         else
         {
+            // If exhausted, cooldown must expire before sprint is allowed again
+            if (exhaustionCooldown > 0f)
+            {
+                exhaustionCooldown -= dt;
+                if (exhaustionCooldown <= 0f)
+                {
+                    isExhausted = false;
+                }
+            }
+
             // Cold shivering sharply reduces recovery rate; extreme shivering (>=80%) nearly halts it
             float shiveringPenalty = isShivering ? (cold >= 80f ? 0.15f : 0.4f) : 1.0f;
-            float recovery = staminaRecoverRate * (1f - (cold / 100f) * 0.5f) * shiveringPenalty;
+            float exhaustionPenalty = isExhausted ? 0.5f : 1.0f;
+            float recovery = staminaRecoverRate * (1f - (cold / 100f) * 0.5f) * shiveringPenalty * exhaustionPenalty;
             stamina = Mathf.Min(100f, stamina + recovery * dt);
         }
 
