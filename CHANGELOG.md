@@ -2,6 +2,18 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.5.2 — 2026-11-04
+- **Guard & Searchlight Synergy (`PatrolMover.cs` & `LightExposureZone.cs`)**:
+  - Implemented searchlight beam glance synergy: patrolling guards dynamically glance and orient towards lingering searchlight disturbance hotspots within 25m.
+  - Added power grid flicker and strobe state in `LightExposureZone.cs` (`TriggerGridFlicker`) with smooth lerped recovery to standard oscillation after disturbance lingers expire.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Added searchlight beam glance orientation and power flicker state in `SimulationWorld`.
+  - Added automated Test 28 validating guard searchlight beam glance synergy and searchlight sweep recovery (28/28 tests passing).
+- **Single-Page Command Center Sync (`dashboard.html`)**:
+  - Bumped Command Center console to v0.5.2 with searchlight-guard synergy telemetry and tooltips.
+- **Documentation & Verification**:
+  - Synced `VERSION.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` to version 0.5.2.
+
 ## 0.5.1 — 2026-11-04
 - **Searchlight Electrical Hum Audio & Whistle Reverberation (`ProceduralAudio.cs` & `PlayerMove.cs`)**:
   - Synthesized 60Hz industrial electrical transformer hum and harmonics in `ProceduralAudio.cs` (`CreateSearchlightHumClip`).

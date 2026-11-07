@@ -20,6 +20,9 @@ public class LightExposureZone : MonoBehaviour
     public float sweepRangeX = 8.0f;
     public float sweepSpeed = 1.2f;
     public float focusLingerTimer = 0f;
+    public bool isFlickering = false;
+    public float flickerTimer = 0f;
+    public float baseExposureLevel = 0.75f;
     private Vector3 focusTargetPos;
     private Vector3 initialPosition;
 
@@ -33,6 +36,7 @@ public class LightExposureZone : MonoBehaviour
     void Awake()
     {
         initialPosition = transform.position;
+        baseExposureLevel = exposureLevel;
         if (playerTransform == null)
         {
             var p = GameObject.FindWithTag("Player");
@@ -47,6 +51,18 @@ public class LightExposureZone : MonoBehaviour
 
     void Update()
     {
+        // Strobe / flicker dynamics during electrical grid instability
+        if (isFlickering)
+        {
+            flickerTimer -= Time.deltaTime;
+            exposureLevel = (Mathf.Sin(Time.time * 24f) > 0f) ? baseExposureLevel : (baseExposureLevel * 0.2f);
+            if (flickerTimer <= 0f)
+            {
+                isFlickering = false;
+                exposureLevel = baseExposureLevel;
+            }
+        }
+
         if (focusLingerTimer > 0f)
         {
             focusLingerTimer -= Time.deltaTime;
@@ -55,9 +71,10 @@ public class LightExposureZone : MonoBehaviour
         }
         else if (isSweepingSpotlight)
         {
-            // Oscillate spotlight beam horizontally across alley
+            // Oscillate spotlight beam horizontally across alley smoothly
             float offsetX = Mathf.Sin(Time.time * sweepSpeed) * sweepRangeX;
-            transform.position = new Vector3(initialPosition.x + offsetX, initialPosition.y, initialPosition.z);
+            Vector3 sweepTarget = new Vector3(initialPosition.x + offsetX, initialPosition.y, initialPosition.z);
+            transform.position = Vector3.Lerp(transform.position, sweepTarget, Time.deltaTime * 4.0f);
         }
     }
 
@@ -65,6 +82,12 @@ public class LightExposureZone : MonoBehaviour
     {
         focusTargetPos = new Vector3(targetPos.x, transform.position.y, targetPos.z);
         focusLingerTimer = duration;
+    }
+
+    public void TriggerGridFlicker(float duration = 2.0f)
+    {
+        isFlickering = true;
+        flickerTimer = duration;
     }
 
     /// <summary>

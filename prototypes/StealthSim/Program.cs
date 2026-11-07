@@ -216,6 +216,8 @@ namespace WW3.StealthSim
         public double SweepTime { get; set; } = 0.0;
         public Vec2? FocusTarget { get; set; } = null;
         public double FocusTimer { get; set; } = 0.0;
+        public bool IsFlickering { get; set; } = false;
+        public double FlickerTimer { get; set; } = 0.0;
 
         public Vec2 GetCurrentPosition()
         {
@@ -231,6 +233,12 @@ namespace WW3.StealthSim
         {
             FocusTarget = target;
             FocusTimer = duration;
+        }
+
+        public void TriggerFlicker(double duration = 2.0)
+        {
+            IsFlickering = true;
+            FlickerTimer = duration;
         }
     }
 
@@ -778,6 +786,17 @@ namespace WW3.StealthSim
 
         private void ExecutePatrol(Guard guard, double dt)
         {
+            // Searchlight beam glance synergy: if searchlight is lingering on disturbance nearby, turn towards it
+            if (CurfewSearchlight.FocusTimer > 0 && CurfewSearchlight.FocusTarget.HasValue)
+            {
+                double distToBeam = Vec2.Distance(guard.Position, CurfewSearchlight.FocusTarget.Value);
+                if (distToBeam <= 25.0)
+                {
+                    Vec2 beamDir = (CurfewSearchlight.FocusTarget.Value - guard.Position).Normalized();
+                    guard.Forward = beamDir;
+                }
+            }
+
             Vec2 target = guard.WaypointDir > 0 ? guard.WaypointB : guard.WaypointA;
             Vec2 diff = target - guard.Position;
             double dist = diff.Magnitude();
@@ -790,7 +809,10 @@ namespace WW3.StealthSim
 
             Vec2 dir = diff.Normalized();
             guard.Position = guard.Position + dir * (guard.PatrolSpeed * dt);
-            guard.Forward = dir;
+            if (CurfewSearchlight.FocusTimer <= 0)
+            {
+                guard.Forward = dir;
+            }
         }
 
         public void BroadcastRadioAlert(Guard callingGuard)
@@ -1287,6 +1309,28 @@ namespace WW3.StealthSim
 
             bool reverbBonusApplied = concreteDuration > dirtDuration && Math.Abs(concreteDuration - 1.5) < 0.01;
             Assert(reverbBonusApplied, "Enclosed concrete alleys sustain acoustic whistle reverberation echoes (+0.5s)");
+
+            // Test 28: Searchlight guard beam glance synergy and grid flicker
+            var simSynergy = new SimulationWorld();
+            var gPatrol = simSynergy.Guards[0]; // Patrol-1 at (15, 5)
+            Vec2 initialForward = gPatrol.Forward;
+
+            // Trigger searchlight focus near guard at (18, 5)
+            Vec2 beamSpot = new Vec2(18.0, 5.0);
+            simSynergy.CurfewSearchlight.FocusOn(beamSpot, 4.0);
+            simSynergy.CurfewSearchlight.TriggerFlicker(2.0);
+
+            simSynergy.Step(0.2, new Vec2(0, 0));
+
+            // Guard forward should orient east towards the beam spot (18, 5) from (15, 5)
+            bool guardFacingSearchlight = gPatrol.Forward.X > 0.8 && simSynergy.CurfewSearchlight.IsFlickering;
+
+            // Step past linger timer to verify return to standard patrol orientation
+            simSynergy.Step(4.5, new Vec2(0, 0));
+            bool sweepResumed = simSynergy.CurfewSearchlight.FocusTimer <= 0;
+
+            Assert(guardFacingSearchlight && sweepResumed,
+                "Patrolling guards dynamically orient towards lingering searchlight beams and searchlight sweeps recover cleanly");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

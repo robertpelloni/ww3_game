@@ -204,6 +204,18 @@ public class PatrolMover : MonoBehaviour
         switch (currentState)
         {
             case GuardState.Patrolling:
+                // If a nearby sweeping searchlight illuminates an active target or lingers, guard peeks towards illuminated zone
+                Vector3 searchlightHotspot;
+                if (CheckNearbySearchlightBeam(out searchlightHotspot))
+                {
+                    Vector3 glanceDir = (searchlightHotspot - transform.position);
+                    glanceDir.y = 0;
+                    if (glanceDir != Vector3.zero)
+                    {
+                        Quaternion glanceRot = Quaternion.LookRotation(glanceDir);
+                        transform.rotation = Quaternion.Slerp(transform.rotation, glanceRot, Time.deltaTime * 2.0f);
+                    }
+                }
                 PatrolMovement();
                 break;
 
@@ -403,6 +415,27 @@ public class PatrolMover : MonoBehaviour
             transform.rotation = Quaternion.LookRotation(moveDelta.normalized);
         }
         transform.position = targetPos;
+    }
+
+    private bool CheckNearbySearchlightBeam(out Vector3 beamPosition)
+    {
+        beamPosition = Vector3.zero;
+        var lights = FindObjectsByType<LightExposureZone>(FindObjectsSortMode.None);
+        if (lights == null) return false;
+
+        foreach (var lz in lights)
+        {
+            if (lz != null && lz.isSweepingSpotlight && lz.focusLingerTimer > 0f)
+            {
+                float d = Vector3.Distance(transform.position, lz.transform.position);
+                if (d <= 25.0f)
+                {
+                    beamPosition = lz.transform.position;
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private bool CheckSilhouetteBacklit()
