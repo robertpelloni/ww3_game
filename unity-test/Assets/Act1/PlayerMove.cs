@@ -193,6 +193,26 @@ public class PlayerMove : MonoBehaviour
                 Debug.Log("[PlayerMove] No glass bottles left to throw!");
             }
         }
+
+        // [T] Key uses scavenged wire cutters to breach secondary perimeter fence shortcut
+        if (Input.GetKeyDown(KeyCode.T))
+        {
+            if (survival != null && survival.hasWireCutters)
+            {
+                survival.hasCutPerimeterFence = true;
+                try
+                {
+                    AudioClip snip = ProceduralAudio.CreateWireSnipClip();
+                    ProceduralAudio.PlayClipAtPoint(snip, transform.position, 0.85f);
+                }
+                catch (System.Exception) {}
+                Debug.Log("[PlayerMove] Snip! Wire fence breached. Secondary stealth shortcut opened to safehouse!");
+            }
+            else
+            {
+                Debug.LogWarning("[PlayerMove] Cannot cut fence without wire cutters!");
+            }
+        }
     }
 
     void HandleStanceInput()

@@ -25,6 +25,8 @@ public class SurvivalSystem : MonoBehaviour
     public int hotTeaCount = 2;
     public int bottleCount = 2;
     public bool hasForgedPapers = true;
+    public bool hasWireCutters = true;
+    public bool hasCutPerimeterFence = false;
 
     [Header("Environmental Status")]
     public bool isSheltered = false;
@@ -377,8 +379,8 @@ public class SurvivalSystem : MonoBehaviour
             DrinkHotTea();
         }
 
-        GUI.Label(new Rect(20, 204, 235, 18), $"Papers: {(hasForgedPapers ? "Forged ID (Valid)" : "None")} | Bottles: {bottleCount}");
-        GUI.Label(new Rect(20, 222, 235, 18), "[Q] Whistle | [F] Throw Bottle | [1] Rice | [2] Med | [3] Tea");
+        GUI.Label(new Rect(20, 204, 235, 18), $"Papers: {(hasForgedPapers ? "Valid" : "None")} | Cutters: {(hasWireCutters ? "Equipped" : "None")} | Bottles: {bottleCount}");
+        GUI.Label(new Rect(20, 222, 235, 18), "[Q] Whistle | [F] Bottle | [T] Cut Wire Fence | [1] Rice | [2] Med | [3] Tea");
         GUI.Label(new Rect(20, 240, 235, 18), "[E] Checkpoint Papers | [B] Bribe Guard | [R] Retry");
 
         // Overlay for Game Over or Victory

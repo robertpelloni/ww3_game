@@ -1,6 +1,11 @@
-# HANDOFF — session 2026-11-04 (v0.5.4)
+# HANDOFF — session 2026-11-04 (v0.5.5)
 
 ## What was accomplished this session
+- **Wire-Cutter Shortcut Mechanics & Perimeter Breach (`PlayerMove.cs` & `SurvivalSystem.cs`)**:
+  * Implemented wire cutter interaction (`[T] Cut Wire Fence`) enabling Jun-ho to breach secondary perimeter chain-link fences using scavenged wire cutters (`hasWireCutters = true`).
+  * Opens an alternative stealth infiltration alleyway bypassing the heavily fortified Sector 4 Checkpoint Gate.
+  * Added procedural metallic wire-snip audio effect in `ProceduralAudio.cs` (`CreateWireSnipClip`).
+  * Pure-C# simulation updated with 31/31 automated tests passing (`prototypes/StealthSim`).
 - **Checkpoint Interrogation, Rice Bowl Bribery & Alarm Sirens (`CheckpointTrigger.cs` & `ProceduralAudio.cs`)**:
   * Implemented 2-rice-bowl bribery mechanics allowing players to barter scarce food rations with corrupt checkpoint guards to secure passage through Sector 4.
   * Added perimeter security siren escalation: unauthorized gate breach or failed inspection synthesizes a procedural alarm siren (`CreateAlarmSirenClip`) and alerts all patrol guards within 35m.
@@ -47,11 +52,11 @@
 - **Procedural Lo-Fi Audio Synthesizer (`ProceduralAudio.cs`)**:
   * Generates 22kHz mono PCM audio clips directly in memory without external asset overhead.
 - **Unified Command Center & Governance Sync**:
-  * Synchronized `dashboard.html` to `v0.5.4`.
-  * Updated `scripts/run_checks.py` to track 30/30 passing StealthSim tests.
+  * Synchronized `dashboard.html` to `v0.5.5`.
+  * Updated `scripts/run_checks.py` to track 31/31 passing StealthSim tests.
   * Updated `VERSION.md`, `CHANGELOG.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md`.
 
 ## For the successor
-1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (30/30 StealthSim tests, docs, server statuses).
+1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (31/31 StealthSim tests, docs, server statuses).
 2. Open `dashboard.html` in a web browser to inspect the updated Command Center console.
 3. Next priority: Unity URP scaffold in `unity-project/` (Hub 2022.3 LTS, 3D URP, Very Low preset locked).

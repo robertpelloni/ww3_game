@@ -33,6 +33,31 @@ public static class ProceduralAudio
     }
 
     /// <summary>
+    /// Synthesizes a sharp metallic wire snip / tension snap sound.
+    /// Used when cutting through secondary perimeter chain-link wire fences.
+    /// </summary>
+    public static AudioClip CreateWireSnipClip()
+    {
+        float duration = 0.25f;
+        int sampleCount = (int)(SampleRate * duration);
+        float[] samples = new float[sampleCount];
+
+        for (int i = 0; i < sampleCount; i++)
+        {
+            float t = (float)i / SampleRate;
+            float decay = Mathf.Exp(-t * 22f);
+            // High metallic ping (~2200Hz) plus quick noise snap
+            float metallic = Mathf.Sin(2f * Mathf.PI * 2200f * t);
+            float noise = (Random.value * 2f - 1f) * 0.5f;
+            samples[i] = (metallic * 0.6f + noise * 0.4f) * decay * 0.45f;
+        }
+
+        AudioClip clip = AudioClip.Create("WireFenceSnip", sampleCount, 1, SampleRate, false);
+        clip.SetData(samples, 0);
+        return clip;
+    }
+
+    /// <summary>
     /// Synthesizes a curfew perimeter security siren: warbling dual-frequency alarm tone.
     /// Used when a checkpoint security gate is breached or alarm is tripped.
     /// </summary>

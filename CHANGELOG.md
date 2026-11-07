@@ -2,6 +2,18 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.5.5 — 2026-11-04
+- **Wire-Cutter Shortcut Mechanics & Perimeter Breach (`PlayerMove.cs` & `SurvivalSystem.cs`)**:
+  - Implemented wire cutter interaction (`[T] Cut Wire Fence`) enabling Jun-ho to breach secondary perimeter chain-link fences using scavenged wire cutters (`hasWireCutters = true`).
+  - Opens an alternative stealth infiltration alleyway bypassing the heavily fortified Sector 4 Checkpoint Gate.
+- **Audio Synthesis Expansion (`ProceduralAudio.cs`)**:
+  - Added `CreateWireSnipClip`: synthesizes a sharp metallic wire snip and tension snap in-memory.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored wire cutters, fence cutting, and secondary stealth bypass path in `SimulationWorld`.
+  - Added automated Test 31 validating fence breach and safehouse infiltration via secondary stealth shortcut (31/31 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` and governance docs to version 0.5.5.
+
 ## 0.5.4 — 2026-11-04
 - **Checkpoint Interrogation & Food Bribery Polish (`CheckpointTrigger.cs`)**:
   - Implemented 2-rice-bowl bribery mechanics allowing players to barter scarce food rations with corrupt checkpoint guards to secure safe passage through Sector 4.

@@ -141,7 +141,8 @@ namespace WW3.StealthSim
         public int HotTeaCount { get; set; } = 1;
         public int BottleCount { get; set; } = 2;
         public bool HasForgedPapers { get; set; } = true;
-        public bool HasWireCutters { get; set; } = false;
+        public bool HasWireCutters { get; set; } = true;
+        public bool HasCutPerimeterFence { get; set; } = false;
         public bool FlashlightOn { get; set; } = false;
         public bool IsShivering => Cold >= 70.0;
         public bool IsStarving => Hunger >= 80.0;
@@ -306,6 +307,14 @@ namespace WW3.StealthSim
                     g.LastInvestigateTarget = CheckpointPosition;
                 }
             }
+        }
+
+        public bool CutWireFence()
+        {
+            if (!PlayerCharacter.HasWireCutters) return false;
+            PlayerCharacter.HasCutPerimeterFence = true;
+            ProceduralAudioLog.Add($"WireFenceSnip at ({PlayerCharacter.Position.X:F1}, {PlayerCharacter.Position.Y:F1})");
+            return true;
         }
 
         public void Whistle()
@@ -1418,6 +1427,23 @@ namespace WW3.StealthSim
 
             Assert(bribePassed && bribeRecorded && alarmAlerted,
                 "Checkpoint guard accepts 2-rice bribe and security sirens escalate guards within 35m to full Alert");
+
+            // Test 31: Wire-cutter shortcut breach and safehouse infiltration
+            var simCut = new SimulationWorld();
+            simCut.PlayerCharacter.HasWireCutters = true;
+            simCut.PlayerCharacter.Position = new Vec2(40.0, 1.0); // Side-fence boundary below checkpoint
+
+            bool cutSuccess = simCut.CutWireFence();
+            bool fenceBreached = simCut.PlayerCharacter.HasCutPerimeterFence &&
+                                 simCut.ProceduralAudioLog.Exists(a => a.StartsWith("WireFenceSnip"));
+
+            // Proceed through breach directly to safehouse
+            simCut.PlayerCharacter.Position = simCut.SafehousePosition;
+            simCut.Step(0.1, new Vec2(0, 0));
+            bool wonViaShortcut = simCut.GameWon;
+
+            Assert(cutSuccess && fenceBreached && wonViaShortcut,
+                "Scavenged wire cutters breach secondary perimeter fence opening stealth shortcut to safehouse");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;
