@@ -39,6 +39,14 @@ public class PatrolMover : MonoBehaviour
     private float searchTimer = 0f;
     private float alertBroadcastCooldown = 0f;
 
+    [Header("Performance & Sensor Budgeting (Intel HD 520 / Potato Target)")]
+    public float sensorTickInterval = 0.066f; // ~15Hz sensor update when patrolling far
+    private float sensorTickTimer = 0f;
+    private bool cachedPlayerSeen = false;
+    private bool cachedSoundHeard = false;
+    private bool cachedDistractionHeard = false;
+    private Vector3 cachedDistractionPos = Vector3.zero;
+
     private float t;
     private int dir = 1;
     private Vector3 lastKnownPlayerPos;
@@ -59,10 +67,22 @@ public class PatrolMover : MonoBehaviour
 
     void Update()
     {
-        bool playerSeen = CheckVision();
-        bool playerSoundHeard = CheckHearing();
-        Vector3 distractionPos;
-        bool distractionHeard = CheckDistractionEvents(out distractionPos);
+        // Adaptive sensor frequency: 60Hz when active / suspicious, 15Hz when cruising on patrol
+        float currentSensorInterval = (currentState == GuardState.Patrolling && suspicionMeter <= 0.1f) ? sensorTickInterval : 0f;
+        sensorTickTimer += Time.deltaTime;
+
+        if (sensorTickTimer >= currentSensorInterval)
+        {
+            sensorTickTimer = 0f;
+            cachedPlayerSeen = CheckVision();
+            cachedSoundHeard = CheckHearing();
+            cachedDistractionHeard = CheckDistractionEvents(out cachedDistractionPos);
+        }
+
+        bool playerSeen = cachedPlayerSeen;
+        bool playerSoundHeard = cachedSoundHeard;
+        bool distractionHeard = cachedDistractionHeard;
+        Vector3 distractionPos = cachedDistractionPos;
 
         // Update suspicion meter based on vision check and hearing
         if (playerSeen)

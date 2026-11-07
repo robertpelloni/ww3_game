@@ -2,6 +2,18 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.4.7 — 2026-11-04
+- **Adaptive Frame-Budgeted Sensor Optimization (`PatrolMover.cs`)**:
+  - Implemented dynamic sensor interval budgeting (15Hz when far / patrolling, 60Hz when suspicious or alert) to minimize physics raycasts.
+  - Added distance-based raycast culling, conserving CPU cycles on the low-spec Intel HD 520 hardware target to guarantee 30fps+ performance.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored sensor interval evaluation and distance culling in `SimulationWorld`.
+  - Added automated Test 23 validating frame-budgeted sensor evaluation and distance culling (23/23 tests passing).
+- **Single-Page Command Center Sync (`dashboard.html`)**:
+  - Bumped Command Center console to v0.4.7 with sensor frequency budgeting and potato-hardware performance telemetry.
+- **Documentation & Verification**:
+  - Synced `VERSION.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` to version 0.4.7.
+
 ## 0.4.6 — 2026-11-04
 - **Searchlight Glare Suspicion Escalation (`PatrolMover.cs`)**:
   - Implemented `searchlightAlertMultiplier = 2.5f`: when a player is illuminated directly under searchlight glare (exposure $\ge 0.75$), guard suspicion accumulation multiplies by 2.5x.

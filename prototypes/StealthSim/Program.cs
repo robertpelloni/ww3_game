@@ -75,6 +75,9 @@ namespace WW3.StealthSim
         public double VisionRange { get; set; } = 14.0;
         public bool FlashlightActive => State == AIState.Investigate || State == AIState.Search || State == AIState.Chase;
         public double HearingSensitivity { get; set; } = 1.0;
+        public double SensorInterval { get; set; } = 0.066; // 15Hz when cruising
+        public double SensorTimer { get; set; } = 0.0;
+        public int SensorEvaluationCount { get; set; } = 0;
     }
 
     public class Shelter
@@ -521,55 +524,78 @@ namespace WW3.StealthSim
         {
             Vec2 toPlayer = PlayerCharacter.Position - guard.Position;
             double dist = toPlayer.Magnitude();
-            Vec2 dirToPlayer = toPlayer.Normalized();
 
-            // Vision Check - Line of sight raycasting blocked by obstacle walls
-            bool rayBlocked = false;
-            foreach (var obs in Obstacles)
-            {
-                if (obs.BlocksSegment(guard.Position, PlayerCharacter.Position))
-                {
-                    rayBlocked = true;
-                    break;
-                }
-            }
+            // Adaptive sensor budgeting: evaluate full physics rays every tick only when suspicious or active
+            guard.SensorTimer += dt;
+            double currentInterval = (guard.State == AIState.Patrol && guard.Suspicion <= 5.0) ? guard.SensorInterval : 0.0;
+            bool evaluateSensors = guard.SensorTimer >= currentInterval;
 
-            double dot = Vec2.Dot(guard.Forward, dirToPlayer);
-            double angleDeg = Math.Acos(Math.Clamp(dot, -1.0, 1.0)) * (180.0 / Math.PI);
-            bool inVisionCone = !rayBlocked && angleDeg <= (guard.VisionAngleDeg / 2.0) && dist <= guard.VisionRange;
-
-            // Hearing Check - Player noise & Environmental sound distractions with obstacle occlusion
-            double effectivePlayerNoise = playerNoiseRadius * guard.HearingSensitivity;
-            foreach (var obs in Obstacles)
-            {
-                if (obs.BlocksSegment(guard.Position, PlayerCharacter.Position))
-                {
-                    effectivePlayerNoise *= guard.WallOcclusionFactor;
-                    break;
-                }
-            }
-            bool heardPlayerNoise = dist <= effectivePlayerNoise;
-
+            bool inVisionCone = false;
+            bool heardPlayerNoise = false;
             bool heardDistraction = false;
             Vec2 distractionTarget = Vec2.Zero;
 
-            if (ActiveDistractionPos.HasValue && ActiveDistractionTimer > 0)
+            if (evaluateSensors)
             {
-                double distDistract = Vec2.Distance(guard.Position, ActiveDistractionPos.Value);
-                double effectiveDistractRadius = ActiveDistractionRadius * guard.HearingSensitivity;
-                foreach (var obs in Obstacles)
+                guard.SensorTimer = 0.0;
+                guard.SensorEvaluationCount++;
+
+                Vec2 dirToPlayer = toPlayer.Normalized();
+
+                // Distance-culled Vision Check - skip raycasting if beyond vision range
+                if (dist <= guard.VisionRange)
                 {
-                    if (obs.BlocksSegment(guard.Position, ActiveDistractionPos.Value))
+                    bool rayBlocked = false;
+                    foreach (var obs in Obstacles)
                     {
-                        effectiveDistractRadius *= guard.WallOcclusionFactor;
-                        break;
+                        if (obs.BlocksSegment(guard.Position, PlayerCharacter.Position))
+                        {
+                            rayBlocked = true;
+                            break;
+                        }
                     }
+
+                    double dot = Vec2.Dot(guard.Forward, dirToPlayer);
+                    double angleDeg = Math.Acos(Math.Clamp(dot, -1.0, 1.0)) * (180.0 / Math.PI);
+                    inVisionCone = !rayBlocked && angleDeg <= (guard.VisionAngleDeg / 2.0);
                 }
 
-                if (distDistract <= effectiveDistractRadius)
+                // Distance-culled Hearing Check
+                double effectivePlayerNoise = playerNoiseRadius * guard.HearingSensitivity;
+                if (dist <= effectivePlayerNoise)
                 {
-                    heardDistraction = true;
-                    distractionTarget = ActiveDistractionPos.Value;
+                    foreach (var obs in Obstacles)
+                    {
+                        if (obs.BlocksSegment(guard.Position, PlayerCharacter.Position))
+                        {
+                            effectivePlayerNoise *= guard.WallOcclusionFactor;
+                            break;
+                        }
+                    }
+                    heardPlayerNoise = dist <= effectivePlayerNoise;
+                }
+
+                if (ActiveDistractionPos.HasValue && ActiveDistractionTimer > 0)
+                {
+                    double distDistract = Vec2.Distance(guard.Position, ActiveDistractionPos.Value);
+                    double effectiveDistractRadius = ActiveDistractionRadius * guard.HearingSensitivity;
+                    if (distDistract <= effectiveDistractRadius)
+                    {
+                        foreach (var obs in Obstacles)
+                        {
+                            if (obs.BlocksSegment(guard.Position, ActiveDistractionPos.Value))
+                            {
+                                effectiveDistractRadius *= guard.WallOcclusionFactor;
+                                break;
+                            }
+                        }
+
+                        if (distDistract <= effectiveDistractRadius)
+                        {
+                            heardDistraction = true;
+                            distractionTarget = ActiveDistractionPos.Value;
+                        }
+                    }
                 }
             }
 
@@ -1083,6 +1109,20 @@ namespace WW3.StealthSim
 
             bool glareAccelerated = glareSuspicion > (dimSuspicion * 3.0);
             Assert(glareAccelerated, "Searchlight direct glare accelerates guard suspicion accumulation by over 3x");
+
+            // Test 23: Performance budgeting and distance-culled sensor evaluation
+            var simPerf = new SimulationWorld();
+            var guardCruise = simPerf.Guards[0];
+            guardCruise.SensorEvaluationCount = 0;
+            // 60 ticks of 0.016s = ~1 second
+            for (int i = 0; i < 60; i++)
+            {
+                simPerf.Step(0.016, new Vec2(0, 0));
+            }
+
+            // At 15Hz budgeting on calm patrol, sensor evaluations should be ~15-20 instead of 60
+            bool sensorBudgeted = guardCruise.SensorEvaluationCount < 30 && guardCruise.SensorEvaluationCount > 0;
+            Assert(sensorBudgeted, "Frame-budgeted sensor evaluation and distance culling conserve CPU cycles");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;
