@@ -2,6 +2,18 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.5.4 — 2026-11-04
+- **Checkpoint Interrogation & Food Bribery Polish (`CheckpointTrigger.cs`)**:
+  - Implemented 2-rice-bowl bribery mechanics allowing players to barter scarce food rations with corrupt checkpoint guards to secure safe passage through Sector 4.
+  - Added perimeter security siren escalation: unauthorized gate breach or failed inspection synthesizes a procedural alarm siren (`ProceduralAudio.cs`) and alerts all patrol guards within 35m.
+- **Audio Synthesis Expansion (`ProceduralAudio.cs`)**:
+  - Added `CreateAlarmSirenClip`: synthesizes a dual-frequency modulated warble siren (600Hz-900Hz) in-memory without external audio files.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored rice bowl bribery and checkpoint alarm sirens in `SimulationWorld`.
+  - Added automated Test 30 validating rice bribery and siren alarm propagation to guards within 35m (30/30 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` and governance docs to version 0.5.4.
+
 ## 0.5.3 — 2026-11-04
 - **Low-Spec Dynamic LOD & Spatial Entity Sleep (`PatrolMover.cs`)**:
   - Guards beyond 35m from the player drop to a lightweight 2Hz sensory sleep mode, skipping all raycasts and trigonometric angles while cruising on patrol to preserve a solid 30fps+ on low-spec hardware (Intel HD 520).

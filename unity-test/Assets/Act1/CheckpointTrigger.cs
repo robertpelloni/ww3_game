@@ -16,11 +16,13 @@ public class CheckpointTrigger : MonoBehaviour
 
     [Header("Bribe / Dialogue")]
     public bool canBribe = true;
-    public int bribeCost = 50;
+    public int bribeRiceCost = 2; // Scavenged food bribe
     public bool bribed = false;
 
     [Header("Guard Association")]
     public PatrolMover checkpointGuard;
+    public float sirenBroadcastRadius = 35.0f;
+    private AudioSource audioSource;
 
     private bool playerInRange = false;
     private Transform playerTransform;
@@ -30,6 +32,14 @@ public class CheckpointTrigger : MonoBehaviour
         if (checkpointGuard == null)
         {
             checkpointGuard = FindFirstObjectByType<PatrolMover>();
+        }
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource.spatialBlend = 1.0f;
+            audioSource.minDistance = 3.0f;
+            audioSource.maxDistance = 40.0f;
         }
     }
 
@@ -77,21 +87,49 @@ public class CheckpointTrigger : MonoBehaviour
             }
             else if (Input.GetKeyDown(KeyCode.B) && canBribe)
             {
-                // Attempt bribe
-                bribed = true;
-                Debug.Log($"[Checkpoint] {checkpointName}: Guard accepted bribe of {bribeCost} won. Passage granted.");
+                // Attempt bribe with scavenged rice
+                if (survival != null && survival.riceCount >= bribeRiceCost)
+                {
+                    survival.riceCount -= bribeRiceCost;
+                    bribed = true;
+                    Debug.Log($"[Checkpoint] {checkpointName}: Guard accepted bribe of {bribeRiceCost} rice bowls. Passage granted.");
+                }
+                else
+                {
+                    Debug.LogWarning($"[Checkpoint] {checkpointName}: Guard sneers: 'Need at least {bribeRiceCost} rice bowls to pass.'");
+                }
             }
         }
     }
 
     public void TriggerSecurityAlarm()
     {
+        if (alarmTriggered) return;
         alarmTriggered = true;
-        if (checkpointGuard != null)
+
+        // Play security siren audio
+        if (audioSource != null)
         {
-            checkpointGuard.currentState = PatrolMover.GuardState.Alert;
-            checkpointGuard.suspicionMeter = 1.0f;
+            audioSource.clip = ProceduralAudio.CreateAlarmSirenClip(2.0f);
+            audioSource.Play();
         }
+
+        // Alert checkpoint guard and broadcast to all guards within 35m
+        var allGuards = FindObjectsByType<PatrolMover>(FindObjectsSortMode.None);
+        if (allGuards != null)
+        {
+            foreach (var g in allGuards)
+            {
+                if (g == null) continue;
+                if (Vector3.Distance(transform.position, g.transform.position) <= sirenBroadcastRadius)
+                {
+                    g.ReceiveRadioAlert(transform.position);
+                    g.currentState = PatrolMover.GuardState.Alert;
+                    g.suspicionMeter = 1.0f;
+                }
+            }
+        }
+
         Debug.LogWarning($"[ALARM] Checkpoint breach detected at {checkpointName}!");
     }
 
@@ -109,7 +147,7 @@ public class CheckpointTrigger : MonoBehaviour
                 GUI.Label(new Rect(Screen.width / 2 - 150, Screen.height - 95, 300, 25), "[E] Present Transit Papers (Missing/Invalid)");
                 if (canBribe)
                 {
-                    GUI.Label(new Rect(Screen.width / 2 - 150, Screen.height - 75, 300, 25), $"[B] Bribe Guard ({bribeCost} Won)");
+                    GUI.Label(new Rect(Screen.width / 2 - 150, Screen.height - 75, 300, 25), $"[B] Bribe Guard ({bribeRiceCost} Rice Bowls)");
                 }
             }
         }

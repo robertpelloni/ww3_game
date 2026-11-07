@@ -257,6 +257,8 @@ namespace WW3.StealthSim
         public Spotlight CurfewSearchlight { get; set; } = new Spotlight();
         public Vec2 SafehousePosition { get; set; } = new Vec2(56.0, 10.0);
         public Vec2 CheckpointPosition { get; set; } = new Vec2(40.0, 10.0);
+        public bool CheckpointBribed { get; set; } = false;
+        public bool CheckpointAlarmTripped { get; set; } = false;
         public Vec2? ActiveDistractionPos { get; set; } = null;
         public double ActiveDistractionRadius { get; set; } = 14.0;
         public double ActiveDistractionTimer { get; set; } = 0.0;
@@ -280,6 +282,30 @@ namespace WW3.StealthSim
             PlayerCharacter.BottleCount--;
             TriggerDistraction(targetPos, 14.0, 2.5);
             return true;
+        }
+
+        public bool BribeCheckpointGuard()
+        {
+            if (PlayerCharacter.RiceCount < 2) return false;
+            PlayerCharacter.RiceCount -= 2;
+            CheckpointBribed = true;
+            ProceduralAudioLog.Add("CheckpointBribeAccepted");
+            return true;
+        }
+
+        public void TriggerCheckpointAlarm()
+        {
+            CheckpointAlarmTripped = true;
+            ProceduralAudioLog.Add("CheckpointAlarmSiren");
+            foreach (var g in Guards)
+            {
+                if (Vec2.Distance(CheckpointPosition, g.Position) <= 35.0)
+                {
+                    g.State = AIState.Chase;
+                    g.Suspicion = 100.0;
+                    g.LastInvestigateTarget = CheckpointPosition;
+                }
+            }
         }
 
         public void Whistle()
@@ -1372,6 +1398,26 @@ namespace WW3.StealthSim
 
             Assert(distantGuardSleeping && guardAwakened,
                 "Low-spec spatial sleep LOD throttles distant guards to 2Hz and wakes them immediately upon alert");
+
+            // Test 30: Checkpoint interrogation, rice bowl bribery, and siren alarm propagation
+            var simCheck = new SimulationWorld();
+            simCheck.PlayerCharacter.Position = simCheck.CheckpointPosition;
+            simCheck.PlayerCharacter.RiceCount = 3;
+
+            // Bribe checkpoint guard with 2 rice bowls
+            bool bribePassed = simCheck.BribeCheckpointGuard();
+            bool bribeRecorded = simCheck.CheckpointBribed && simCheck.PlayerCharacter.RiceCount == 1;
+
+            // Trigger alarm on un-bribed breach
+            var simAlarm = new SimulationWorld();
+            simAlarm.TriggerCheckpointAlarm();
+            var checkGuard = simAlarm.Guards[2]; // Checkpoint Guard at (42, 10)
+            bool alarmAlerted = simAlarm.CheckpointAlarmTripped &&
+                                checkGuard.State == AIState.Chase &&
+                                checkGuard.Suspicion >= 99.0;
+
+            Assert(bribePassed && bribeRecorded && alarmAlerted,
+                "Checkpoint guard accepts 2-rice bribe and security sirens escalate guards within 35m to full Alert");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

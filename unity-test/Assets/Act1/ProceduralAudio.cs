@@ -33,6 +33,29 @@ public static class ProceduralAudio
     }
 
     /// <summary>
+    /// Synthesizes a curfew perimeter security siren: warbling dual-frequency alarm tone.
+    /// Used when a checkpoint security gate is breached or alarm is tripped.
+    /// </summary>
+    public static AudioClip CreateAlarmSirenClip(float duration = 1.5f)
+    {
+        int sampleCount = (int)(SampleRate * duration);
+        float[] samples = new float[sampleCount];
+
+        for (int i = 0; i < sampleCount; i++)
+        {
+            float t = (float)i / SampleRate;
+            // Modulated warble between 600Hz and 900Hz at 3Hz
+            float freq = 750f + Mathf.Sin(2f * Mathf.PI * 3f * t) * 150f;
+            float tone = Mathf.Sin(2f * Mathf.PI * freq * t);
+            samples[i] = tone * 0.35f;
+        }
+
+        AudioClip clip = AudioClip.Create("CheckpointSecuritySiren", sampleCount, 1, SampleRate, false);
+        clip.SetData(samples, 0);
+        return clip;
+    }
+
+    /// <summary>
     /// Generates a sharp noise burst simulating shattered glass / thrown bottle impact.
     /// </summary>
     public static AudioClip CreateBottleShatterClip(float duration = 0.4f)
