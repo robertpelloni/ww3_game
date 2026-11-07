@@ -1,6 +1,10 @@
-# HANDOFF — session 2026-11-04 (v0.5.2)
+# HANDOFF — session 2026-11-04 (v0.5.3)
 
 ## What was accomplished this session
+- **Low-Spec Dynamic LOD & Spatial Entity Sleep for 30fps+ (`PatrolMover.cs` & `SurvivalSystem.cs`)**:
+  * Guards beyond 35m from the player drop to a lightweight 2Hz sensory sleep mode, skipping all vision cone raycasts and trigonometric angles while cruising on patrol.
+  * Throttled survival environmental checks (`CheckShelterStatus`, `CheckLightExposure`) to 10Hz in `SurvivalSystem.cs` instead of per-frame, eliminating CPU bottlenecks on the target dual-core Intel HD 520 hardware.
+  * Pure-C# simulation updated with 29/29 automated tests passing (`prototypes/StealthSim`).
 - **Guard Searchlight Synergy & Power Grid Flicker (`PatrolMover.cs` & `LightExposureZone.cs`)**:
   * Guard patrol AI in `PatrolMover.cs` dynamically glances and reorients towards lingering searchlight disturbance hotspots within 25m.
   * Added power grid flicker and strobe state in `LightExposureZone.cs` (`TriggerGridFlicker`) with smooth lerped recovery to standard oscillation after disturbance lingers expire.
@@ -39,11 +43,11 @@
 - **Procedural Lo-Fi Audio Synthesizer (`ProceduralAudio.cs`)**:
   * Generates 22kHz mono PCM audio clips directly in memory without external asset overhead.
 - **Unified Command Center & Governance Sync**:
-  * Synchronized `dashboard.html` to `v0.5.2`.
-  * Updated `scripts/run_checks.py` to track 28/28 passing StealthSim tests.
+  * Synchronized `dashboard.html` to `v0.5.3`.
+  * Updated `scripts/run_checks.py` to track 29/29 passing StealthSim tests.
   * Updated `VERSION.md`, `CHANGELOG.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md`.
 
 ## For the successor
-1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (28/28 StealthSim tests, docs, server statuses).
+1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (29/29 StealthSim tests, docs, server statuses).
 2. Open `dashboard.html` in a web browser to inspect the updated Command Center console.
 3. Next priority: Unity URP scaffold in `unity-project/` (Hub 2022.3 LTS, 3D URP, Very Low preset locked).

@@ -43,6 +43,8 @@ public class PatrolMover : MonoBehaviour
 
     [Header("Performance & Sensor Budgeting (Intel HD 520 / Potato Target)")]
     public float sensorTickInterval = 0.066f; // ~15Hz sensor update when patrolling far
+    public float spatialSleepDistance = 35.0f; // Beyond 35m, drop to 2Hz sensory sleep mode
+    public float sleepTickInterval = 0.50f;   // ~2Hz update when distant
     private float sensorTickTimer = 0f;
     private bool cachedPlayerSeen = false;
     private bool cachedSoundHeard = false;
@@ -69,15 +71,27 @@ public class PatrolMover : MonoBehaviour
 
     void Update()
     {
-        // Adaptive sensor frequency: 60Hz when active / suspicious, 15Hz when cruising on patrol
-        float currentSensorInterval = (currentState == GuardState.Patrolling && suspicionMeter <= 0.1f) ? sensorTickInterval : 0f;
+        // Adaptive sensor frequency: 60Hz when active / suspicious, 15Hz when cruising on patrol, 2Hz if distant (>35m)
+        float distToPlayer = targetPlayer != null ? Vector3.Distance(transform.position, targetPlayer.position) : 999f;
+        bool isDistant = distToPlayer > spatialSleepDistance && currentState == GuardState.Patrolling && suspicionMeter <= 0.05f;
+
+        float currentSensorInterval = 0f;
+        if (isDistant)
+        {
+            currentSensorInterval = sleepTickInterval; // 2Hz low-power sensory sleep
+        }
+        else if (currentState == GuardState.Patrolling && suspicionMeter <= 0.1f)
+        {
+            currentSensorInterval = sensorTickInterval; // 15Hz cruising
+        }
+
         sensorTickTimer += Time.deltaTime;
 
         if (sensorTickTimer >= currentSensorInterval)
         {
             sensorTickTimer = 0f;
-            cachedPlayerSeen = CheckVision();
-            cachedSoundHeard = CheckHearing();
+            cachedPlayerSeen = isDistant ? false : CheckVision();
+            cachedSoundHeard = isDistant ? false : CheckHearing();
             cachedDistractionHeard = CheckDistractionEvents(out cachedDistractionPos);
         }
 

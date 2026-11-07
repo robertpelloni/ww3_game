@@ -46,6 +46,10 @@ public class SurvivalSystem : MonoBehaviour
     [Header("Debug HUD")]
     public bool showDebugHUD = true;
 
+    [Header("Performance Throttling (Intel HD 520 / Low-Spec)")]
+    public float envCheckInterval = 0.10f; // 10Hz throttle on shelter & light calculations
+    private float envCheckTimer = 0f;
+
     private PlayerMove playerMove;
     private PatrolMover nearestGuard;
     private ShelterZone[] shelterZones;
@@ -71,9 +75,14 @@ public class SurvivalSystem : MonoBehaviour
     {
         float dt = Time.deltaTime;
 
-        // Check shelter proximity & ambient light exposure
-        CheckShelterStatus();
-        CheckLightExposure();
+        // Throttled shelter proximity & ambient light exposure evaluation (10Hz instead of 60Hz)
+        envCheckTimer += dt;
+        if (envCheckTimer >= envCheckInterval)
+        {
+            envCheckTimer = 0f;
+            CheckShelterStatus();
+            CheckLightExposure();
+        }
 
         // Base hunger accumulation
         hunger = Mathf.Clamp(hunger + hungerRate * dt, 0f, 100f);

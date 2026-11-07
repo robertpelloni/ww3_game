@@ -76,6 +76,8 @@ namespace WW3.StealthSim
         public bool FlashlightActive => State == AIState.Investigate || State == AIState.Search || State == AIState.Chase;
         public double HearingSensitivity { get; set; } = 1.0;
         public double SensorInterval { get; set; } = 0.066; // 15Hz when cruising
+        public double SpatialSleepDistance { get; set; } = 35.0; // >35m drops to 2Hz
+        public double SleepInterval { get; set; } = 0.50; // 2Hz sensory sleep
         public double SensorTimer { get; set; } = 0.0;
         public int SensorEvaluationCount { get; set; } = 0;
     }
@@ -586,7 +588,17 @@ namespace WW3.StealthSim
 
             // Adaptive sensor budgeting: evaluate full physics rays every tick only when suspicious or active
             guard.SensorTimer += dt;
-            double currentInterval = (guard.State == AIState.Patrol && guard.Suspicion <= 5.0) ? guard.SensorInterval : 0.0;
+            bool isDistant = dist > guard.SpatialSleepDistance && guard.State == AIState.Patrol && guard.Suspicion <= 5.0;
+            double currentInterval = 0.0;
+            if (isDistant)
+            {
+                currentInterval = guard.SleepInterval; // 2Hz sleep
+            }
+            else if (guard.State == AIState.Patrol && guard.Suspicion <= 5.0)
+            {
+                currentInterval = guard.SensorInterval; // 15Hz cruising
+            }
+
             bool evaluateSensors = guard.SensorTimer >= currentInterval;
 
             bool inVisionCone = false;
@@ -1331,6 +1343,35 @@ namespace WW3.StealthSim
 
             Assert(guardFacingSearchlight && sweepResumed,
                 "Patrolling guards dynamically orient towards lingering searchlight beams and searchlight sweeps recover cleanly");
+
+            // Test 29: Low-spec dynamic spatial sleep LOD & instant alert wake-up
+            var simLOD = new SimulationWorld();
+            var farGuard = simLOD.Guards[2]; // Checkpoint Guard at (42, 10)
+            simLOD.PlayerCharacter.Position = new Vec2(2.0, 10.0); // 40m away (> 35m spatial sleep)
+            farGuard.SensorEvaluationCount = 0;
+
+            // Step 60 ticks of 0.016s (~1s of game time)
+            for (int i = 0; i < 60; i++)
+            {
+                simLOD.Step(0.016, new Vec2(0, 0));
+            }
+
+            // At 2Hz sleep LOD, distant guard should execute <= 4 sensory evaluations instead of 60
+            bool distantGuardSleeping = farGuard.SensorEvaluationCount <= 4;
+
+            // Trigger radio alert on mid-street Patrol-2 at (28, 15), well within 25m of farGuard (42, 10):
+            // dist = sqrt(14^2 + 5^2) = sqrt(196 + 25) = sqrt(221) = 14.8m <= 25m
+            var midGuard = simLOD.Guards[1];
+            midGuard.State = AIState.Chase;
+            midGuard.LastInvestigateTarget = new Vec2(28.0, 15.0);
+            farGuard.SensorEvaluationCount = 0;
+            simLOD.BroadcastRadioAlert(midGuard);
+
+            // After radio alert, distant guard is awake in Investigate state
+            bool guardAwakened = farGuard.State == AIState.Investigate && farGuard.Suspicion >= 60.0;
+
+            Assert(distantGuardSleeping && guardAwakened,
+                "Low-spec spatial sleep LOD throttles distant guards to 2Hz and wakes them immediately upon alert");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

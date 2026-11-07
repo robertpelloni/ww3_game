@@ -2,6 +2,18 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.5.3 — 2026-11-04
+- **Low-Spec Dynamic LOD & Spatial Entity Sleep (`PatrolMover.cs`)**:
+  - Guards beyond 35m from the player drop to a lightweight 2Hz sensory sleep mode, skipping all raycasts and trigonometric angles while cruising on patrol to preserve a solid 30fps+ on low-spec hardware (Intel HD 520).
+  - Distant guards awaken instantly to full 60Hz evaluation upon player proximity or receiving an allied radio alert.
+- **Throttled Environmental Evaluations (`SurvivalSystem.cs`)**:
+  - Throttled shelter proximity and light exposure checks to 10Hz instead of running per-frame, eliminating unnecessary CPU overhead.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored dynamic spatial sleep LOD heuristics in `SimulationWorld`.
+  - Added automated Test 29 validating low-spec spatial sleep LOD and instant wake-up upon alert (29/29 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` and governance docs to version 0.5.3.
+
 ## 0.5.2 — 2026-11-04
 - **Guard & Searchlight Synergy (`PatrolMover.cs` & `LightExposureZone.cs`)**:
   - Implemented searchlight beam glance synergy: patrolling guards dynamically glance and orient towards lingering searchlight disturbance hotspots within 25m.
