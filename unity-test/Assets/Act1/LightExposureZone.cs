@@ -15,6 +15,12 @@ public class LightExposureZone : MonoBehaviour
     [Tooltip("Effective radius of light emission.")]
     public float radius = 5.0f;
 
+    [Header("Oscillating Sweep Settings (Curfew Spotlight)")]
+    public bool isSweepingSpotlight = false;
+    public float sweepRangeX = 8.0f;
+    public float sweepSpeed = 1.2f;
+    private Vector3 initialPosition;
+
     [Tooltip("Light exposure factor when within radius (0.0 = deep shadow, 1.0 = full direct glare).")]
     [Range(0f, 1f)]
     public float exposureLevel = 0.75f;
@@ -24,6 +30,7 @@ public class LightExposureZone : MonoBehaviour
 
     void Awake()
     {
+        initialPosition = transform.position;
         if (playerTransform == null)
         {
             var p = GameObject.FindWithTag("Player");
@@ -33,6 +40,16 @@ public class LightExposureZone : MonoBehaviour
                 var pm = FindFirstObjectByType<PlayerMove>();
                 if (pm != null) playerTransform = pm.transform;
             }
+        }
+    }
+
+    void Update()
+    {
+        if (isSweepingSpotlight)
+        {
+            // Oscillate spotlight beam horizontally across alley
+            float offsetX = Mathf.Sin(Time.time * sweepSpeed) * sweepRangeX;
+            transform.position = new Vector3(initialPosition.x + offsetX, initialPosition.y, initialPosition.z);
         }
     }
 

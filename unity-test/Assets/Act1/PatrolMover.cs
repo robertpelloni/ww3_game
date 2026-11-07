@@ -361,8 +361,13 @@ public class PatrolMover : MonoBehaviour
         if (angle > viewAngle) return false;
 
         // Raycast check to ensure line of sight isn't blocked by obstacles (clamped to dist)
+        Vector3 guardEye = transform.position + Vector3.up * 1.5f;
+        Vector3 playerChest = targetPlayer.position + Vector3.up * 0.7f;
+        Vector3 rayDir = playerChest - guardEye;
+        float rayDist = rayDir.magnitude;
+
         RaycastHit hit;
-        if (Physics.Raycast(transform.position + Vector3.up * 0.5f, toPlayer.normalized, out hit, dist))
+        if (Physics.Raycast(guardEye, rayDir.normalized, out hit, rayDist))
         {
             if (hit.transform == targetPlayer || hit.transform.IsChildOf(targetPlayer))
             {

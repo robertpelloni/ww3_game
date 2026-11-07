@@ -2,6 +2,18 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.4.5 — 2026-11-04
+- **Curfew Spotlight Sweeps & Dynamic Shadow Occlusion (`LightExposureZone.cs` & `PatrolMover.cs`)**:
+  - Implemented horizontal oscillating searchlight sweeping in `LightExposureZone.cs` (`isSweepingSpotlight = true`, `sweepRangeX = 8.0f`).
+  - Added chest-level raycast line-of-sight checks in `PatrolMover.cs` ensuring solid barricades and concrete walls cast vision-blocking shadows even when searchlights sweep nearby.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Implemented obstacle wall line-of-sight ray occlusion against guard vision cones.
+  - Added automated Test 21 validating that solid barricades project protective shadows against sweeping spotlights and guard vision (21/21 tests passing).
+- **Single-Page Command Center Sync (`dashboard.html`)**:
+  - Bumped Command Center console to v0.4.5 with sweeping searchlight telemetry and shadow projection tooltips.
+- **Documentation & Verification**:
+  - Synced `VERSION.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` to version 0.4.5.
+
 ## 0.4.4 — 2026-11-04
 - **Environmental Surface Zones (`SurfaceZone.cs` & `.meta`)**:
   - Created `SurfaceZone` trigger component for authoring metal catwalk grates, puddles/mud, and shattered glass debris in Act 1 levels.

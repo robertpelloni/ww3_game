@@ -523,10 +523,20 @@ namespace WW3.StealthSim
             double dist = toPlayer.Magnitude();
             Vec2 dirToPlayer = toPlayer.Normalized();
 
-            // Vision Check
+            // Vision Check - Line of sight raycasting blocked by obstacle walls
+            bool rayBlocked = false;
+            foreach (var obs in Obstacles)
+            {
+                if (obs.BlocksSegment(guard.Position, PlayerCharacter.Position))
+                {
+                    rayBlocked = true;
+                    break;
+                }
+            }
+
             double dot = Vec2.Dot(guard.Forward, dirToPlayer);
             double angleDeg = Math.Acos(Math.Clamp(dot, -1.0, 1.0)) * (180.0 / Math.PI);
-            bool inVisionCone = angleDeg <= (guard.VisionAngleDeg / 2.0) && dist <= guard.VisionRange;
+            bool inVisionCone = !rayBlocked && angleDeg <= (guard.VisionAngleDeg / 2.0) && dist <= guard.VisionRange;
 
             // Hearing Check - Player noise & Environmental sound distractions with obstacle occlusion
             double effectivePlayerNoise = playerNoiseRadius * guard.HearingSensitivity;
@@ -1014,6 +1024,34 @@ namespace WW3.StealthSim
 
             Assert(initialConcrete && enteredMetalGrate && enteredGlassDebris,
                 "Environmental surface zones dynamically update player terrain and noise footprint");
+
+            // Test 21: Searchlight oscillation and obstacle shadow occlusion
+            var simOcc = new SimulationWorld();
+            var gTest = simOcc.Guards[2]; // Checkpoint guard at (42, 10)
+            gTest.Position = new Vec2(42.0, 5.0);
+            gTest.Forward = new Vec2(-1, 0); // Looking west towards barricade
+
+            // Sweeping searchlight illuminates barricade area
+            simOcc.CurfewSearchlight.Center = new Vec2(40.0, 5.0);
+            simOcc.CurfewSearchlight.Radius = 8.0;
+
+            // Player hides behind barricade at (38, 5)
+            simOcc.PlayerCharacter.Position = new Vec2(38.0, 5.0);
+            simOcc.Step(0.2, new Vec2(0, 0));
+
+            // Despite searchlight glaring nearby, line-of-sight ray is blocked by barricade
+            bool protectedByShadow = gTest.Suspicion == 0.0 && gTest.State == AIState.Patrol;
+
+            // Now step into open gap at (38, 9.5) and face guard with searchlight overhead
+            gTest.Position = new Vec2(42.0, 9.5);
+            gTest.Forward = new Vec2(-1, 0); // Looking directly west at player
+            simOcc.PlayerCharacter.Position = new Vec2(38.0, 9.5);
+            simOcc.CurfewSearchlight.Center = new Vec2(38.0, 9.5); // Direct spotlight illumination
+            simOcc.Step(0.2, new Vec2(0, 0));
+            bool detectedInClearSight = gTest.Suspicion > 0.0;
+
+            Assert(protectedByShadow && detectedInClearSight,
+                "Obstacle walls project true occlusion shadows protecting players from sweeping searchlights and guard vision");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;
