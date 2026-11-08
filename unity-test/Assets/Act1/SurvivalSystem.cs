@@ -40,6 +40,8 @@ public class SurvivalSystem : MonoBehaviour
     public bool isStarving = false;
     public bool isExhausted = false;
     public float exhaustionCooldown = 0f;
+    public bool hasThermalBreathPuff = false;
+    public float breathPuffTimer = 0f;
 
     [Header("Game Loop State")]
     public bool isGameOver = false;
@@ -164,6 +166,26 @@ public class SurvivalSystem : MonoBehaviour
             }
 
             cold = Mathf.Clamp(cold + coldRate * exposureThermalFactor * dt, 0f, 100f);
+        }
+
+        // Thermal breath vapor exhalation (Cold >= 60% and unsheltered): emits visible condensation puff every 2.5s
+        if (!isSheltered && cold >= 60f)
+        {
+            breathPuffTimer += dt;
+            if (breathPuffTimer >= 2.5f)
+            {
+                breathPuffTimer = 0f;
+                hasThermalBreathPuff = true;
+            }
+            else if (breathPuffTimer >= 0.75f)
+            {
+                hasThermalBreathPuff = false;
+            }
+        }
+        else
+        {
+            hasThermalBreathPuff = false;
+            breathPuffTimer = 0f;
         }
 
         // Shivering mechanic (Cold >= 70%): generates acoustic noise & reduces stamina regen
@@ -356,8 +378,14 @@ public class SurvivalSystem : MonoBehaviour
             lightZones = FindObjectsByType<LightExposureZone>(FindObjectsSortMode.None);
         }
 
-        // Deep shadow default baseline in curfew night alleys
-        float maxExposure = isSheltered ? 0.05f : 0.15f;
+        // Deep shadow default baseline in curfew night alleys (amplified by thermal breath puff)
+        float baselineShadow = isSheltered ? 0.05f : 0.15f;
+        if (hasThermalBreathPuff)
+        {
+            baselineShadow += 0.25f; // Thermal vapor cloud reflects ambient moonlight
+        }
+
+        float maxExposure = baselineShadow;
 
         if (lightZones != null)
         {

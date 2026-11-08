@@ -152,6 +152,8 @@ namespace WW3.StealthSim
         public bool IsShivering => Cold >= 70.0;
         public bool IsStarving => Hunger >= 80.0;
         public bool IsExhausted { get; set; } = false;
+        public bool HasThermalBreathPuff { get; set; } = false;
+        public double BreathPuffTimer { get; set; } = 0.0;
         public double ExhaustionTimer { get; set; } = 0.0;
         public double WhistleTimer { get; set; } = 0.0;
         public double FootstepTimer { get; set; } = 0.0;
@@ -495,8 +497,8 @@ namespace WW3.StealthSim
                 }
             }
 
-            // Default dark alley shadow
-            return 0.05;
+            // Default dark alley shadow (elevated if thermal breath puff active)
+            return PlayerCharacter.HasThermalBreathPuff ? 0.30 : 0.05;
         }
 
         public void TriggerWhistle()
@@ -618,11 +620,31 @@ namespace WW3.StealthSim
             bool sheltered = IsPlayerSheltered();
             if (sheltered)
             {
+                PlayerCharacter.HasThermalBreathPuff = false;
+                PlayerCharacter.BreathPuffTimer = 0.0;
                 WindAmbienceVolume = Math.Max(0.08, WindAmbienceVolume - dt * 0.5);
                 PlayerCharacter.Cold = Math.Max(0.0, PlayerCharacter.Cold - 6.0 * dt);
             }
             else
             {
+                if (PlayerCharacter.Cold >= 60.0)
+                {
+                    PlayerCharacter.BreathPuffTimer += dt;
+                    if (PlayerCharacter.BreathPuffTimer >= 2.5)
+                    {
+                        PlayerCharacter.BreathPuffTimer = 0.0;
+                        PlayerCharacter.HasThermalBreathPuff = true;
+                    }
+                    else if (PlayerCharacter.BreathPuffTimer >= 0.75)
+                    {
+                        PlayerCharacter.HasThermalBreathPuff = false;
+                    }
+                }
+                else
+                {
+                    PlayerCharacter.HasThermalBreathPuff = false;
+                }
+
                 double targetWind = 0.20 + (PlayerCharacter.Cold / 100.0) * 0.35;
                 WindAmbienceVolume = WindAmbienceVolume + (targetWind - WindAmbienceVolume) * dt * 2.0;
             }
@@ -1789,6 +1811,25 @@ namespace WW3.StealthSim
 
             bool windDampenedInShelter = shelteredWindVol < outdoorWindVol && shelteredWindVol <= 0.15;
             Assert(windDampenedInShelter, "Environmental wind soundscape volume dynamically scales with cold and dampens inside shelters");
+
+            // Test 46: Thermal condensation breath puff exhalation and shelter suppression
+            var simBreath = new SimulationWorld();
+            simBreath.PlayerCharacter.Cold = 75.0; // Freezing
+            simBreath.PlayerCharacter.Position = new Vec2(2.0, 10.0); // Unsheltered alley
+            simBreath.CurfewSearchlight.Radius = 0; // Shadow
+
+            // Step 2.6s so breath puff cycles
+            simBreath.Step(2.6, new Vec2(0, 0));
+            bool breathPuffActive = simBreath.PlayerCharacter.HasThermalBreathPuff;
+            double exposedBreathLevel = simBreath.CalculatePlayerExposure();
+
+            // Move to shelter and step
+            simBreath.PlayerCharacter.Position = simBreath.Shelters[0].Position;
+            simBreath.Step(0.5, new Vec2(0, 0));
+            bool breathSuppressedInShelter = !simBreath.PlayerCharacter.HasThermalBreathPuff;
+
+            Assert(breathPuffActive && exposedBreathLevel >= 0.30 && breathSuppressedInShelter,
+                "Freezing players exhale visible thermal condensation breath puffs that elevate exposure unless sheltered");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

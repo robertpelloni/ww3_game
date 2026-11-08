@@ -2,6 +2,16 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.7.0 — 2026-11-04 — Milestone 2 Thermal Stealth & Environmental Vapor Release
+- **Thermal Breath Vapor Condensation (`SurvivalSystem.cs`)**:
+  - Implemented thermal breath puff mechanics: when freezing (Cold $\ge$ 60%) in outdoor curfew weather, exhalations emit periodic condensation vapor puffs (every 2.5s) that elevate baseline silhouette exposure from 0.05 to 0.30 in dark shadows.
+  - Standing inside warming shelters suppresses breath condensation immediately by restoring core temperature.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored thermal breath vapor cycles, exposure scaling, and shelter suppression in `SimulationWorld`.
+  - Added automated Test 46 validating thermal condensation breath puff exhalation and shelter suppression (46/46 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 46/46 tests and updated governance docs to version 0.7.0.
+
 ## 0.6.9 — 2026-11-04
 - **Curfew Night Wind Ambience Synthesis & Dynamic Shelter Dampening (`SurvivalSystem.cs` & `ProceduralAudio.cs`)**:
   - Implemented `CreateNightWindAmbienceClip` in `ProceduralAudio.cs`: generates continuous low-pass filtered brownian noise with slow sinusoidal gust envelopes (0.75Hz).
