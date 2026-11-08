@@ -38,6 +38,7 @@ public class PatrolMover : MonoBehaviour
     [Tooltip("Acoustic transmission factor through solid walls and concrete obstacles (0.35 = 65% dampening).")]
     public float wallSoundOcclusionFactor = 0.35f;
     public float radioBroadcastRadius = 25.0f;
+    public float tacticalFlankOffset = 0f; // Lateral fanning offset for pincer convergence
     private float searchTimer = 0f;
     private float alertBroadcastCooldown = 0f;
 
@@ -321,13 +322,21 @@ public class PatrolMover : MonoBehaviour
         var allGuards = FindObjectsByType<PatrolMover>(FindObjectsSortMode.None);
         if (allGuards == null) return;
 
+        int guardIndex = 0;
         foreach (var other in allGuards)
         {
             if (other == null || other == this) continue;
             float d = Vector3.Distance(transform.position, other.transform.position);
             if (d <= radioBroadcastRadius)
             {
-                other.ReceiveRadioAlert(lastKnownPlayerPos);
+                guardIndex++;
+                // Alternate lateral flanking offset: +4.5m or -4.5m
+                float flank = (guardIndex % 2 == 1) ? 4.5f : -4.5f;
+                Vector3 toDisturbance = (lastKnownPlayerPos - transform.position).normalized;
+                Vector3 flankPerpendicular = new Vector3(-toDisturbance.z, 0, toDisturbance.x);
+                Vector3 flankPosition = lastKnownPlayerPos + flankPerpendicular * flank;
+
+                other.ReceiveRadioAlert(flankPosition);
             }
         }
     }

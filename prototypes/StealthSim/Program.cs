@@ -214,6 +214,7 @@ namespace WW3.StealthSim
     {
         public Vec2 Center { get; set; }
         public double Radius { get; set; } = 4.0;
+        public double BaseRadius { get; set; } = 4.0;
         public double SweepRange { get; set; } = 10.0;
         public double SweepSpeed { get; set; } = 1.5;
         public double SweepTime { get; set; } = 0.0;
@@ -236,6 +237,7 @@ namespace WW3.StealthSim
         {
             FocusTarget = target;
             FocusTimer = duration;
+            Radius = BaseRadius * 1.4; // Expand beam radius on alert lock
         }
 
         public void TriggerFlicker(double duration = 2.0)
@@ -487,13 +489,16 @@ namespace WW3.StealthSim
             if (CurfewSearchlight.FocusTimer > 0)
             {
                 CurfewSearchlight.FocusTimer -= dt;
+                CurfewSearchlight.Radius = CurfewSearchlight.BaseRadius * 1.4;
                 if (CurfewSearchlight.FocusTimer <= 0)
                 {
                     CurfewSearchlight.FocusTarget = null;
+                    CurfewSearchlight.Radius = CurfewSearchlight.BaseRadius;
                 }
             }
             else
             {
+                CurfewSearchlight.Radius = CurfewSearchlight.BaseRadius;
                 CurfewSearchlight.SweepTime += dt;
             }
 
@@ -873,13 +878,18 @@ namespace WW3.StealthSim
                 CurfewSearchlight.FocusOn(callingGuard.LastInvestigateTarget, 5.0);
             }
 
+            int fIndex = 0;
             foreach (var other in Guards)
             {
                 if (other == callingGuard) continue;
                 double d = Vec2.Distance(callingGuard.Position, other.Position);
                 if (d <= callingGuard.RadioBroadcastRadius)
                 {
-                    other.LastInvestigateTarget = callingGuard.LastInvestigateTarget;
+                    fIndex++;
+                    // Tactical fanning pincer offset: guard fanning +4.5m perpendicular
+                    Vec2 toTarget = (callingGuard.LastInvestigateTarget - callingGuard.Position).Normalized();
+                    Vec2 flank = new Vec2(-toTarget.Y, toTarget.X) * (fIndex % 2 == 1 ? 4.5 : -4.5);
+                    other.LastInvestigateTarget = callingGuard.LastInvestigateTarget + flank;
                     other.Suspicion = Math.Max(other.Suspicion, 60.0);
                     other.State = AIState.Investigate;
                     other.SearchTimer = 4.0;
@@ -1444,6 +1454,25 @@ namespace WW3.StealthSim
 
             Assert(cutSuccess && fenceBreached && wonViaShortcut,
                 "Scavenged wire cutters breach secondary perimeter fence opening stealth shortcut to safehouse");
+
+            // Test 32: Coordinated tactical pincer flanking offsets and searchlight beam widening
+            var simPincer = new SimulationWorld();
+            var leadGuard = simPincer.Guards[0]; // Patrol-1 at (15, 5)
+            var flankGuard = simPincer.Guards[1]; // Patrol-2 at (28, 15)
+            leadGuard.LastInvestigateTarget = new Vec2(20.0, 5.0);
+
+            simPincer.BroadcastRadioAlert(leadGuard);
+
+            // Flank guard should have received a laterally offset investigate target
+            bool flankOffsetApplied = Math.Abs(flankGuard.LastInvestigateTarget.Y - 5.0) > 3.0;
+            bool beamWidened = simPincer.CurfewSearchlight.Radius > simPincer.CurfewSearchlight.BaseRadius;
+
+            // Wait until linger expires
+            simPincer.Step(5.5, new Vec2(0, 0));
+            bool beamRestored = Math.Abs(simPincer.CurfewSearchlight.Radius - simPincer.CurfewSearchlight.BaseRadius) < 0.01;
+
+            Assert(flankOffsetApplied && beamWidened && beamRestored,
+                "Guards execute tactical pincer flanking convergence and searchlight beam widens during active focus");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

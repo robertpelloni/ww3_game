@@ -2,6 +2,17 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.5.6 — 2026-11-04
+- **Tactical Pincer Search Formations (`PatrolMover.cs`)**:
+  - Guards converging on radio or acoustic disturbances now calculate tactical perpendicular flanking offsets (+4.5m / -4.5m) to execute a coordinated pincer sweep rather than stacking onto the same point.
+- **Searchlight Cone Diameter Widening (`LightExposureZone.cs`)**:
+  - Sweeping searchlights now dynamically expand their beam radius by 1.4x (e.g. 5m to 7m) while locking onto suspicious coordinates, significantly intensifying perimeter tension.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored tactical flanking pincer formations and beam widening in `SimulationWorld`.
+  - Added automated Test 32 validating dual-guard tactical pincer convergence and searchlight beam widening (32/32 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` and governance docs to version 0.5.6.
+
 ## 0.5.5 — 2026-11-04
 - **Wire-Cutter Shortcut Mechanics & Perimeter Breach (`PlayerMove.cs` & `SurvivalSystem.cs`)**:
   - Implemented wire cutter interaction (`[T] Cut Wire Fence`) enabling Jun-ho to breach secondary perimeter chain-link fences using scavenged wire cutters (`hasWireCutters = true`).

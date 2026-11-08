@@ -14,6 +14,8 @@ public class LightExposureZone : MonoBehaviour
 
     [Tooltip("Effective radius of light emission.")]
     public float radius = 5.0f;
+    public float baseRadius = 5.0f;
+    public float alertFocusRadiusMultiplier = 1.4f; // Expands radius when locking on disturbance
 
     [Header("Oscillating Sweep Settings (Curfew Spotlight)")]
     public bool isSweepingSpotlight = false;
@@ -36,6 +38,7 @@ public class LightExposureZone : MonoBehaviour
     void Awake()
     {
         initialPosition = transform.position;
+        baseRadius = radius;
         baseExposureLevel = exposureLevel;
         if (playerTransform == null)
         {
@@ -66,11 +69,15 @@ public class LightExposureZone : MonoBehaviour
         if (focusLingerTimer > 0f)
         {
             focusLingerTimer -= Time.deltaTime;
+            // Expand beam radius during active focus lock
+            radius = Mathf.Lerp(radius, baseRadius * alertFocusRadiusMultiplier, Time.deltaTime * 3.0f);
             // Smoothly track towards focused disturbance location
             transform.position = Vector3.Lerp(transform.position, focusTargetPos, Time.deltaTime * 3.0f);
         }
         else if (isSweepingSpotlight)
         {
+            // Recover baseline radius
+            radius = Mathf.Lerp(radius, baseRadius, Time.deltaTime * 2.0f);
             // Oscillate spotlight beam horizontally across alley smoothly
             float offsetX = Mathf.Sin(Time.time * sweepSpeed) * sweepRangeX;
             Vector3 sweepTarget = new Vector3(initialPosition.x + offsetX, initialPosition.y, initialPosition.z);

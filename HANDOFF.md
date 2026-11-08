@@ -1,6 +1,10 @@
-# HANDOFF — session 2026-11-04 (v0.5.5)
+# HANDOFF — session 2026-11-04 (v0.5.6)
 
 ## What was accomplished this session
+- **Tactical Pincer Search Formations & Searchlight Beam Widening (`PatrolMover.cs` & `LightExposureZone.cs`)**:
+  * Guards converging on disturbances now calculate tactical perpendicular flanking offsets (+4.5m / -4.5m) to execute a coordinated pincer search sweep instead of stacking onto the same coordinate.
+  * Sweeping searchlights now dynamically expand their beam radius by 1.4x (e.g. 5m to 7m) while lingering on disturbance coordinates, creating perimeter sweep tension.
+  * Pure-C# simulation updated with 32/32 automated tests passing (`prototypes/StealthSim`).
 - **Wire-Cutter Shortcut Mechanics & Perimeter Breach (`PlayerMove.cs` & `SurvivalSystem.cs`)**:
   * Implemented wire cutter interaction (`[T] Cut Wire Fence`) enabling Jun-ho to breach secondary perimeter chain-link fences using scavenged wire cutters (`hasWireCutters = true`).
   * Opens an alternative stealth infiltration alleyway bypassing the heavily fortified Sector 4 Checkpoint Gate.
@@ -52,11 +56,11 @@
 - **Procedural Lo-Fi Audio Synthesizer (`ProceduralAudio.cs`)**:
   * Generates 22kHz mono PCM audio clips directly in memory without external asset overhead.
 - **Unified Command Center & Governance Sync**:
-  * Synchronized `dashboard.html` to `v0.5.5`.
-  * Updated `scripts/run_checks.py` to track 31/31 passing StealthSim tests.
+  * Synchronized `dashboard.html` to `v0.5.6`.
+  * Updated `scripts/run_checks.py` to track 32/32 passing StealthSim tests.
   * Updated `VERSION.md`, `CHANGELOG.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md`.
 
 ## For the successor
-1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (31/31 StealthSim tests, docs, server statuses).
+1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (32/32 StealthSim tests, docs, server statuses).
 2. Open `dashboard.html` in a web browser to inspect the updated Command Center console.
 3. Next priority: Unity URP scaffold in `unity-project/` (Hub 2022.3 LTS, 3D URP, Very Low preset locked).
