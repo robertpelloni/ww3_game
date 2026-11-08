@@ -47,6 +47,7 @@ public class PatrolMover : MonoBehaviour
     public float sensorTickInterval = 0.066f; // ~15Hz sensor update when patrolling far
     public float spatialSleepDistance = 35.0f; // Beyond 35m, drop to 2Hz sensory sleep mode
     public float sleepTickInterval = 0.50f;   // ~2Hz update when distant
+    public float dynamicLoadDecimationMultiplier = 1.0f; // Multiplier when frame time > 33.3ms
     private float sensorTickTimer = 0f;
     private bool cachedPlayerSeen = false;
     private bool cachedSoundHeard = false;
@@ -73,6 +74,9 @@ public class PatrolMover : MonoBehaviour
 
     void Update()
     {
+        // Dynamic load decimation: if frame rate drops below 30fps (dt > 33.3ms), scale intervals
+        dynamicLoadDecimationMultiplier = (Time.deltaTime > 0.0333f) ? 1.5f : 1.0f;
+
         // Adaptive sensor frequency: 60Hz when active / suspicious, 15Hz when cruising on patrol, 2Hz if distant (>35m)
         float distToPlayer = targetPlayer != null ? Vector3.Distance(transform.position, targetPlayer.position) : 999f;
         bool isDistant = distToPlayer > spatialSleepDistance && currentState == GuardState.Patrolling && suspicionMeter <= 0.05f;
@@ -80,11 +84,11 @@ public class PatrolMover : MonoBehaviour
         float currentSensorInterval = 0f;
         if (isDistant)
         {
-            currentSensorInterval = sleepTickInterval; // 2Hz low-power sensory sleep
+            currentSensorInterval = sleepTickInterval * dynamicLoadDecimationMultiplier; // 2Hz low-power sensory sleep
         }
         else if (currentState == GuardState.Patrolling && suspicionMeter <= 0.1f)
         {
-            currentSensorInterval = sensorTickInterval; // 15Hz cruising
+            currentSensorInterval = sensorTickInterval * dynamicLoadDecimationMultiplier; // 15Hz cruising
         }
 
         sensorTickTimer += Time.deltaTime;

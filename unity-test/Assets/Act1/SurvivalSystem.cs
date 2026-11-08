@@ -47,6 +47,10 @@ public class SurvivalSystem : MonoBehaviour
 
     [Header("Debug HUD")]
     public bool showDebugHUD = true;
+    public float rollingFPS = 60f;
+    private float fpsAccumulator = 0f;
+    private int fpsFrameCount = 0;
+    private float fpsTimer = 0f;
 
     [Header("Performance Throttling (Intel HD 520 / Low-Spec)")]
     public float envCheckInterval = 0.10f; // 10Hz throttle on shelter & light calculations
@@ -76,6 +80,18 @@ public class SurvivalSystem : MonoBehaviour
     void Update()
     {
         float dt = Time.deltaTime;
+
+        // Rolling FPS monitoring
+        fpsAccumulator += (dt > 0f) ? (1f / dt) : 60f;
+        fpsFrameCount++;
+        fpsTimer += dt;
+        if (fpsTimer >= 0.5f)
+        {
+            rollingFPS = fpsAccumulator / Mathf.Max(1, fpsFrameCount);
+            fpsAccumulator = 0f;
+            fpsFrameCount = 0;
+            fpsTimer = 0f;
+        }
 
         // Throttled shelter proximity & ambient light exposure evaluation (10Hz instead of 60Hz)
         envCheckTimer += dt;
@@ -341,7 +357,7 @@ public class SurvivalSystem : MonoBehaviour
     {
         if (!showDebugHUD) return;
 
-        GUI.Box(new Rect(10, 10, 275, 270), "Jun-ho Survival Monitor (Act 1)");
+        GUI.Box(new Rect(10, 10, 285, 285), $"Jun-ho Survival Monitor [FPS: {rollingFPS:F0}]");
 
         GUI.Label(new Rect(20, 32, 235, 18), $"Stamina:  {stamina:F0}%");
         GUI.Label(new Rect(20, 50, 235, 18), $"Hunger:   {hunger:F0}% {(isStarving ? "[STARVING!]" : "")}");

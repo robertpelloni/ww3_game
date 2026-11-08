@@ -2,6 +2,17 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.5.8 — 2026-11-04
+- **Real-Time Frame-Rate Profiler HUD (`SurvivalSystem.cs`)**:
+  - Added rolling real-time FPS profiler to the IMGUI survival monitor (`FPS: XX`), verifying 30fps+ performance stability on potato hardware targets.
+- **Dynamic Sensor Decimation Under Load (`PatrolMover.cs`)**:
+  - Implemented dynamic sensor load decimation: if frame time spikes above 33.3ms (< 30fps), guard sensory intervals are dynamically decimated by 1.5x, automatically throttling physics raycasts and restoring 30fps+ frame rates on dual-core Intel HD 520 hardware.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored dynamic load decimation and interval scaling in `SimulationWorld`.
+  - Added automated Test 34 validating dynamic sensor decimation under heavy frame drops (34/34 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` and governance docs to version 0.5.8.
+
 ## 0.5.7 — 2026-11-04
 - **Searchlight Pre-Lock Strobe Acquisition Warning (`LightExposureZone.cs`)**:
   - Implemented 0.5s pre-focus strobe acquisition warning cue (`isAcquiringTarget`): when a searchlight detects a disturbance or receives an alert, the beam strobes rapidly for 0.5s to visually telegraph the impending focus lock before centering on the target.

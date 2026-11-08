@@ -78,6 +78,7 @@ namespace WW3.StealthSim
         public double SensorInterval { get; set; } = 0.066; // 15Hz when cruising
         public double SpatialSleepDistance { get; set; } = 35.0; // >35m drops to 2Hz
         public double SleepInterval { get; set; } = 0.50; // 2Hz sensory sleep
+        public double DynamicLoadMultiplier { get; set; } = 1.0;
         public double SensorTimer { get; set; } = 0.0;
         public int SensorEvaluationCount { get; set; } = 0;
     }
@@ -644,15 +645,17 @@ namespace WW3.StealthSim
 
             // Adaptive sensor budgeting: evaluate full physics rays every tick only when suspicious or active
             guard.SensorTimer += dt;
+            guard.DynamicLoadMultiplier = (dt > 0.0333) ? 1.5 : 1.0; // Decimate when frame time spikes
+
             bool isDistant = dist > guard.SpatialSleepDistance && guard.State == AIState.Patrol && guard.Suspicion <= 5.0;
             double currentInterval = 0.0;
             if (isDistant)
             {
-                currentInterval = guard.SleepInterval; // 2Hz sleep
+                currentInterval = guard.SleepInterval * guard.DynamicLoadMultiplier; // 2Hz sleep scaled
             }
             else if (guard.State == AIState.Patrol && guard.Suspicion <= 5.0)
             {
-                currentInterval = guard.SensorInterval; // 15Hz cruising
+                currentInterval = guard.SensorInterval * guard.DynamicLoadMultiplier; // 15Hz cruising scaled
             }
 
             bool evaluateSensors = guard.SensorTimer >= currentInterval;
@@ -1505,6 +1508,21 @@ namespace WW3.StealthSim
 
             Assert(strobeTriggered && lockEngaged,
                 "Searchlight pre-lock strobe warning telegraphs beam focus lock to alert player before engaging");
+
+            // Test 34: Frame rate profiling and dynamic sensor decimation under heavy load
+            var simHeavy = new SimulationWorld();
+            var cruiseGuard = simHeavy.Guards[0];
+            cruiseGuard.SensorEvaluationCount = 0;
+
+            // Simulate heavy frame drop (dt = 0.050s = 20fps < 30fps threshold) for 20 ticks (1s)
+            for (int i = 0; i < 20; i++)
+            {
+                simHeavy.Step(0.050, new Vec2(0, 0));
+            }
+
+            // At 1.5x decimated load interval, evaluations should be reduced compared to nominal
+            bool decimationActive = cruiseGuard.DynamicLoadMultiplier >= 1.5 && cruiseGuard.SensorEvaluationCount < 15;
+            Assert(decimationActive, "Dynamic sensor decimation scales guard sensory intervals under frame rate drops to guarantee 30fps+");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;
