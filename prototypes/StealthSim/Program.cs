@@ -290,6 +290,7 @@ namespace WW3.StealthSim
         public string EndReason { get; set; } = "";
         public double ElapsedMissionTime { get; set; } = 0.0;
         public string ExtractionRoute { get; set; } = "Checkpoint Gate";
+        public double WindAmbienceVolume { get; set; } = 0.25;
 
         public void TriggerDistraction(Vec2 pos, double radius = 14.0, double duration = 2.5)
         {
@@ -617,9 +618,14 @@ namespace WW3.StealthSim
             bool sheltered = IsPlayerSheltered();
             if (sheltered)
             {
+                WindAmbienceVolume = Math.Max(0.08, WindAmbienceVolume - dt * 0.5);
                 PlayerCharacter.Cold = Math.Max(0.0, PlayerCharacter.Cold - 6.0 * dt);
             }
             else
+            {
+                double targetWind = 0.20 + (PlayerCharacter.Cold / 100.0) * 0.35;
+                WindAmbienceVolume = WindAmbienceVolume + (targetWind - WindAmbienceVolume) * dt * 2.0;
+            }
             {
                 // Thermal factor: halogen spotlight radiant heat slows frostbite; deep shadow wind chill accelerates it
                 double thermalFactor = 1.0;
@@ -1768,6 +1774,21 @@ namespace WW3.StealthSim
 
             Assert(cut1 && broke && cut2Blocked,
                 "Wire cutters degrade with use, breaking upon exhausting durability and blocking further breaches");
+
+            // Test 45: Dynamic curfew wind soundscape scaling and shelter acoustic dampening
+            var simWind = new SimulationWorld();
+            simWind.PlayerCharacter.Cold = 80.0; // Freezing outdoor alley
+            simWind.PlayerCharacter.Position = new Vec2(5.0, 10.0); // Unsheltered alley
+            simWind.Step(1.0, new Vec2(0, 0));
+            double outdoorWindVol = simWind.WindAmbienceVolume;
+
+            // Move inside burn barrel shelter
+            simWind.PlayerCharacter.Position = simWind.Shelters[0].Position;
+            simWind.Step(2.0, new Vec2(0, 0));
+            double shelteredWindVol = simWind.WindAmbienceVolume;
+
+            bool windDampenedInShelter = shelteredWindVol < outdoorWindVol && shelteredWindVol <= 0.15;
+            Assert(windDampenedInShelter, "Environmental wind soundscape volume dynamically scales with cold and dampens inside shelters");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

@@ -2,6 +2,16 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.6.9 — 2026-11-04
+- **Curfew Night Wind Ambience Synthesis & Dynamic Shelter Dampening (`SurvivalSystem.cs` & `ProceduralAudio.cs`)**:
+  - Implemented `CreateNightWindAmbienceClip` in `ProceduralAudio.cs`: generates continuous low-pass filtered brownian noise with slow sinusoidal gust envelopes (0.75Hz).
+  - Wired into `SurvivalSystem.cs` 2D ambient audio playback: scales volume dynamically with outdoor cold accumulation (0.20 to 0.55), dampening down to 0.08 inside shelter warming zones.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored dynamic wind soundscape volume scaling and shelter dampening in `SimulationWorld`.
+  - Added automated Test 45 validating environmental wind soundscape scaling and shelter dampening (45/45 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 45/45 tests and updated governance docs to version 0.6.9.
+
 ## 0.6.8 — 2026-11-04
 - **Contextual Proximity Interaction Prompt HUD (`SurvivalSystem.cs`)**:
   - Implemented dynamic proximity interaction prompts floating in the bottom HUD: displays contextual guidance when near shelters (`[SHELTER: ...] Warming core`), checkpoints (`[E] Present Papers | [B] Bribe Guard`), or perimeter fence breaches (`[T] Cut Wire Fence`).

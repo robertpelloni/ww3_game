@@ -62,6 +62,11 @@ public class SurvivalSystem : MonoBehaviour
     [Header("Contextual Prompts")]
     public string activeContextualPrompt = "";
 
+    [Header("Atmospheric Ambience")]
+    public float windAmbienceVolume = 0.35f;
+    private AudioSource windAudioSource;
+    private float windTimer = 0f;
+
     private PlayerMove playerMove;
     private PatrolMover nearestGuard;
     private ShelterZone[] shelterZones;
@@ -83,6 +88,17 @@ public class SurvivalSystem : MonoBehaviour
         shelterZones = FindObjectsByType<ShelterZone>(FindObjectsSortMode.None);
         lightZones = FindObjectsByType<LightExposureZone>(FindObjectsSortMode.None);
         checkpointTrigger = FindFirstObjectByType<CheckpointTrigger>();
+
+        windAudioSource = gameObject.AddComponent<AudioSource>();
+        windAudioSource.loop = true;
+        windAudioSource.spatialBlend = 0f; // 2D ambient stereo/mono
+        windAudioSource.volume = 0.25f;
+        try
+        {
+            windAudioSource.clip = ProceduralAudio.CreateNightWindAmbienceClip(2.0f);
+            windAudioSource.Play();
+        }
+        catch (System.Exception) {}
     }
 
     void Update()
@@ -104,6 +120,13 @@ public class SurvivalSystem : MonoBehaviour
             fpsAccumulator = 0f;
             fpsFrameCount = 0;
             fpsTimer = 0f;
+        }
+
+        // Dynamic wind volume based on shelter and cold level
+        if (windAudioSource != null)
+        {
+            float targetVol = isSheltered ? 0.08f : Mathf.Lerp(0.20f, 0.55f, cold / 100f);
+            windAudioSource.volume = Mathf.Lerp(windAudioSource.volume, targetVol, dt * 2.0f);
         }
 
         // Throttled shelter proximity & ambient light exposure evaluation (10Hz instead of 60Hz)

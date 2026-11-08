@@ -1,6 +1,7 @@
-# TODO — granular short-term tasks (v0.6.8)
+# TODO — granular short-term tasks (v0.6.9)
 
 ## Verified working (keep green)
+- [x] Curfew Night Wind Ambience Audio & Shelter Volume Dampening in `SurvivalSystem.cs` & `ProceduralAudio.cs`
 - [x] Contextual Proximity Interaction Prompt HUD & Tool Durability Decay in `SurvivalSystem.cs` & `PlayerMove.cs`
 - [x] Decoupled Time-Stamped Cache Invalidation & Algebraic Smoothstep Penumbra in `PatrolMover.cs` & `LightExposureZone.cs`
 - [x] 0 B/Frame GC Allocation Mitigation & Native Array Caching in `PatrolMover.cs` & `SurvivalSystem.cs`
@@ -50,7 +51,7 @@
 - [x] Sound lure mechanics: Player whistle `[Q]` producing a 20m acoustic radius in `PlayerMove.cs`
 - [x] Guard acoustic hearing & `Investigating` AI state machine in `PatrolMover.cs`
 - [x] Checkpoint security gate & interrogation system (`CheckpointTrigger.cs`) with paper checks `[E]` and bribe `[B]`
-- [x] Pure-C# console sim `prototypes/StealthSim` (.NET 10/8, 44/44 tests passing)
+- [x] Pure-C# console sim `prototypes/StealthSim` (.NET 10/8, 45/45 tests passing)
 - [x] Unity MCP round-trip U-T1–U-T14 via AnkleBreaker (`unity-test/` Act 1 starter)
 - [x] Godot G-T1–G-T7 via Coding-Solo G1 (`godot-test/` boot + debug capture + compiled TypeScript)
 - [x] Unreal R-T1–R-T2 graceful no-engine failure (sam-david R8)

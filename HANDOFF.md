@@ -1,6 +1,10 @@
-# HANDOFF — session 2026-11-04 (v0.6.8)
+# HANDOFF — session 2026-11-04 (v0.6.9)
 
 ## What was accomplished this session
+- **Curfew Night Wind Ambience Audio & Shelter Volume Dampening (`SurvivalSystem.cs` & `ProceduralAudio.cs`)**:
+  * Implemented procedural winter wind gust soundscape synthesis (`CreateNightWindAmbienceClip`) in `ProceduralAudio.cs` using low-pass filtered brownian noise with slow sinusoidal gust envelopes.
+  * Wired into `SurvivalSystem.cs` ambient audio playback, dynamically scaling volume with cold accumulation and softening inside shelter warming zones.
+  * Pure-C# simulation updated with 45/45 automated tests passing (`prototypes/StealthSim`).
 - **Contextual Proximity Interaction Prompt HUD & Tool Durability Decay (`SurvivalSystem.cs` & `PlayerMove.cs`)**:
   * Implemented floating contextual interaction prompts on the IMGUI monitor: updates when near shelters (`[SHELTER: ...] Warming core`), checkpoints (`[E] Present Papers | [B] Bribe Guard`), or perimeter fence breaches (`[T] Cut Wire Fence`).
   * Added tool condition degradation: wire cutters consume 1 durability charge per fence breach (`wireCutterDurability = 2`), snapping and breaking upon exhaustion.
@@ -104,11 +108,11 @@
 - **Procedural Lo-Fi Audio Synthesizer (`ProceduralAudio.cs`)**:
   * Generates 22kHz mono PCM audio clips directly in memory without external asset overhead.
 - **Unified Command Center & Governance Sync**:
-  * Synchronized `dashboard.html` to `v0.6.8`.
-  * Updated `scripts/run_checks.py` to track 44/44 passing StealthSim tests.
+  * Synchronized `dashboard.html` to `v0.6.9`.
+  * Updated `scripts/run_checks.py` to track 45/45 passing StealthSim tests.
   * Updated `VERSION.md`, `CHANGELOG.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md`.
 
 ## For the successor
-1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (44/44 StealthSim tests, docs, server statuses).
+1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (45/45 StealthSim tests, docs, server statuses).
 2. Open `dashboard.html` in a web browser to inspect the updated Command Center console.
 3. Next priority: Unity URP scaffold in `unity-project/` (Hub 2022.3 LTS, 3D URP, Very Low preset locked).

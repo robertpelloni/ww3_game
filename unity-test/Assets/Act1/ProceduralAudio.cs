@@ -192,6 +192,33 @@ public static class ProceduralAudio
     }
 
     /// <summary>
+    /// Generates a continuous chilling curfew winter wind gust ambience clip.
+    /// Uses low-pass filtered brownian noise with slow sinusoidal gust modulation.
+    /// </summary>
+    public static AudioClip CreateNightWindAmbienceClip(float duration = 2.0f)
+    {
+        int sampleCount = Mathf.CeilToInt(SampleRate * duration);
+        float[] samples = new float[sampleCount];
+        float lastVal = 0f;
+
+        for (int i = 0; i < sampleCount; i++)
+        {
+            float t = (float)i / SampleRate;
+            // Brownian random walk
+            float white = (Random.value * 2f - 1f);
+            lastVal = (lastVal + (0.02f * white)) / 1.02f;
+
+            // Slow wind gust envelope (0.5Hz - 1.5Hz)
+            float gust = 0.5f + 0.5f * Mathf.Sin(2f * Mathf.PI * 0.75f * t);
+            samples[i] = lastVal * gust * 0.45f;
+        }
+
+        AudioClip clip = AudioClip.Create("CurfewWinterWind_Ambience", sampleCount, 1, SampleRate, false);
+        clip.SetData(samples, 0);
+        return clip;
+    }
+
+    /// <summary>
     /// Generates a low-frequency 60Hz transformer electrical hum with slight harmonic buzzing.
     /// Used for active industrial curfew spotlights and high-voltage perimeter fences.
     /// </summary>
