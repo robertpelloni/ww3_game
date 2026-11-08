@@ -17,6 +17,10 @@ public class LightExposureZone : MonoBehaviour
     public float baseRadius = 5.0f;
     public float alertFocusRadiusMultiplier = 1.4f; // Expands radius when locking on disturbance
 
+    [Header("Atmospheric Fog Scattering")]
+    public bool hasDenseFog = true;
+    public float fogScatteringFactor = 0.85f; // Fog slightly diffuses direct glare
+
     [Header("Oscillating Sweep Settings (Curfew Spotlight)")]
     public bool isSweepingSpotlight = false;
     public float sweepRangeX = 8.0f;
@@ -123,6 +127,11 @@ public class LightExposureZone : MonoBehaviour
     public bool IsInside(Vector3 position)
     {
         return Vector3.Distance(transform.position, position) <= radius;
+    }
+
+    public float GetEffectiveExposure()
+    {
+        return hasDenseFog ? (exposureLevel * fogScatteringFactor) : exposureLevel;
     }
 
     /// <summary>

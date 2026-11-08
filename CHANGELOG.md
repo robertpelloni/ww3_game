@@ -2,6 +2,16 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.5.9 — 2026-11-04
+- **Atmospheric Fog Extinction & Searchlight Scattering (`LightExposureZone.cs` & `PatrolMover.cs`)**:
+  - Implemented dynamic atmospheric fog extinction in `PatrolMover.cs`: dense alley fog attenuates unassisted guard vision range by 16.6% (12m to 10m in Unity, 14m to 11.67m in simulation), while guard flashlights and curfew searchlights pierce through clearly.
+  - Added searchlight beam scattering in `LightExposureZone.cs` (`GetEffectiveExposure`): fog diffuses direct glare by 0.85x, creating realistic atmospheric light falloff without expensive compute shaders.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored atmospheric fog extinction and searchlight scattering in `SimulationWorld`.
+  - Added automated Test 35 validating dense fog vision attenuation and flashlight penetration (35/35 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` and governance docs to version 0.5.9.
+
 ## 0.5.8 — 2026-11-04
 - **Real-Time Frame-Rate Profiler HUD (`SurvivalSystem.cs`)**:
   - Added rolling real-time FPS profiler to the IMGUI survival monitor (`FPS: XX`), verifying 30fps+ performance stability on potato hardware targets.

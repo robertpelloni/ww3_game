@@ -18,8 +18,11 @@ public class PatrolMover : MonoBehaviour
 
     [Header("Vision & Detection")]
     public float viewDistance = 12f;
+    public float baseViewDistance = 12f;
     public float viewAngle = 70f; // Half-angle FOV
     public bool isFlashlightActive = false;
+    public bool hasDenseFog = true;
+    public float fogExtinctionDistanceReduction = 0.166f; // Reduces unassisted view distance from 12m to 10m
     public float flashlightSweepAngle = 45f;
     public float flashlightSweepSpeed = 2.5f;
     public float searchlightAlertMultiplier = 2.5f;
@@ -501,8 +504,12 @@ public class PatrolMover : MonoBehaviour
         Vector3 toPlayer = targetPlayer.position - transform.position;
         float dist = toPlayer.magnitude;
 
+        // Apply dense fog atmospheric extinction (reduced range unless illuminated by flashlight)
+        float effectiveViewDistance = hasDenseFog && !isFlashlightActive
+            ? (viewDistance * (1f - fogExtinctionDistanceReduction))
+            : viewDistance;
+
         // Apply glare blindness if guard is looking directly into an intense light beam within 6m
-        float effectiveViewDistance = viewDistance;
         var lights = FindObjectsByType<LightExposureZone>(FindObjectsSortMode.None);
         if (lights != null)
         {

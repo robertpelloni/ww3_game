@@ -75,6 +75,7 @@ namespace WW3.StealthSim
         public double VisionRange { get; set; } = 14.0;
         public bool FlashlightActive => State == AIState.Investigate || State == AIState.Search || State == AIState.Chase;
         public double HearingSensitivity { get; set; } = 1.0;
+        public bool HasDenseFog { get; set; } = true;
         public double SensorInterval { get; set; } = 0.066; // 15Hz when cruising
         public double SpatialSleepDistance { get; set; } = 35.0; // >35m drops to 2Hz
         public double SleepInterval { get; set; } = 0.50; // 2Hz sensory sleep
@@ -216,6 +217,8 @@ namespace WW3.StealthSim
         public Vec2 Center { get; set; }
         public double Radius { get; set; } = 4.0;
         public double BaseRadius { get; set; } = 4.0;
+        public bool HasDenseFog { get; set; } = true;
+        public double FogScatteringFactor { get; set; } = 0.85;
         public double SweepRange { get; set; } = 10.0;
         public double SweepSpeed { get; set; } = 1.5;
         public double SweepTime { get; set; } = 0.0;
@@ -672,8 +675,10 @@ namespace WW3.StealthSim
 
                 Vec2 dirToPlayer = toPlayer.Normalized();
 
-                // Distance-culled Vision Check with Glare Blindness
-                double effectiveVisionRange = guard.VisionRange;
+                // Dense fog atmospheric extinction reduces unassisted guard vision range by 16.6% (14m -> 11.67m) unless flashlight active
+                double effectiveVisionRange = (guard.HasDenseFog && !guard.FlashlightActive)
+                    ? (guard.VisionRange * 0.833)
+                    : guard.VisionRange;
                 Vec2 toSearchlight = CurfewSearchlight.GetCurrentPosition() - guard.Position;
                 if (toSearchlight.Magnitude() <= 6.0)
                 {
@@ -1523,6 +1528,33 @@ namespace WW3.StealthSim
             // At 1.5x decimated load interval, evaluations should be reduced compared to nominal
             bool decimationActive = cruiseGuard.DynamicLoadMultiplier >= 1.5 && cruiseGuard.SensorEvaluationCount < 15;
             Assert(decimationActive, "Dynamic sensor decimation scales guard sensory intervals under frame rate drops to guarantee 30fps+");
+
+            // Test 35: Dense fog atmospheric extinction and searchlight scattering
+            var simFog = new SimulationWorld();
+            var fogGuard = simFog.Guards[0]; // VisionRange = 14m
+            fogGuard.WaypointA = new Vec2(10.0, 5.0);
+            fogGuard.WaypointB = new Vec2(10.0, 5.0);
+            fogGuard.Position = new Vec2(10.0, 5.0);
+            fogGuard.Forward = new Vec2(1, 0); // Looking east
+
+            // Position player at 13m (within standard 14m range, but > 14*0.833 = 11.67m in dense fog)
+            simFog.PlayerCharacter.Position = new Vec2(23.0, 5.0);
+            simFog.CurfewSearchlight.Radius = 0; // In dark shadow alley
+            simFog.Step(0.1, new Vec2(0, 0));
+
+            // In dense fog, player at 13m should be concealed by atmospheric fog extinction
+            bool fogConcealed = fogGuard.Suspicion == 0.0;
+
+            // When guard turns on flashlight during investigation, flashlight pierces fog at 13m
+            fogGuard.State = AIState.Investigate; // Activates flashlight
+            fogGuard.LastInvestigateTarget = new Vec2(23.0, 5.0);
+            fogGuard.Position = new Vec2(10.0, 5.0);
+            fogGuard.Forward = new Vec2(1, 0);
+            simFog.Step(0.2, new Vec2(0, 0));
+            bool flashlightPiercedFog = fogGuard.Suspicion > 0.0;
+
+            Assert(fogConcealed && flashlightPiercedFog,
+                "Atmospheric fog extinction attenuates unassisted guard vision and searchlight/flashlight beams pierce through");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;
