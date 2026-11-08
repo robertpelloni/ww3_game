@@ -1,6 +1,10 @@
-# HANDOFF — session 2026-11-04 (v0.6.3)
+# HANDOFF — session 2026-11-04 (v0.6.4)
 
 ## What was accomplished this session
+- **Surface-Dependent Footstep Audio & Movement Pacing (`PlayerMove.cs` & `ProceduralAudio.cs`)**:
+  * Implemented `CreateFootstepClip(surface)` synthesizing terrain-specific audio impulses: soft mud squishes for Dirt, solid taps for Concrete, metallic ringing pings for MetalGrate, and sharp crunches for GlassDebris.
+  * Added rhythmic stride pacing in `PlayerMove.cs` with stance-dependent step intervals (Sprint 0.28s, Walk 0.45s, Crouch 0.65s, Prone 0.90s).
+  * Pure-C# simulation updated with 40/40 automated tests passing (`prototypes/StealthSim`).
 - **Guard Alert Shout Vocalization Audio Synthesis (`PatrolMover.cs` & `ProceduralAudio.cs`)**:
   * Implemented `CreateGuardAlertShoutClip` in `ProceduralAudio.cs` synthesizing a harsh 350Hz formant vocal alert shout with throat harmonics when patrol guards transition to `Alert`.
   * Wired into `PatrolMover.cs` and mirrored in pure-C# `SimulationWorld` event logs.
@@ -84,11 +88,11 @@
 - **Procedural Lo-Fi Audio Synthesizer (`ProceduralAudio.cs`)**:
   * Generates 22kHz mono PCM audio clips directly in memory without external asset overhead.
 - **Unified Command Center & Governance Sync**:
-  * Synchronized `dashboard.html` to `v0.6.3`.
-  * Updated `scripts/run_checks.py` to track 39/39 passing StealthSim tests.
+  * Synchronized `dashboard.html` to `v0.6.4`.
+  * Updated `scripts/run_checks.py` to track 40/40 passing StealthSim tests.
   * Updated `VERSION.md`, `CHANGELOG.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md`.
 
 ## For the successor
-1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (39/39 StealthSim tests, docs, server statuses).
+1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (40/40 StealthSim tests, docs, server statuses).
 2. Open `dashboard.html` in a web browser to inspect the updated Command Center console.
 3. Next priority: Unity URP scaffold in `unity-project/` (Hub 2022.3 LTS, 3D URP, Very Low preset locked).

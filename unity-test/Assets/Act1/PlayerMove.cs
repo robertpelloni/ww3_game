@@ -51,6 +51,9 @@ public class PlayerMove : MonoBehaviour
     [Header("Boundaries")]
     public float minX = -28f, maxX = 28f, minZ = -9f, maxZ = 9f;
 
+    [Header("Footstep Audio Pacing")]
+    public float footstepTimer = 0f;
+
     public bool IsMoving { get; private set; }
     public float CurrentNoiseRadius { get; private set; }
     public bool IsWhistling => whistleTimer > 0f;
@@ -89,6 +92,30 @@ public class PlayerMove : MonoBehaviour
         p.z = Mathf.Clamp(p.z, minZ, maxZ);
         p.y = 1f;
         transform.position = p;
+
+        // Footstep audio pacing based on movement and stance
+        if (IsMoving)
+        {
+            float strideInterval = currentStance switch
+            {
+                Stance.Sprint => 0.28f,
+                Stance.Walk => 0.45f,
+                Stance.Crouch => 0.65f,
+                Stance.Prone => 0.90f,
+                _ => 0.45f
+            };
+
+            footstepTimer += Time.deltaTime;
+            if (footstepTimer >= strideInterval)
+            {
+                footstepTimer = 0f;
+                PlayFootstepAudio();
+            }
+        }
+        else
+        {
+            footstepTimer = 0f;
+        }
 
         // Update surface material multiplier
         surfaceNoiseMultiplier = currentSurface switch
@@ -134,6 +161,24 @@ public class PlayerMove : MonoBehaviour
         {
             throwCooldownTimer -= Time.deltaTime;
         }
+    }
+
+    private void PlayFootstepAudio()
+    {
+        try
+        {
+            AudioClip step = ProceduralAudio.CreateFootstepClip(currentSurface);
+            float vol = currentStance switch
+            {
+                Stance.Sprint => 0.85f,
+                Stance.Walk => 0.50f,
+                Stance.Crouch => 0.25f,
+                Stance.Prone => 0.12f,
+                _ => 0.50f
+            };
+            ProceduralAudio.PlayClipAtPoint(step, transform.position, vol);
+        }
+        catch (System.Exception) {}
     }
 
     void HandleDistractionInputs()

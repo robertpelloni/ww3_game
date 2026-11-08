@@ -152,22 +152,41 @@ public static class ProceduralAudio
     }
 
     /// <summary>
-    /// Generates a subtle low-frequency footstep thud pulse.
+    /// Generates a procedural footstep impulse parameterized by ground surface material.
+    /// Soft mud squish for Dirt, solid tap for Concrete, metallic ping for MetalGrate, and sharp crunch for GlassDebris.
     /// </summary>
-    public static AudioClip CreateFootstepClip(float duration = 0.15f)
+    public static AudioClip CreateFootstepClip(PlayerMove.SurfaceType surface = PlayerMove.SurfaceType.Concrete, float duration = 0.12f)
     {
         int sampleCount = Mathf.CeilToInt(SampleRate * duration);
         float[] samples = new float[sampleCount];
 
         for (int i = 0; i < sampleCount; i++)
         {
-            float decay = Mathf.Exp(-18f * (float)i / sampleCount);
-            float lowFreq = Mathf.Sin(2f * Mathf.PI * 110f * ((float)i / SampleRate));
-            float noise = (Random.value * 2f - 1f) * 0.25f;
-            samples[i] = (lowFreq + noise) * decay * 0.35f;
+            float t = (float)i / SampleRate;
+            float decay = Mathf.Exp(-t * (surface == PlayerMove.SurfaceType.MetalGrate ? 24f : 36f));
+            float noise = (Random.value * 2f - 1f);
+            float sample = 0f;
+
+            switch (surface)
+            {
+                case PlayerMove.SurfaceType.Dirt:
+                    sample = (Mathf.Sin(2f * Mathf.PI * 85f * t) * 0.7f + noise * 0.2f) * decay * 0.22f;
+                    break;
+                case PlayerMove.SurfaceType.Concrete:
+                    sample = (Mathf.Sin(2f * Mathf.PI * 135f * t) * 0.65f + noise * 0.3f) * decay * 0.32f;
+                    break;
+                case PlayerMove.SurfaceType.MetalGrate:
+                    sample = (Mathf.Sin(2f * Mathf.PI * 1550f * t) * 0.5f + noise * 0.3f) * decay * 0.40f;
+                    break;
+                case PlayerMove.SurfaceType.GlassDebris:
+                    sample = noise * decay * 0.50f;
+                    break;
+            }
+
+            samples[i] = sample;
         }
 
-        AudioClip clip = AudioClip.Create("Procedural_Footstep", sampleCount, 1, SampleRate, false);
+        AudioClip clip = AudioClip.Create($"Procedural_Footstep_{surface}", sampleCount, 1, SampleRate, false);
         clip.SetData(samples, 0);
         return clip;
     }

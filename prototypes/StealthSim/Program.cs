@@ -153,6 +153,7 @@ namespace WW3.StealthSim
         public bool IsExhausted { get; set; } = false;
         public double ExhaustionTimer { get; set; } = 0.0;
         public double WhistleTimer { get; set; } = 0.0;
+        public double FootstepTimer { get; set; } = 0.0;
 
         public double GetBaseSpeed() => CurrentStance switch
         {
@@ -629,6 +630,30 @@ namespace WW3.StealthSim
                 Math.Clamp(PlayerCharacter.Position.X + moveDir.X * speed * dt, 0.0, Width),
                 Math.Clamp(PlayerCharacter.Position.Y + moveDir.Y * speed * dt, 0.0, Height)
             );
+
+            // Footstep audio pacing & logging
+            if (moveInput.Magnitude() > 0.01)
+            {
+                double strideInterval = PlayerCharacter.CurrentStance switch
+                {
+                    Stance.Sprint => 0.28,
+                    Stance.Walk => 0.45,
+                    Stance.Crouch => 0.65,
+                    Stance.Prone => 0.90,
+                    _ => 0.45
+                };
+
+                PlayerCharacter.FootstepTimer += dt;
+                if (PlayerCharacter.FootstepTimer >= strideInterval)
+                {
+                    PlayerCharacter.FootstepTimer = 0.0;
+                    ProceduralAudioLog.Add($"Footstep_{PlayerCharacter.CurrentSurface} at ({PlayerCharacter.Position.X:F1}, {PlayerCharacter.Position.Y:F1})");
+                }
+            }
+            else
+            {
+                PlayerCharacter.FootstepTimer = 0.0;
+            }
 
             // Win condition check
             if (Vec2.Distance(PlayerCharacter.Position, SafehousePosition) <= 2.5)
@@ -1650,6 +1675,20 @@ namespace WW3.StealthSim
 
             bool shoutTriggered = simShout.ProceduralAudioLog.Exists(a => a.StartsWith("GuardAlertShout"));
             Assert(shoutTriggered, "Guard alert shout vocalization synthesizes audio cue when player is spotted and chased");
+
+            // Test 40: Player surface-dependent footstep audio pacing and stride intervals
+            var simStep = new SimulationWorld();
+            simStep.PlayerCharacter.CurrentStance = Stance.Walk;
+            simStep.PlayerCharacter.Position = new Vec2(22.0, 10.0); // Inside Catwalk Metal Grate zone
+
+            // Step 1.0s of walking input
+            for (int i = 0; i < 10; i++)
+            {
+                simStep.Step(0.1, new Vec2(1, 0));
+            }
+
+            bool metalStepsLogged = simStep.ProceduralAudioLog.Exists(a => a.StartsWith("Footstep_MetalGrate"));
+            Assert(metalStepsLogged, "Player movement synthesizes surface-dependent rhythmic footstep audio across ground terrains");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

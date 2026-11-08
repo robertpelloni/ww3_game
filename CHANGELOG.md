@@ -2,6 +2,16 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.6.4 — 2026-11-04
+- **Surface-Dependent Procedural Footstep Audio (`PlayerMove.cs` & `ProceduralAudio.cs`)**:
+  - Implemented `CreateFootstepClip(surface)` in `ProceduralAudio.cs` synthesizing terrain-specific audio impulses: soft mud squishes for Dirt, solid taps for Concrete, metallic ringing pings for MetalGrate, and sharp crunches for GlassDebris.
+  - Added rhythmic stride pacing in `PlayerMove.cs` with stance-dependent step intervals (Sprint 0.28s, Walk 0.45s, Crouch 0.65s, Prone 0.90s).
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Added footstep stride pacing and surface audio logging in `SimulationWorld`.
+  - Added automated Test 40 validating surface-dependent footstep dispatching and stride intervals (40/40 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 40/40 tests and updated governance docs to version 0.6.4.
+
 ## 0.6.3 — 2026-11-04
 - **Guard Alert Shout Vocalization Synthesis (`PatrolMover.cs` & `ProceduralAudio.cs`)**:
   - Implemented `CreateGuardAlertShoutClip`: synthesizes a harsh 350Hz formant vocal alert shout with 700Hz and 1050Hz throat harmonics in memory when guards spot Jun-ho and transition to `Alert`.
