@@ -1,6 +1,10 @@
-# HANDOFF — session 2026-11-04 (v0.5.6)
+# HANDOFF — session 2026-11-04 (v0.5.7)
 
 ## What was accomplished this session
+- **Searchlight Pre-Lock Strobe Acquisition Warning & Guard Focus Signal Debounce (`LightExposureZone.cs` & `PatrolMover.cs`)**:
+  * Implemented 0.5s pre-focus strobe acquisition warning cue (`isAcquiringTarget`): when a searchlight detects a disturbance or receives an alert, the beam strobes rapidly for 0.5s to visually telegraph the impending focus lock before centering on the target.
+  * Added a 2.0s debounce cooldown on `SignalNearbySearchlights` preventing multiple guards in `Suspicious` state from prematurely resetting active searchlight focus timers.
+  * Pure-C# simulation updated with 33/33 automated tests passing (`prototypes/StealthSim`).
 - **Tactical Pincer Search Formations & Searchlight Beam Widening (`PatrolMover.cs` & `LightExposureZone.cs`)**:
   * Guards converging on disturbances now calculate tactical perpendicular flanking offsets (+4.5m / -4.5m) to execute a coordinated pincer search sweep instead of stacking onto the same coordinate.
   * Sweeping searchlights now dynamically expand their beam radius by 1.4x (e.g. 5m to 7m) while lingering on disturbance coordinates, creating perimeter sweep tension.
@@ -56,11 +60,11 @@
 - **Procedural Lo-Fi Audio Synthesizer (`ProceduralAudio.cs`)**:
   * Generates 22kHz mono PCM audio clips directly in memory without external asset overhead.
 - **Unified Command Center & Governance Sync**:
-  * Synchronized `dashboard.html` to `v0.5.6`.
-  * Updated `scripts/run_checks.py` to track 32/32 passing StealthSim tests.
+  * Synchronized `dashboard.html` to `v0.5.7`.
+  * Updated `scripts/run_checks.py` to track 33/33 passing StealthSim tests.
   * Updated `VERSION.md`, `CHANGELOG.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md`.
 
 ## For the successor
-1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (32/32 StealthSim tests, docs, server statuses).
+1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (33/33 StealthSim tests, docs, server statuses).
 2. Open `dashboard.html` in a web browser to inspect the updated Command Center console.
 3. Next priority: Unity URP scaffold in `unity-project/` (Hub 2022.3 LTS, 3D URP, Very Low preset locked).

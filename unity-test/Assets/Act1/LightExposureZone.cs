@@ -22,6 +22,8 @@ public class LightExposureZone : MonoBehaviour
     public float sweepRangeX = 8.0f;
     public float sweepSpeed = 1.2f;
     public float focusLingerTimer = 0f;
+    public bool isAcquiringTarget = false;
+    public float acquisitionWarningTimer = 0f;
     public bool isFlickering = false;
     public float flickerTimer = 0f;
     public float baseExposureLevel = 0.75f;
@@ -66,6 +68,19 @@ public class LightExposureZone : MonoBehaviour
             }
         }
 
+        // Pre-focus strobe warning cue (0.5s acquisition delay)
+        if (isAcquiringTarget)
+        {
+            acquisitionWarningTimer -= Time.deltaTime;
+            // High-frequency strobe warning: beam flickers rapidly to telegraph lock
+            exposureLevel = (Mathf.Sin(Time.time * 30f) > 0f) ? 1.0f : 0.4f;
+            if (acquisitionWarningTimer <= 0f)
+            {
+                isAcquiringTarget = false;
+                exposureLevel = baseExposureLevel;
+            }
+        }
+
         if (focusLingerTimer > 0f)
         {
             focusLingerTimer -= Time.deltaTime;
@@ -88,7 +103,12 @@ public class LightExposureZone : MonoBehaviour
     public void FocusOnTarget(Vector3 targetPos, float duration = 5.0f)
     {
         focusTargetPos = new Vector3(targetPos.x, transform.position.y, targetPos.z);
-        focusLingerTimer = duration;
+        focusLingerTimer = Mathf.Max(focusLingerTimer, duration);
+        if (!isAcquiringTarget && focusLingerTimer <= duration)
+        {
+            isAcquiringTarget = true;
+            acquisitionWarningTimer = 0.5f; // 0.5s pre-lock strobe cue
+        }
     }
 
     public void TriggerGridFlicker(float duration = 2.0f)

@@ -2,6 +2,17 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.5.7 — 2026-11-04
+- **Searchlight Pre-Lock Strobe Acquisition Warning (`LightExposureZone.cs`)**:
+  - Implemented 0.5s pre-focus strobe acquisition warning cue (`isAcquiringTarget`): when a searchlight detects a disturbance or receives an alert, the beam strobes rapidly for 0.5s to visually telegraph the impending focus lock before centering on the target.
+- **Guard Searchlight Coordination Debounce (`PatrolMover.cs`)**:
+  - Added a 2.0s debounce cooldown on `SignalNearbySearchlights` preventing multiple guards in `Suspicious` state from prematurely resetting or overriding active searchlight focus timers.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored searchlight pre-lock strobe warning and focus debounce in `SimulationWorld`.
+  - Added automated Test 33 validating pre-lock strobe acquisition warnings and focus lock transitions (33/33 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` and governance docs to version 0.5.7.
+
 ## 0.5.6 — 2026-11-04
 - **Tactical Pincer Search Formations (`PatrolMover.cs`)**:
   - Guards converging on radio or acoustic disturbances now calculate tactical perpendicular flanking offsets (+4.5m / -4.5m) to execute a coordinated pincer sweep rather than stacking onto the same point.

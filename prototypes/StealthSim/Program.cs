@@ -220,6 +220,8 @@ namespace WW3.StealthSim
         public double SweepTime { get; set; } = 0.0;
         public Vec2? FocusTarget { get; set; } = null;
         public double FocusTimer { get; set; } = 0.0;
+        public bool IsAcquiringTarget { get; set; } = false;
+        public double AcquisitionWarningTimer { get; set; } = 0.0;
         public bool IsFlickering { get; set; } = false;
         public double FlickerTimer { get; set; } = 0.0;
 
@@ -236,7 +238,12 @@ namespace WW3.StealthSim
         public void FocusOn(Vec2 target, double duration = 5.0)
         {
             FocusTarget = target;
-            FocusTimer = duration;
+            FocusTimer = Math.Max(FocusTimer, duration);
+            if (!IsAcquiringTarget && FocusTimer <= duration)
+            {
+                IsAcquiringTarget = true;
+                AcquisitionWarningTimer = 0.5; // 0.5s pre-focus strobe cue
+            }
             Radius = BaseRadius * 1.4; // Expand beam radius on alert lock
         }
 
@@ -485,6 +492,15 @@ namespace WW3.StealthSim
         public void Step(double dt, Vec2 moveInput)
         {
             if (GameOver || GameWon) return;
+
+            if (CurfewSearchlight.IsAcquiringTarget)
+            {
+                CurfewSearchlight.AcquisitionWarningTimer -= dt;
+                if (CurfewSearchlight.AcquisitionWarningTimer <= 0)
+                {
+                    CurfewSearchlight.IsAcquiringTarget = false;
+                }
+            }
 
             if (CurfewSearchlight.FocusTimer > 0)
             {
@@ -1473,6 +1489,22 @@ namespace WW3.StealthSim
 
             Assert(flankOffsetApplied && beamWidened && beamRestored,
                 "Guards execute tactical pincer flanking convergence and searchlight beam widens during active focus");
+
+            // Test 33: Searchlight pre-lock strobe acquisition warning and guard focus debounce
+            var simAcq = new SimulationWorld();
+            Vec2 pingPos = new Vec2(25.0, 10.0);
+            simAcq.CurfewSearchlight.FocusOn(pingPos, 4.0);
+
+            bool strobeTriggered = simAcq.CurfewSearchlight.IsAcquiringTarget &&
+                                   simAcq.CurfewSearchlight.AcquisitionWarningTimer > 0.0;
+
+            // Step 0.6s past pre-lock acquisition delay
+            simAcq.Step(0.6, new Vec2(0, 0));
+            bool lockEngaged = !simAcq.CurfewSearchlight.IsAcquiringTarget &&
+                               simAcq.CurfewSearchlight.FocusTimer > 0;
+
+            Assert(strobeTriggered && lockEngaged,
+                "Searchlight pre-lock strobe warning telegraphs beam focus lock to alert player before engaging");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

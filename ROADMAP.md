@@ -1,13 +1,14 @@
 # ROADMAP — major structural milestones
 
-**Version:** 0.5.6 (see [VERSION.md](VERSION.md)).
+**Version:** 0.5.7 (see [VERSION.md](VERSION.md)).
 
 ## M1 — Vertical slice: Act 1 Blackout Chongjin (Milestone Polish Completed)
 - 1 street 60x20m, night + fog + searchlight, 2 patrols + 1 checkpoint guard.
 - Win = reach safehouse; lose + retry < 3s; 30fps+ HD 520 Very Low.
 - State:
-  * Pure-C# console sim verified in `prototypes/StealthSim` (32/32 tests passing).
+  * Pure-C# console sim verified in `prototypes/StealthSim` (33/33 tests passing).
   * Scene + patrol/player starter scripts live in `unity-test/` (see [docs/MCP_TESTS.md](docs/MCP_TESTS.md)).
+  * Searchlight pre-lock strobe acquisition warning cue and guard focus signal debouncing.
   * Tactical guard pincer search sweeps (+4.5m lateral offsets) and searchlight beam widening (1.4x).
   * Wire-cutter perimeter fence breach shortcut (`PlayerMove.cs` `[T]`, `ProceduralAudio.cs` snip audio).
   * Checkpoint security gate inspection, 2-rice food bribery, and procedural alarm siren escalation (`CheckpointTrigger.cs`).

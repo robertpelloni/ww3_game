@@ -41,6 +41,7 @@ public class PatrolMover : MonoBehaviour
     public float tacticalFlankOffset = 0f; // Lateral fanning offset for pincer convergence
     private float searchTimer = 0f;
     private float alertBroadcastCooldown = 0f;
+    private float searchlightSignalCooldown = 0f;
 
     [Header("Performance & Sensor Budgeting (Intel HD 520 / Potato Target)")]
     public float sensorTickInterval = 0.066f; // ~15Hz sensor update when patrolling far
@@ -212,6 +213,10 @@ public class PatrolMover : MonoBehaviour
         {
             alertBroadcastCooldown -= Time.deltaTime;
         }
+        if (searchlightSignalCooldown > 0f)
+        {
+            searchlightSignalCooldown -= Time.deltaTime;
+        }
 
         // Execute behavior based on state
         isFlashlightActive = (currentState == GuardState.Investigating || currentState == GuardState.Suspicious || currentState == GuardState.Alert);
@@ -343,6 +348,9 @@ public class PatrolMover : MonoBehaviour
 
     private void SignalNearbySearchlights(Vector3 targetPos, float lingerDuration)
     {
+        if (searchlightSignalCooldown > 0f) return;
+        searchlightSignalCooldown = 2.0f; // Debounce searchlight signal to prevent timer resetting
+
         var lights = FindObjectsByType<LightExposureZone>(FindObjectsSortMode.None);
         if (lights == null) return;
 
