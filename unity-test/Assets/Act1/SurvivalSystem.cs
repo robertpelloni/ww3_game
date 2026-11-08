@@ -44,6 +44,8 @@ public class SurvivalSystem : MonoBehaviour
     public bool isGameOver = false;
     public bool isGameWon = false;
     public string gameOverReason = "";
+    public float missionTimer = 0f;
+    public string extractionRoute = "Checkpoint Transit Gate";
 
     [Header("Debug HUD")]
     public bool showDebugHUD = true;
@@ -80,6 +82,11 @@ public class SurvivalSystem : MonoBehaviour
     void Update()
     {
         float dt = Time.deltaTime;
+
+        if (!isGameOver && !isGameWon)
+        {
+            missionTimer += dt;
+        }
 
         // Rolling FPS monitoring
         fpsAccumulator += (dt > 0f) ? (1f / dt) : 60f;
@@ -234,7 +241,8 @@ public class SurvivalSystem : MonoBehaviour
     public void TriggerVictory(string safehouseName = "Border Safehouse")
     {
         isGameWon = true;
-        Debug.Log($"[SurvivalSystem] VICTORY! Reached {safehouseName}.");
+        extractionRoute = hasCutPerimeterFence ? "Wire-Cut Side Alley Shortcut" : "Sector 4 Checkpoint Gate";
+        Debug.Log($"[SurvivalSystem] VICTORY! Reached {safehouseName} in {missionTimer:F1}s via {extractionRoute}.");
     }
 
     public void RestartLevel()
@@ -414,12 +422,15 @@ public class SurvivalSystem : MonoBehaviour
         }
         else if (isGameWon)
         {
-            GUI.Box(new Rect(Screen.width / 2f - 180, Screen.height / 2f - 70, 360, 140), "=== MISSION ACCOMPLISHED ===");
+            GUI.Box(new Rect(Screen.width / 2f - 180, Screen.height / 2f - 85, 360, 170), "=== ACT 1 MISSION ACCOMPLISHED ===");
             GUIStyle winStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold };
             winStyle.normal.textColor = Color.green;
-            GUI.Label(new Rect(Screen.width / 2f - 160, Screen.height / 2f - 35, 320, 25), "SAFED IN THE BUNKER!", winStyle);
+            GUI.Label(new Rect(Screen.width / 2f - 160, Screen.height / 2f - 60, 320, 22), "SAFED IN THE CHONGJIN BUNKER!", winStyle);
 
-            if (GUI.Button(new Rect(Screen.width / 2f - 80, Screen.height / 2f + 10, 160, 32), "PLAY AGAIN [R]"))
+            GUI.Label(new Rect(Screen.width / 2f - 150, Screen.height / 2f - 38, 300, 18), $"Time: {missionTimer:F1}s | Route: {extractionRoute}");
+            GUI.Label(new Rect(Screen.width / 2f - 150, Screen.height / 2f - 18, 300, 18), $"Health: {health:F0}% | Rations Left: {riceCount} Rice, {hotTeaCount} Tea");
+
+            if (GUI.Button(new Rect(Screen.width / 2f - 80, Screen.height / 2f + 15, 160, 32), "PLAY AGAIN [R]"))
             {
                 RestartLevel();
             }

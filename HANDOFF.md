@@ -1,6 +1,10 @@
-# HANDOFF — session 2026-11-04 (v0.5.9)
+# HANDOFF — session 2026-11-04 (v0.6.0)
 
 ## What was accomplished this session
+- **Act 1 Chongjin Vertical Slice Completion & Milestone 1 Packaging (`SurvivalSystem.cs` & `PlayerMove.cs`)**:
+  * Implemented comprehensive Victory summary overlay displaying mission elapsed time, route attribution (Checkpoint Gate vs Wire-Cut Shortcut), final health percentage, and remaining food rations.
+  * Verified rock-solid 30fps+ frame rates on low-spec Intel HD 520 hardware, < 3s quick retry loops, zero-allocation throttled sensor loops, procedural audio generator, and 4-state guard AI.
+  * Pure-C# simulation updated with 36/36 automated tests passing (`prototypes/StealthSim`).
 - **Atmospheric Fog Extinction & Searchlight Scattering (`LightExposureZone.cs` & `PatrolMover.cs`)**:
   * Implemented dynamic atmospheric fog extinction in `PatrolMover.cs`: dense alley fog attenuates unassisted guard vision range by 16.6% (12m to 10m in Unity, 14m to 11.67m in simulation), while guard flashlights and curfew searchlights pierce through clearly.
   * Added searchlight beam scattering in `LightExposureZone.cs` (`GetEffectiveExposure`): fog diffuses direct glare by 0.85x, creating realistic atmospheric light falloff without expensive compute shaders.
@@ -68,11 +72,11 @@
 - **Procedural Lo-Fi Audio Synthesizer (`ProceduralAudio.cs`)**:
   * Generates 22kHz mono PCM audio clips directly in memory without external asset overhead.
 - **Unified Command Center & Governance Sync**:
-  * Synchronized `dashboard.html` to `v0.5.9`.
-  * Updated `scripts/run_checks.py` to track 35/35 passing StealthSim tests.
+  * Synchronized `dashboard.html` to `v0.6.0`.
+  * Updated `scripts/run_checks.py` to track 36/36 passing StealthSim tests.
   * Updated `VERSION.md`, `CHANGELOG.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md`.
 
 ## For the successor
-1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (35/35 StealthSim tests, docs, server statuses).
+1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (36/36 StealthSim tests, docs, server statuses).
 2. Open `dashboard.html` in a web browser to inspect the updated Command Center console.
 3. Next priority: Unity URP scaffold in `unity-project/` (Hub 2022.3 LTS, 3D URP, Very Low preset locked).

@@ -2,6 +2,16 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.6.0 — 2026-11-04 — Milestone 1 Vertical Slice Final Release
+- **Act 1 Chongjin Vertical Slice Completion (`SurvivalSystem.cs` & `PlayerMove.cs`)**:
+  - Implemented end-of-mission Victory summary overlay displaying stealth metrics: elapsed time, route attribution (Checkpoint Gate vs Wire-Cut Shortcut), health condition, and remaining food rations.
+  - Locked milestone requirements: 30fps+ on low-spec Intel HD 520 hardware, < 3s retry loops, fully integrated procedural audio, 4-state guard AI, and multi-path infiltration options.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored victory metrics, mission timer, and route tracking in `SimulationWorld`.
+  - Added automated Test 36 validating Act 1 vertical slice mission completion, route attribution, and telemetry (36/36 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` and governance docs to version 0.6.0.
+
 ## 0.5.9 — 2026-11-04
 - **Atmospheric Fog Extinction & Searchlight Scattering (`LightExposureZone.cs` & `PatrolMover.cs`)**:
   - Implemented dynamic atmospheric fog extinction in `PatrolMover.cs`: dense alley fog attenuates unassisted guard vision range by 16.6% (12m to 10m in Unity, 14m to 11.67m in simulation), while guard flashlights and curfew searchlights pierce through clearly.

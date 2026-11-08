@@ -281,6 +281,8 @@ namespace WW3.StealthSim
         public bool GameWon { get; set; } = false;
         public bool GameOver { get; set; } = false;
         public string EndReason { get; set; } = "";
+        public double ElapsedMissionTime { get; set; } = 0.0;
+        public string ExtractionRoute { get; set; } = "Checkpoint Gate";
 
         public void TriggerDistraction(Vec2 pos, double radius = 14.0, double duration = 2.5)
         {
@@ -497,6 +499,8 @@ namespace WW3.StealthSim
         {
             if (GameOver || GameWon) return;
 
+            ElapsedMissionTime += dt;
+
             if (CurfewSearchlight.IsAcquiringTarget)
             {
                 CurfewSearchlight.AcquisitionWarningTimer -= dt;
@@ -626,6 +630,7 @@ namespace WW3.StealthSim
             if (Vec2.Distance(PlayerCharacter.Position, SafehousePosition) <= 2.5)
             {
                 GameWon = true;
+                ExtractionRoute = PlayerCharacter.HasCutPerimeterFence ? "Wire-Cut Side Alley Shortcut" : "Sector 4 Checkpoint Gate";
                 EndReason = "Safehouse reached! Knocked twice in the darkness. You escaped Chongjin Act 1!";
                 return;
             }
@@ -1555,6 +1560,20 @@ namespace WW3.StealthSim
 
             Assert(fogConcealed && flashlightPiercedFog,
                 "Atmospheric fog extinction attenuates unassisted guard vision and searchlight/flashlight beams pierce through");
+
+            // Test 36: Act 1 Vertical slice completion & mission performance summary reporting
+            var simVictory = new SimulationWorld();
+            simVictory.PlayerCharacter.HasWireCutters = true;
+            simVictory.CutWireFence();
+            simVictory.PlayerCharacter.Position = simVictory.SafehousePosition;
+            simVictory.Step(1.5, new Vec2(0, 0));
+
+            bool missionWon = simVictory.GameWon;
+            bool routeTracked = simVictory.ExtractionRoute == "Wire-Cut Side Alley Shortcut";
+            bool timeRecorded = simVictory.ElapsedMissionTime >= 1.5;
+
+            Assert(missionWon && routeTracked && timeRecorded,
+                "Act 1 mission completion records victory statistics, route attribution, and mission elapsed time");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

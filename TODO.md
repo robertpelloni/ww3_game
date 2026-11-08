@@ -1,6 +1,7 @@
-# TODO — granular short-term tasks (v0.5.9)
+# TODO — granular short-term tasks (v0.6.0)
 
 ## Verified working (keep green)
+- [x] Act 1 Chongjin Vertical Slice Completion & Victory Summary HUD in `SurvivalSystem.cs`
 - [x] Atmospheric Fog Extinction (16.6% range reduction) & Direct Glare Scattering in `PatrolMover.cs` & `LightExposureZone.cs`
 - [x] Real-Time FPS Profiler HUD & Dynamic Sensor Decimation Under Load (1.5x) in `SurvivalSystem.cs` & `PatrolMover.cs`
 - [x] Searchlight Pre-Lock Strobe Acquisition Warning & Guard Focus Signal Debounce in `LightExposureZone.cs` & `PatrolMover.cs`
@@ -41,7 +42,7 @@
 - [x] Sound lure mechanics: Player whistle `[Q]` producing a 20m acoustic radius in `PlayerMove.cs`
 - [x] Guard acoustic hearing & `Investigating` AI state machine in `PatrolMover.cs`
 - [x] Checkpoint security gate & interrogation system (`CheckpointTrigger.cs`) with paper checks `[E]` and bribe `[B]`
-- [x] Pure-C# console sim `prototypes/StealthSim` (.NET 10/8, 35/35 tests passing)
+- [x] Pure-C# console sim `prototypes/StealthSim` (.NET 10/8, 36/36 tests passing)
 - [x] Unity MCP round-trip U-T1–U-T14 via AnkleBreaker (`unity-test/` Act 1 starter)
 - [x] Godot G-T1–G-T7 via Coding-Solo G1 (`godot-test/` boot + debug capture + compiled TypeScript)
 - [x] Unreal R-T1–R-T2 graceful no-engine failure (sam-david R8)
