@@ -1,6 +1,9 @@
-# HANDOFF — session 2026-11-04 (v0.7.1)
+# HANDOFF — session 2026-11-04 (v0.7.2)
 
 ## What was accomplished this session
+- **Dynamic Ambient Wind Acoustic Masking (`PatrolMover.cs`)**:
+  * Implemented dynamic wind acoustic masking: howling outdoor curfew wind gusts attenuate guard acoustic detection of subtle player footsteps by -25%, rewarding players who move during wind gusts while ensuring loud distractions (whistles, bottle shatters) maintain tactical reliability.
+  * Pure-C# simulation updated with 48/48 automated tests passing (`prototypes/StealthSim`).
 - **Broken Glass Debris Acoustic Shards & Guard Suspicion Escalation (`PlayerMove.cs` & `PatrolMover.cs`)**:
   * Implemented broken glass debris acoustic shard escalation: traversing `SurfaceType.GlassDebris` causes boot pressure to crush fractured shards, generating sharp +3.0m acoustic spikes on emitted noise.
   * Enhanced guard acoustic responsiveness: hearing glass shards transitions guards directly into investigation mode with a heightened suspicion floor (50.0% vs 35.0% baseline), simulating instant guard vigilance toward distinct high-frequency glass shattering in curfew silence.

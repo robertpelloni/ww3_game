@@ -2,6 +2,15 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.7.2 — 2026-11-04 — Milestone 2 Ambient Wind Acoustic Masking & Sound Dampening
+- **Ambient Wind Acoustic Masking (`PatrolMover.cs`)**:
+  - Implemented dynamic wind sound masking: outdoor curfew wind gusts attenuate guard hearing sensitivity against subtle player footstep acoustics by -25%, allowing stealthy movement in howling wind while loud distractions (whistles, thrown bottle shatters) maintain penetration.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored ambient wind acoustic masking for player footsteps in `SimulationWorld`.
+  - Added automated Test 48 validating ambient wind footstep masking and loud distraction penetration (48/48 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 48/48 tests and updated governance docs to version 0.7.2.
+
 ## 0.7.1 — 2026-11-04 — Milestone 2 Acoustic Debris & Guard Suspicion Refinement
 - **Glass Debris Acoustic Shards (`PlayerMove.cs` & `PatrolMover.cs`)**:
   - Implemented broken glass debris acoustic shard escalation: traversing `SurfaceType.GlassDebris` triggers sharp +3.0m acoustic spikes on emitted movement noise footprints due to fractured glass fracturing beneath military boots.

@@ -364,8 +364,18 @@ public class PatrolMover : MonoBehaviour
         float dist = Vector3.Distance(transform.position, targetPlayer.position);
         if (dist > baseNoise) return false;
 
+        // Environmental wind masking: howling curfew wind gusts mask subtle footstep acoustics (-25% hearing range)
+        // while loud events (whistles, bottle shatters) maintain high penetration
+        float windMaskingFactor = 1.0f;
+        var survival = targetPlayer.GetComponent<SurvivalSystem>();
+        if (survival != null && !survival.isSheltered && !pm.IsWhistling)
+        {
+            // When outdoor wind volume is elevated, acoustic footprint of footsteps is partially masked
+            windMaskingFactor = 0.75f;
+        }
+
         // Acoustic ray occlusion check: if solid obstacle intervenes, attenuate effective hearing radius
-        float effectiveRadius = baseNoise;
+        float effectiveRadius = baseNoise * windMaskingFactor;
         Vector3 soundOrigin = targetPlayer.position + Vector3.up * 0.5f;
         Vector3 guardEar = transform.position + Vector3.up * 1.5f;
         Vector3 soundDir = soundOrigin - guardEar;

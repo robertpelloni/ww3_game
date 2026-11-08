@@ -791,8 +791,11 @@ namespace WW3.StealthSim
                     inVisionCone = !rayBlocked && angleDeg <= (guard.VisionAngleDeg / 2.0);
                 }
 
-                // Distance-culled Hearing Check
-                double effectivePlayerNoise = playerNoiseRadius * guard.HearingSensitivity;
+                // Distance-culled Hearing Check with ambient wind masking
+                // Environmental wind masking: howling curfew wind gusts mask subtle footstep acoustics (-25% hearing range)
+                // while loud whistles or glass bottle shatters remain unaffected
+                double windMasking = (!IsPlayerSheltered() && ActiveDistractionPos == null) ? 0.75 : 1.0;
+                double effectivePlayerNoise = playerNoiseRadius * guard.HearingSensitivity * windMasking;
                 if (dist <= effectivePlayerNoise)
                 {
                     foreach (var obs in Obstacles)
@@ -1861,6 +1864,26 @@ namespace WW3.StealthSim
 
             Assert(glassAcousticsEscalated && guardGlassSuspicionSharp,
                 "Traversing glass debris triggers +3.0m shard acoustic spikes and raises guard investigation suspicion to 50%");
+
+            // Test 48: Dynamic ambient wind acoustic masking for footstep detection vs loud distractions
+            var simWindMask = new SimulationWorld();
+            var windGuard = simWindMask.Guards[0]; // Patrol-1 at (15, 5)
+            windGuard.Forward = new Vec2(0, 1);
+            simWindMask.PlayerCharacter.CurrentStance = Stance.Walk;
+            simWindMask.PlayerCharacter.CurrentSurface = SurfaceType.Concrete; // 6.0m base noise
+            // Guard hearing threshold with wind masking = 6.0 * 0.75 = 4.5m
+            // Position player at 5.2m away -> in still weather (6.0m) would be heard, but masked in wind (4.5m)
+            simWindMask.PlayerCharacter.Position = new Vec2(15.0, 10.2); // dist = 5.2m
+            simWindMask.Step(0.1, new Vec2(0.1, 0)); // Walking in wind
+            bool footstepMaskedByWind = windGuard.Suspicion <= 5.0 && windGuard.State == AIState.Patrol;
+
+            // Whistle (20m radius) still penetrates wind cleanly and alerts guard
+            simWindMask.Whistle();
+            simWindMask.Step(0.1, new Vec2(0, 0));
+            bool loudDistractionPiercesWind = windGuard.Suspicion >= 30.0 && windGuard.State == AIState.Investigate;
+
+            Assert(footstepMaskedByWind && loudDistractionPiercesWind,
+                "Curfew wind gusts mask subtle footsteps (-25% hearing range) while loud whistles reliably alert guards");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;
