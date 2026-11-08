@@ -2,6 +2,17 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.6.8 — 2026-11-04
+- **Contextual Proximity Interaction Prompt HUD (`SurvivalSystem.cs`)**:
+  - Implemented dynamic proximity interaction prompts floating in the bottom HUD: displays contextual guidance when near shelters (`[SHELTER: ...] Warming core`), checkpoints (`[E] Present Papers | [B] Bribe Guard`), or perimeter fence breaches (`[T] Cut Wire Fence`).
+- **Tool Durability & Degradation (`PlayerMove.cs` & `SurvivalSystem.cs`)**:
+  - Added durability charges to scavenged wire cutters (`wireCutterDurability = 2`), degrading with each fence cut and snapping when exhausted.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored wire cutter durability degradation in `SimulationWorld`.
+  - Added automated Test 44 validating tool durability decay and breach blocking upon exhaustion (44/44 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 44/44 tests and updated governance docs to version 0.6.8.
+
 ## 0.6.7 — 2026-11-04
 - **Unified Time-Stamped Cache Invalidation (`PatrolMover.cs`)**:
   - Decoupled static array cache updates from per-instance guard loops using unified `Time.unscaledTime` timestamps (`Time.unscaledTime - lastCacheTime >= 1.0f`), guaranteeing that guard and light caches invalidate strictly once per second regardless of scene guard counts.

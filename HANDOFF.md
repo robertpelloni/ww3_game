@@ -1,6 +1,10 @@
-# HANDOFF — session 2026-11-04 (v0.6.7)
+# HANDOFF — session 2026-11-04 (v0.6.8)
 
 ## What was accomplished this session
+- **Contextual Proximity Interaction Prompt HUD & Tool Durability Decay (`SurvivalSystem.cs` & `PlayerMove.cs`)**:
+  * Implemented floating contextual interaction prompts on the IMGUI monitor: updates when near shelters (`[SHELTER: ...] Warming core`), checkpoints (`[E] Present Papers | [B] Bribe Guard`), or perimeter fence breaches (`[T] Cut Wire Fence`).
+  * Added tool condition degradation: wire cutters consume 1 durability charge per fence breach (`wireCutterDurability = 2`), snapping and breaking upon exhaustion.
+  * Pure-C# simulation updated with 44/44 automated tests passing (`prototypes/StealthSim`).
 - **Decoupled Time-Stamped Cache Invalidation & Smoothstep Penumbra (`PatrolMover.cs` & `LightExposureZone.cs`)**:
   * Decoupled static array cache updates from per-instance guard loops using unified `Time.unscaledTime` timestamps, guaranteeing that guard and light caches invalidate strictly once per second regardless of scene guard counts.
   * Replaced linear penumbra interpolation with an algebraic polynomial smoothstep S-curve (`t * t * (3 - 2 * t)`), eliminating trigonometric runtime calls during multi-light sweeps.
@@ -100,11 +104,11 @@
 - **Procedural Lo-Fi Audio Synthesizer (`ProceduralAudio.cs`)**:
   * Generates 22kHz mono PCM audio clips directly in memory without external asset overhead.
 - **Unified Command Center & Governance Sync**:
-  * Synchronized `dashboard.html` to `v0.6.7`.
-  * Updated `scripts/run_checks.py` to track 43/43 passing StealthSim tests.
+  * Synchronized `dashboard.html` to `v0.6.8`.
+  * Updated `scripts/run_checks.py` to track 44/44 passing StealthSim tests.
   * Updated `VERSION.md`, `CHANGELOG.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md`.
 
 ## For the successor
-1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (43/43 StealthSim tests, docs, server statuses).
+1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (44/44 StealthSim tests, docs, server statuses).
 2. Open `dashboard.html` in a web browser to inspect the updated Command Center console.
 3. Next priority: Unity URP scaffold in `unity-project/` (Hub 2022.3 LTS, 3D URP, Very Low preset locked).

@@ -242,20 +242,27 @@ public class PlayerMove : MonoBehaviour
         // [T] Key uses scavenged wire cutters to breach secondary perimeter fence shortcut
         if (Input.GetKeyDown(KeyCode.T))
         {
-            if (survival != null && survival.hasWireCutters)
+            if (survival != null && survival.hasWireCutters && survival.wireCutterDurability > 0)
             {
                 survival.hasCutPerimeterFence = true;
+                survival.wireCutterDurability--;
+                if (survival.wireCutterDurability <= 0)
+                {
+                    survival.hasWireCutters = false;
+                    Debug.Log("[PlayerMove] Wire cutters snapped and broke after cutting the fence!");
+                }
+
                 try
                 {
                     AudioClip snip = ProceduralAudio.CreateWireSnipClip();
                     ProceduralAudio.PlayClipAtPoint(snip, transform.position, 0.85f);
                 }
                 catch (System.Exception) {}
-                Debug.Log("[PlayerMove] Snip! Wire fence breached. Secondary stealth shortcut opened to safehouse!");
+                Debug.Log($"[PlayerMove] Snip! Wire fence breached. Shortcut opened! Cutters left: {survival.wireCutterDurability}");
             }
             else
             {
-                Debug.LogWarning("[PlayerMove] Cannot cut fence without wire cutters!");
+                Debug.LogWarning("[PlayerMove] Cannot cut fence without functional wire cutters!");
             }
         }
     }

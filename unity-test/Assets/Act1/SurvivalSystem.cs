@@ -26,6 +26,7 @@ public class SurvivalSystem : MonoBehaviour
     public int bottleCount = 2;
     public bool hasForgedPapers = true;
     public bool hasWireCutters = true;
+    public int wireCutterDurability = 2; // Durability charges before breaking
     public bool hasCutPerimeterFence = false;
 
     [Header("Environmental Status")]
@@ -58,10 +59,14 @@ public class SurvivalSystem : MonoBehaviour
     public float envCheckInterval = 0.10f; // 10Hz throttle on shelter & light calculations
     private float envCheckTimer = 0f;
 
+    [Header("Contextual Prompts")]
+    public string activeContextualPrompt = "";
+
     private PlayerMove playerMove;
     private PatrolMover nearestGuard;
     private ShelterZone[] shelterZones;
     private LightExposureZone[] lightZones;
+    private CheckpointTrigger checkpointTrigger;
 
     void Awake()
     {
@@ -77,6 +82,7 @@ public class SurvivalSystem : MonoBehaviour
     {
         shelterZones = FindObjectsByType<ShelterZone>(FindObjectsSortMode.None);
         lightZones = FindObjectsByType<LightExposureZone>(FindObjectsSortMode.None);
+        checkpointTrigger = FindFirstObjectByType<CheckpointTrigger>();
     }
 
     void Update()
@@ -107,6 +113,7 @@ public class SurvivalSystem : MonoBehaviour
             envCheckTimer = 0f;
             CheckShelterStatus();
             CheckLightExposure();
+            UpdateContextualPrompts();
         }
 
         // Base hunger accumulation
@@ -301,6 +308,24 @@ public class SurvivalSystem : MonoBehaviour
         }
     }
 
+    private void UpdateContextualPrompts()
+    {
+        activeContextualPrompt = "";
+
+        if (isSheltered)
+        {
+            activeContextualPrompt = $"[SHELTER: {currentShelterName}] Warming core body temperature";
+        }
+        else if (checkpointTrigger != null && Vector3.Distance(transform.position, checkpointTrigger.transform.position) <= 4.0f)
+        {
+            activeContextualPrompt = "[E] Present Transit Papers | [B] Bribe Guard (2 Rice)";
+        }
+        else if (hasWireCutters && !hasCutPerimeterFence && transform.position.x >= 18f && transform.position.x <= 24f && Mathf.Abs(transform.position.z) >= 6.5f)
+        {
+            activeContextualPrompt = $"[T] Cut Perimeter Wire Fence ({wireCutterDurability} uses left)";
+        }
+    }
+
     private void CheckLightExposure()
     {
         if (lightZones == null || lightZones.Length == 0)
@@ -404,9 +429,22 @@ public class SurvivalSystem : MonoBehaviour
             DrinkHotTea();
         }
 
-        GUI.Label(new Rect(20, 204, 235, 18), $"Papers: {(hasForgedPapers ? "Valid" : "None")} | Cutters: {(hasWireCutters ? "Equipped" : "None")} | Bottles: {bottleCount}");
+        GUI.Label(new Rect(20, 204, 235, 18), $"Papers: {(hasForgedPapers ? "Valid" : "None")} | Cutters: {(hasWireCutters ? $"{wireCutterDurability} Uses" : "None")} | Bottles: {bottleCount}");
         GUI.Label(new Rect(20, 222, 235, 18), "[Q] Whistle | [F] Bottle | [T] Cut Wire Fence | [1] Rice | [2] Med | [3] Tea");
         GUI.Label(new Rect(20, 240, 235, 18), "[E] Checkpoint Papers | [B] Bribe Guard | [R] Retry");
+
+        if (!string.IsNullOrEmpty(activeContextualPrompt))
+        {
+            GUIStyle promptStyle = new GUIStyle(GUI.skin.box)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontStyle = FontStyle.Bold,
+                fontSize = 12
+            };
+            GUI.color = Color.cyan;
+            GUI.Box(new Rect(Screen.width / 2f - 180, Screen.height - 70, 360, 32), activeContextualPrompt, promptStyle);
+            GUI.color = Color.white;
+        }
 
         // Overlay for Game Over or Victory
         if (isGameOver)

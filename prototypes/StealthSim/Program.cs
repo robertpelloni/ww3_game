@@ -146,6 +146,7 @@ namespace WW3.StealthSim
         public int BottleCount { get; set; } = 2;
         public bool HasForgedPapers { get; set; } = true;
         public bool HasWireCutters { get; set; } = true;
+        public int WireCutterDurability { get; set; } = 2;
         public bool HasCutPerimeterFence { get; set; } = false;
         public bool FlashlightOn { get; set; } = false;
         public bool IsShivering => Cold >= 70.0;
@@ -332,8 +333,13 @@ namespace WW3.StealthSim
 
         public bool CutWireFence()
         {
-            if (!PlayerCharacter.HasWireCutters) return false;
+            if (!PlayerCharacter.HasWireCutters || PlayerCharacter.WireCutterDurability <= 0) return false;
             PlayerCharacter.HasCutPerimeterFence = true;
+            PlayerCharacter.WireCutterDurability--;
+            if (PlayerCharacter.WireCutterDurability <= 0)
+            {
+                PlayerCharacter.HasWireCutters = false;
+            }
             ProceduralAudioLog.Add($"WireFenceSnip at ({PlayerCharacter.Position.X:F1}, {PlayerCharacter.Position.Y:F1})");
             return true;
         }
@@ -1750,6 +1756,18 @@ namespace WW3.StealthSim
 
             bool smoothstepValid = midExp > 0.10 && midExp < 0.85;
             Assert(smoothstepValid, "Searchlight penumbra computes algebraic smoothstep S-curve falloff eliminating trigonometric overhead");
+
+            // Test 44: Contextual proximity interaction state and tool durability decay
+            var simDurability = new SimulationWorld();
+            simDurability.PlayerCharacter.HasWireCutters = true;
+            simDurability.PlayerCharacter.WireCutterDurability = 1;
+
+            bool cut1 = simDurability.CutWireFence();
+            bool broke = !simDurability.PlayerCharacter.HasWireCutters && simDurability.PlayerCharacter.WireCutterDurability == 0;
+            bool cut2Blocked = !simDurability.CutWireFence();
+
+            Assert(cut1 && broke && cut2Blocked,
+                "Wire cutters degrade with use, breaking upon exhausting durability and blocking further breaches");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;
