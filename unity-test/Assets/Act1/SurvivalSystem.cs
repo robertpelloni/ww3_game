@@ -317,9 +317,10 @@ public class SurvivalSystem : MonoBehaviour
             {
                 if (lz != null && lz.IsPlayerInside())
                 {
-                    if (lz.exposureLevel > maxExposure)
+                    float zoneExp = lz.GetExposureAtPosition(transform.position);
+                    if (zoneExp > maxExposure)
                     {
-                        maxExposure = lz.exposureLevel;
+                        maxExposure = zoneExp;
                     }
                 }
             }

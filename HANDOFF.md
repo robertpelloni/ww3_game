@@ -1,6 +1,10 @@
-# HANDOFF — session 2026-11-04 (v0.6.4)
+# HANDOFF — session 2026-11-04 (v0.6.5)
 
 ## What was accomplished this session
+- **Searchlight Penumbra Edge Falloff & Progressive Shadow Dynamics (`LightExposureZone.cs` & `SurvivalSystem.cs`)**:
+  * Implemented smooth penumbra edge falloff (`GetExposureAtPosition`) differentiating between the inner core (full exposure) and outer perimeter rim (progressive falloff to ambient shadow), rewarding careful edge-skirting stealth.
+  * Mirrored penumbra falloff in pure-C# `SimulationWorld.CalculatePlayerExposure()`.
+  * Pure-C# simulation updated with 41/41 automated tests passing (`prototypes/StealthSim`).
 - **Surface-Dependent Footstep Audio & Movement Pacing (`PlayerMove.cs` & `ProceduralAudio.cs`)**:
   * Implemented `CreateFootstepClip(surface)` synthesizing terrain-specific audio impulses: soft mud squishes for Dirt, solid taps for Concrete, metallic ringing pings for MetalGrate, and sharp crunches for GlassDebris.
   * Added rhythmic stride pacing in `PlayerMove.cs` with stance-dependent step intervals (Sprint 0.28s, Walk 0.45s, Crouch 0.65s, Prone 0.90s).
@@ -88,11 +92,11 @@
 - **Procedural Lo-Fi Audio Synthesizer (`ProceduralAudio.cs`)**:
   * Generates 22kHz mono PCM audio clips directly in memory without external asset overhead.
 - **Unified Command Center & Governance Sync**:
-  * Synchronized `dashboard.html` to `v0.6.4`.
-  * Updated `scripts/run_checks.py` to track 40/40 passing StealthSim tests.
+  * Synchronized `dashboard.html` to `v0.6.5`.
+  * Updated `scripts/run_checks.py` to track 41/41 passing StealthSim tests.
   * Updated `VERSION.md`, `CHANGELOG.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md`.
 
 ## For the successor
-1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (40/40 StealthSim tests, docs, server statuses).
+1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (41/41 StealthSim tests, docs, server statuses).
 2. Open `dashboard.html` in a web browser to inspect the updated Command Center console.
 3. Next priority: Unity URP scaffold in `unity-project/` (Hub 2022.3 LTS, 3D URP, Very Low preset locked).

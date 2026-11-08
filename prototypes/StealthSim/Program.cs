@@ -220,6 +220,7 @@ namespace WW3.StealthSim
         public Vec2 Center { get; set; }
         public double Radius { get; set; } = 4.0;
         public double BaseRadius { get; set; } = 4.0;
+        public double InnerCoreRatio { get; set; } = 0.45;
         public bool HasDenseFog { get; set; } = true;
         public double FogScatteringFactor { get; set; } = 0.85;
         public double SweepRange { get; set; } = 10.0;
@@ -455,11 +456,20 @@ namespace WW3.StealthSim
         {
             Vec2 pPos = PlayerCharacter.Position;
 
-            // Curfew Spotlight: max exposure
+            // Curfew Spotlight with smooth penumbra edge falloff
             Vec2 spotPos = CurfewSearchlight.GetCurrentPosition();
-            if (Vec2.Distance(pPos, spotPos) <= CurfewSearchlight.Radius)
+            double distToSpot = Vec2.Distance(pPos, spotPos);
+            if (distToSpot <= CurfewSearchlight.Radius)
             {
-                return 1.0;
+                double coreR = CurfewSearchlight.Radius * CurfewSearchlight.InnerCoreRatio;
+                double maxSpotExp = CurfewSearchlight.HasDenseFog ? (1.0 * CurfewSearchlight.FogScatteringFactor) : 1.0;
+                if (distToSpot <= coreR)
+                {
+                    return maxSpotExp;
+                }
+                // Penumbra falloff from core to outer rim
+                double t = (distToSpot - coreR) / (CurfewSearchlight.Radius - coreR);
+                return maxSpotExp * (1.0 - t) + 0.05 * t;
             }
 
             // Flashlight on increases exposure significantly
@@ -1032,10 +1042,10 @@ namespace WW3.StealthSim
             double lampExp = world.CalculatePlayerExposure();
             Assert(Math.Abs(lampExp - 0.50) < 0.001, "Lamp radius exposure equals 0.50");
 
-            // Test 3: Spotlight exposure
+            // Test 3: Spotlight exposure (under fog scattering, max direct exposure is 0.85)
             world.PlayerCharacter.Position = world.CurfewSearchlight.GetCurrentPosition();
             double spotExp = world.CalculatePlayerExposure();
-            Assert(Math.Abs(spotExp - 1.0) < 0.001, "Curfew spotlight exposure equals 1.0");
+            Assert(spotExp >= 0.85, "Curfew spotlight direct exposure equals max effective core exposure (>=0.85)");
 
             // Test 4: Whistle alert mechanics
             world.PlayerCharacter.Position = new Vec2(2.0, 10.0);
@@ -1689,6 +1699,23 @@ namespace WW3.StealthSim
 
             bool metalStepsLogged = simStep.ProceduralAudioLog.Exists(a => a.StartsWith("Footstep_MetalGrate"));
             Assert(metalStepsLogged, "Player movement synthesizes surface-dependent rhythmic footstep audio across ground terrains");
+
+            // Test 41: Searchlight penumbra edge falloff and progressive suspicion scaling
+            var simPenum = new SimulationWorld();
+            simPenum.CurfewSearchlight.Center = new Vec2(15.0, 10.0);
+            simPenum.CurfewSearchlight.SweepRange = 0; // Fixed spotlight
+            simPenum.CurfewSearchlight.Radius = 6.0;
+
+            // Core center exposure at (15, 10)
+            simPenum.PlayerCharacter.Position = new Vec2(15.0, 10.0);
+            double coreExp = simPenum.CalculatePlayerExposure();
+
+            // Edge penumbra exposure at (19.5, 10) -> dist = 4.5m (between core 2.7m and radius 6.0m)
+            simPenum.PlayerCharacter.Position = new Vec2(19.5, 10.0);
+            double edgeExp = simPenum.CalculatePlayerExposure();
+
+            bool penumbraFalloffWorking = (coreExp > edgeExp) && (edgeExp > 0.05);
+            Assert(penumbraFalloffWorking, "Searchlight projects smooth penumbra falloff rewarding edge-skirting stealth");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

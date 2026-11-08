@@ -16,6 +16,7 @@ public class LightExposureZone : MonoBehaviour
     public float radius = 5.0f;
     public float baseRadius = 5.0f;
     public float alertFocusRadiusMultiplier = 1.4f; // Expands radius when locking on disturbance
+    public float innerCoreRatio = 0.45f; // Inner 45% radius provides full glare
 
     [Header("Atmospheric Fog Scattering")]
     public bool hasDenseFog = true;
@@ -134,6 +135,28 @@ public class LightExposureZone : MonoBehaviour
     public float GetEffectiveExposure()
     {
         return hasDenseFog ? (exposureLevel * fogScatteringFactor) : exposureLevel;
+    }
+
+    /// <summary>
+    /// Computes exposure with smooth penumbra edge falloff based on distance from light center.
+    /// Returns 1.0 in inner core, falling off smoothly to baseline at the outer rim.
+    /// </summary>
+    public float GetExposureAtPosition(Vector3 position)
+    {
+        float dist = Vector3.Distance(transform.position, position);
+        if (dist > radius) return 0.15f;
+
+        float coreRadius = radius * innerCoreRatio;
+        float baseExp = GetEffectiveExposure();
+
+        if (dist <= coreRadius)
+        {
+            return baseExp;
+        }
+
+        // Smooth cosine penumbra falloff from core to outer rim
+        float t = (dist - coreRadius) / (radius - coreRadius);
+        return Mathf.Lerp(baseExp, 0.15f, t);
     }
 
     /// <summary>

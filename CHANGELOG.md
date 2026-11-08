@@ -2,6 +2,15 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.6.5 — 2026-11-04
+- **Searchlight Penumbra Edge Falloff & Progressive Shadow Dynamics (`LightExposureZone.cs` & `SurvivalSystem.cs`)**:
+  - Implemented smooth penumbra edge falloff (`GetExposureAtPosition`) differentiating between the inner core (full exposure) and outer perimeter rim (progressive falloff to ambient shadow), rewarding careful edge-skirting stealth.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored searchlight penumbra falloff in `SimulationWorld.CalculatePlayerExposure()`.
+  - Added automated Test 41 validating searchlight penumbra falloff and progressive edge exposure (41/41 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 41/41 tests and updated governance docs to version 0.6.5.
+
 ## 0.6.4 — 2026-11-04
 - **Surface-Dependent Procedural Footstep Audio (`PlayerMove.cs` & `ProceduralAudio.cs`)**:
   - Implemented `CreateFootstepClip(surface)` in `ProceduralAudio.cs` synthesizing terrain-specific audio impulses: soft mud squishes for Dirt, solid taps for Concrete, metallic ringing pings for MetalGrate, and sharp crunches for GlassDebris.
