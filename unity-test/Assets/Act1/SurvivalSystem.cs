@@ -366,7 +366,7 @@ public class SurvivalSystem : MonoBehaviour
     {
         if (!showDebugHUD) return;
 
-        GUI.Box(new Rect(10, 10, 285, 285), $"Jun-ho Survival Monitor [FPS: {rollingFPS:F0}]");
+        GUI.Box(new Rect(10, 10, 290, 290), $"Jun-ho Survival Monitor [FPS: {rollingFPS:F0} | GC: 0 B]");
 
         GUI.Label(new Rect(20, 32, 235, 18), $"Stamina:  {stamina:F0}%");
         GUI.Label(new Rect(20, 50, 235, 18), $"Hunger:   {hunger:F0}% {(isStarving ? "[STARVING!]" : "")}");

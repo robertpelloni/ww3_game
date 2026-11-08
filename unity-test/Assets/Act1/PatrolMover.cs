@@ -63,6 +63,32 @@ public class PatrolMover : MonoBehaviour
     private int dir = 1;
     private Vector3 lastKnownPlayerPos;
 
+    // Static preallocated cache to eliminate per-frame GC allocations
+    private static LightExposureZone[] cachedLightZones;
+    private static float lightZoneCacheTimer = 0f;
+    private static PatrolMover[] cachedGuards;
+    private static float guardCacheTimer = 0f;
+
+    private static void UpdateCachedLightZones()
+    {
+        lightZoneCacheTimer += Time.deltaTime;
+        if (cachedLightZones == null || lightZoneCacheTimer >= 1.0f)
+        {
+            lightZoneCacheTimer = 0f;
+            cachedLightZones = FindObjectsByType<LightExposureZone>(FindObjectsSortMode.None);
+        }
+    }
+
+    private static void UpdateCachedGuards()
+    {
+        guardCacheTimer += Time.deltaTime;
+        if (cachedGuards == null || guardCacheTimer >= 1.0f)
+        {
+            guardCacheTimer = 0f;
+            cachedGuards = FindObjectsByType<PatrolMover>(FindObjectsSortMode.None);
+        }
+    }
+
     void Awake()
     {
         if (targetPlayer == null)
@@ -361,7 +387,8 @@ public class PatrolMover : MonoBehaviour
         }
         catch (System.Exception) {}
 
-        var allGuards = FindObjectsByType<PatrolMover>(FindObjectsSortMode.None);
+        UpdateCachedGuards();
+        var allGuards = cachedGuards;
         if (allGuards == null) return;
 
         int guardIndex = 0;
@@ -388,7 +415,8 @@ public class PatrolMover : MonoBehaviour
         if (searchlightSignalCooldown > 0f) return;
         searchlightSignalCooldown = 2.0f; // Debounce searchlight signal to prevent timer resetting
 
-        var lights = FindObjectsByType<LightExposureZone>(FindObjectsSortMode.None);
+        UpdateCachedLightZones();
+        var lights = cachedLightZones;
         if (lights == null) return;
 
         foreach (var lz in lights)
@@ -510,7 +538,8 @@ public class PatrolMover : MonoBehaviour
     private bool CheckSilhouetteBacklit()
     {
         if (targetPlayer == null) return false;
-        var lights = FindObjectsByType<LightExposureZone>(FindObjectsSortMode.None);
+        UpdateCachedLightZones();
+        var lights = cachedLightZones;
         if (lights == null) return false;
 
         Vector3 toPlayer = (targetPlayer.position - transform.position).normalized;
@@ -541,7 +570,8 @@ public class PatrolMover : MonoBehaviour
             : viewDistance;
 
         // Apply glare blindness if guard is looking directly into an intense light beam within 6m
-        var lights = FindObjectsByType<LightExposureZone>(FindObjectsSortMode.None);
+        UpdateCachedLightZones();
+        var lights = cachedLightZones;
         if (lights != null)
         {
             foreach (var lz in lights)

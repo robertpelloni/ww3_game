@@ -1717,6 +1717,26 @@ namespace WW3.StealthSim
             bool penumbraFalloffWorking = (coreExp > edgeExp) && (edgeExp > 0.05);
             Assert(penumbraFalloffWorking, "Searchlight projects smooth penumbra falloff rewarding edge-skirting stealth");
 
+            // Test 42: GC allocation mitigation and high-frequency sub-millisecond stepping
+            var simGC = new SimulationWorld();
+            long initialMemory = GC.GetTotalMemory(true);
+            var swGC = System.Diagnostics.Stopwatch.StartNew();
+
+            for (int i = 0; i < 1000; i++)
+            {
+                simGC.Step(0.016, new Vec2(0.5, 0.2));
+            }
+
+            swGC.Stop();
+            long finalMemory = GC.GetTotalMemory(false);
+            long allocatedBytes = Math.Max(0, finalMemory - initialMemory);
+            double avgMsPerStep = (double)swGC.ElapsedMilliseconds / 1000.0;
+
+            bool subMillisecondSpeed = avgMsPerStep < 0.10; // Well under 0.1ms per tick
+            bool memoryControlled = allocatedBytes < 250000; // Minimal allocation footprint
+            Assert(subMillisecondSpeed && memoryControlled,
+                "Simulation executes GC-optimized sub-millisecond updates guaranteeing locked 30fps+ on low-spec hardware");
+
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;
         }

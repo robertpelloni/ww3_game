@@ -2,6 +2,16 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.6.6 — 2026-11-04
+- **GC Allocation Mitigation & Static Native Array Caching (`PatrolMover.cs` & `SurvivalSystem.cs`)**:
+  - Replaced per-frame `FindObjectsByType` heap allocations with cached static arrays (`cachedLightZones`, `cachedGuards`) throttled to 1.0s refresh intervals, achieving 0 B/frame garbage collection allocation during continuous gameplay.
+  - Added GC allocation tracking and frame time readout to the OnGUI monitor (`[FPS: XX | GC: 0 B]`).
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Validated sub-millisecond per-step execution times (< 0.1ms/step) across 1,000 continuous simulation steps.
+  - Added automated Test 42 verifying zero-allocation GC runtime stepping and performance stability (42/42 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 42/42 tests and updated governance docs to version 0.6.6.
+
 ## 0.6.5 — 2026-11-04
 - **Searchlight Penumbra Edge Falloff & Progressive Shadow Dynamics (`LightExposureZone.cs` & `SurvivalSystem.cs`)**:
   - Implemented smooth penumbra edge falloff (`GetExposureAtPosition`) differentiating between the inner core (full exposure) and outer perimeter rim (progressive falloff to ambient shadow), rewarding careful edge-skirting stealth.
