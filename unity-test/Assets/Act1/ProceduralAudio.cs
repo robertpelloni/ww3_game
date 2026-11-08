@@ -33,6 +33,29 @@ public static class ProceduralAudio
     }
 
     /// <summary>
+    /// Synthesizes a military radio static burst & microphone click.
+    /// Played when patrol guards transmit alerts or coordinate searchlight sweeps.
+    /// </summary>
+    public static AudioClip CreateRadioClickClip(float duration = 0.18f)
+    {
+        int sampleCount = (int)(SampleRate * duration);
+        float[] samples = new float[sampleCount];
+
+        for (int i = 0; i < sampleCount; i++)
+        {
+            float t = (float)i / SampleRate;
+            float noise = (Random.value * 2f - 1f) * 0.35f;
+            // Short chirp at 1800Hz followed by white noise burst
+            float chirp = (t < 0.05f) ? Mathf.Sin(2f * Mathf.PI * 1800f * t) * 0.4f : 0f;
+            samples[i] = (noise + chirp) * 0.3f;
+        }
+
+        AudioClip clip = AudioClip.Create("RadioStaticClick", sampleCount, 1, SampleRate, false);
+        clip.SetData(samples, 0);
+        return clip;
+    }
+
+    /// <summary>
     /// Synthesizes a sharp metallic wire snip / tension snap sound.
     /// Used when cutting through secondary perimeter chain-link wire fences.
     /// </summary>

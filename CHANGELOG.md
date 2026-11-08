@@ -2,6 +2,16 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.6.2 — 2026-11-04
+- **Guard Radio Static Click Synthesis & Audio Threat Escalation (`PatrolMover.cs` & `ProceduralAudio.cs`)**:
+  - Synthesized a military radio chirp and microphone static burst (`CreateRadioClickClip`) dispatched when patrol guards transmit tactical radio convergence alerts.
+  - Wired into `PatrolMover.cs` spatial audio playback so players in nearby alleys receive immediate acoustic warnings when guards coordinate search sweeps.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored radio static clicks and audio event logging in `SimulationWorld`.
+  - Added automated Test 38 validating guard vocalization and radio click event dispatches (38/38 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` and governance docs to version 0.6.2.
+
 ## 0.6.1 — 2026-11-04
 - **Multi-Stage Investigation Search Probing (`PatrolMover.cs`)**:
   - Guards investigating disturbances now execute a two-stage perimeter search: first probing the primary disturbance coordinates, pausing for a directional scan, and then inspecting a secondary vantage point (+3.5m lateral offset) before completing search.

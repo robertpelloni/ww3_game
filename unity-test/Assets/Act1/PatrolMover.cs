@@ -343,6 +343,14 @@ public class PatrolMover : MonoBehaviour
         if (alertBroadcastCooldown > 0f) return;
         alertBroadcastCooldown = 3.0f;
 
+        // Play radio chirp audio
+        try
+        {
+            AudioClip click = ProceduralAudio.CreateRadioClickClip();
+            ProceduralAudio.PlayClipAtPoint(click, transform.position, 0.75f);
+        }
+        catch (System.Exception) {}
+
         var allGuards = FindObjectsByType<PatrolMover>(FindObjectsSortMode.None);
         if (allGuards == null) return;
 

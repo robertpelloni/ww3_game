@@ -914,6 +914,7 @@ namespace WW3.StealthSim
         {
             if (callingGuard.AlertBroadcastCooldown > 0) return;
             callingGuard.AlertBroadcastCooldown = 3.0;
+            ProceduralAudioLog.Add($"RadioStaticClick from {callingGuard.Name} at ({callingGuard.Position.X:F1}, {callingGuard.Position.Y:F1})");
 
             // Signal nearby sweeping searchlights to focus beam
             if (Vec2.Distance(callingGuard.Position, CurfewSearchlight.Center) <= 25.0)
@@ -1616,6 +1617,16 @@ namespace WW3.StealthSim
 
             Assert(stageProbed && jitterActive,
                 "Guards execute multi-point staged search probing and searchlights exhibit motor mechanical jitter");
+
+            // Test 38: Dynamic guard audio threat escalation and radio click dispatches
+            var simAudioEsc = new SimulationWorld();
+            var gLead = simAudioEsc.Guards[0];
+            gLead.LastInvestigateTarget = new Vec2(22.0, 5.0);
+
+            simAudioEsc.BroadcastRadioAlert(gLead);
+            bool radioLogged = simAudioEsc.ProceduralAudioLog.Exists(a => a.StartsWith("RadioStaticClick"));
+
+            Assert(radioLogged, "Guard radio alert broadcasts synthesize military radio click audio and dispatch event logs");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;
