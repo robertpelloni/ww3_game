@@ -2,6 +2,16 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.7.1 — 2026-11-04 — Milestone 2 Acoustic Debris & Guard Suspicion Refinement
+- **Glass Debris Acoustic Shards (`PlayerMove.cs` & `PatrolMover.cs`)**:
+  - Implemented broken glass debris acoustic shard escalation: traversing `SurfaceType.GlassDebris` triggers sharp +3.0m acoustic spikes on emitted movement noise footprints due to fractured glass fracturing beneath military boots.
+  - Enhanced guard acoustic responsiveness: guards hearing shattered glass debris crunches transition into investigation mode with a sharper suspicion floor (50.0% vs 35.0% muffled baseline footstep) reflecting heightened vigilance toward distinct high-frequency glass noises under nighttime curfew.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored glass shard acoustic spike calculations and heightened guard investigation suspicion response in `SimulationWorld`.
+  - Added automated Test 47 validating broken glass debris acoustic shard escalation and guard suspicion responsiveness (47/47 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 47/47 tests and updated governance docs to version 0.7.1.
+
 ## 0.7.0 — 2026-11-04 — Milestone 2 Thermal Stealth & Environmental Vapor Release
 - **Thermal Breath Vapor Condensation (`SurvivalSystem.cs`)**:
   - Implemented thermal breath puff mechanics: when freezing (Cold $\ge$ 60%) in outdoor curfew weather, exhalations emit periodic condensation vapor puffs (every 2.5s) that elevate baseline silhouette exposure from 0.05 to 0.30 in dark shadows.

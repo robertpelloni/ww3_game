@@ -220,8 +220,19 @@ public class PatrolMover : MonoBehaviour
         }
         else if (playerSoundHeard)
         {
-            // Hearing player sound immediately raises interest to Investigating or Suspicious
-            suspicionMeter = Mathf.Clamp01(suspicionMeter + 0.35f * Time.deltaTime);
+            // Hearing player sound immediately raises interest to Investigating or Suspicious.
+            // Sharp glass shard crunching alerts guards significantly faster than muffled dirt/concrete thuds.
+            float soundSuspicionRate = 0.35f;
+            if (targetPlayer != null)
+            {
+                var pm = targetPlayer.GetComponent<PlayerMove>();
+                if (pm != null && pm.currentSurface == PlayerMove.SurfaceType.GlassDebris)
+                {
+                    soundSuspicionRate = 0.50f; // 1.43x sharper suspicion reaction to shattering glass shards
+                }
+            }
+
+            suspicionMeter = Mathf.Clamp01(suspicionMeter + soundSuspicionRate * Time.deltaTime);
             if (targetPlayer != null) lastKnownPlayerPos = targetPlayer.position;
 
             if (currentState == GuardState.Patrolling)

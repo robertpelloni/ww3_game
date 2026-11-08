@@ -187,6 +187,12 @@ namespace WW3.StealthSim
                 _ => 2.0
             }) * surfaceMod;
 
+            // Glass shards crunch escalation: fractured glass beneath boots causes sharp acoustic spikes (+3.0m)
+            if (CurrentSurface == SurfaceType.GlassDebris)
+            {
+                baseNoise += 3.0;
+            }
+
             if (IsShivering)
             {
                 // Freezing teeth chattering adds +1.8m acoustic signature
@@ -840,7 +846,9 @@ namespace WW3.StealthSim
                 if (guard.State != AIState.Chase)
                 {
                     guard.State = AIState.Investigate;
-                    guard.Suspicion = Math.Max(guard.Suspicion, 35.0);
+                    // Sharp glass shard crunching alerts guards significantly faster (50.0 vs 35.0 baseline)
+                    double heardSuspicionFloor = (PlayerCharacter.CurrentSurface == SurfaceType.GlassDebris) ? 50.0 : 35.0;
+                    guard.Suspicion = Math.Max(guard.Suspicion, heardSuspicionFloor);
                 }
             }
 
@@ -888,7 +896,7 @@ namespace WW3.StealthSim
             }
             else
             {
-                // Decay suspicion if not seeing/hearing
+                // Decay suspicion if neither seeing nor hearing anything
                 if (guard.State == AIState.Chase)
                 {
                     guard.SearchTimer += dt;
@@ -898,7 +906,7 @@ namespace WW3.StealthSim
                         guard.SearchTimer = 0.0;
                     }
                 }
-                else
+                else if (!heardPlayerNoise && !heardDistraction)
                 {
                     guard.Suspicion = Math.Max(0.0, guard.Suspicion - 12.0 * dt);
                     if (guard.Suspicion <= 5.0 && (guard.State == AIState.Investigate || guard.State == AIState.Search))
@@ -1830,6 +1838,29 @@ namespace WW3.StealthSim
 
             Assert(breathPuffActive && exposedBreathLevel >= 0.30 && breathSuppressedInShelter,
                 "Freezing players exhale visible thermal condensation breath puffs that elevate exposure unless sheltered");
+
+            // Test 47: Broken glass debris acoustic shard escalation and guard suspicion responsiveness
+            var simGlass = new SimulationWorld();
+            // Move Guard closer to the glass debris zone at (33, 10)
+            var patrolG = simGlass.Guards[0];
+            patrolG.Position = new Vec2(30.0, 10.0);
+            patrolG.Forward = new Vec2(0, 1); // Not facing directly at player
+
+            simGlass.PlayerCharacter.Position = new Vec2(33.0, 10.0); // Inside Broken Bottle Rubble zone
+            simGlass.PlayerCharacter.CurrentStance = Stance.Walk;
+            simGlass.PlayerCharacter.CurrentSurface = SurfaceType.Concrete;
+            double concreteNoiseRadius = simGlass.PlayerCharacter.GetNoiseRadius();
+
+            simGlass.PlayerCharacter.CurrentSurface = SurfaceType.GlassDebris;
+            double glassNoiseRadius = simGlass.PlayerCharacter.GetNoiseRadius();
+
+            // Guard hearing glass shard noise transitions with sharper suspicion floor (50.0 vs 35.0 baseline)
+            simGlass.Step(0.1, new Vec2(0.1, 0));
+            bool glassAcousticsEscalated = glassNoiseRadius > concreteNoiseRadius && (glassNoiseRadius - (6.0 * 2.0)) >= 3.0;
+            bool guardGlassSuspicionSharp = patrolG.Suspicion >= 50.0 && patrolG.State == AIState.Investigate;
+
+            Assert(glassAcousticsEscalated && guardGlassSuspicionSharp,
+                "Traversing glass debris triggers +3.0m shard acoustic spikes and raises guard investigation suspicion to 50%");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

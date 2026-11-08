@@ -137,6 +137,12 @@ public class PlayerMove : MonoBehaviour
         {
             float baseNoise = IsMoving ? (GetBaseNoiseRadius() * surfaceNoiseMultiplier) : 0f;
 
+            // Glass shards crunch escalation: fractured glass beneath boots causes sharp acoustic spikes (+3.0m)
+            if (IsMoving && currentSurface == SurfaceType.GlassDebris)
+            {
+                baseNoise += 3.0f;
+            }
+
             // Shivering chattering noise & exhaustion heavy breathing:
             if (survival != null)
             {

@@ -1,6 +1,7 @@
-# TODO — granular short-term tasks (v0.7.0)
+# TODO — granular short-term tasks (v0.7.1)
 
 ## Verified working (keep green)
+- [x] Broken Glass Debris Acoustic Shards & Guard Suspicion Floor Escalation in `PlayerMove.cs` & `PatrolMover.cs`
 - [x] Thermal Condensation Breath Vapor Cycles & Shelter Heat Suppression in `SurvivalSystem.cs`
 - [x] Curfew Night Wind Ambience Audio & Shelter Volume Dampening in `SurvivalSystem.cs` & `ProceduralAudio.cs`
 - [x] Contextual Proximity Interaction Prompt HUD & Tool Durability Decay in `SurvivalSystem.cs` & `PlayerMove.cs`

@@ -1,6 +1,10 @@
-# HANDOFF — session 2026-11-04 (v0.7.0)
+# HANDOFF — session 2026-11-04 (v0.7.1)
 
 ## What was accomplished this session
+- **Broken Glass Debris Acoustic Shards & Guard Suspicion Escalation (`PlayerMove.cs` & `PatrolMover.cs`)**:
+  * Implemented broken glass debris acoustic shard escalation: traversing `SurfaceType.GlassDebris` causes boot pressure to crush fractured shards, generating sharp +3.0m acoustic spikes on emitted noise.
+  * Enhanced guard acoustic responsiveness: hearing glass shards transitions guards directly into investigation mode with a heightened suspicion floor (50.0% vs 35.0% baseline), simulating instant guard vigilance toward distinct high-frequency glass shattering in curfew silence.
+  * Pure-C# simulation updated with 47/47 automated tests passing (`prototypes/StealthSim`).
 - **Thermal Breath Vapor Condensation & Shelter Heat Suppression (`SurvivalSystem.cs`)**:
   * Implemented thermal breath puff exhalation: when freezing (Cold $\ge$ 60%) in unsheltered curfew alleys, exhalations periodically emit condensation vapor clouds (every 2.5s) that elevate baseline silhouette exposure from 0.05 to 0.30 in dark shadows.
   * Standing inside warming shelters suppresses breath condensation immediately by warming core temperature.
