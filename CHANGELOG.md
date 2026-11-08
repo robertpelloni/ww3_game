@@ -2,6 +2,16 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.6.3 — 2026-11-04
+- **Guard Alert Shout Vocalization Synthesis (`PatrolMover.cs` & `ProceduralAudio.cs`)**:
+  - Implemented `CreateGuardAlertShoutClip`: synthesizes a harsh 350Hz formant vocal alert shout with 700Hz and 1050Hz throat harmonics in memory when guards spot Jun-ho and transition to `Alert`.
+  - Wired into `PatrolMover.cs` state transition logic.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Added guard alert vocal shout event dispatching in `SimulationWorld`.
+  - Added automated Test 39 validating guard alert vocalization and event logging (39/39 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 39/39 tests and updated governance docs to version 0.6.3.
+
 ## 0.6.2 — 2026-11-04
 - **Guard Radio Static Click Synthesis & Audio Threat Escalation (`PatrolMover.cs` & `ProceduralAudio.cs`)**:
   - Synthesized a military radio chirp and microphone static burst (`CreateRadioClickClip`) dispatched when patrol guards transmit tactical radio convergence alerts.

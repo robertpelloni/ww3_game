@@ -33,6 +33,32 @@ public static class ProceduralAudio
     }
 
     /// <summary>
+    /// Synthesizes a sharp, harsh guard alert vocalization yell / shout.
+    /// Dispatched when a patrol guard spots Jun-ho and escalates into Alert state.
+    /// </summary>
+    public static AudioClip CreateGuardAlertShoutClip(float duration = 0.40f)
+    {
+        int sampleCount = (int)(SampleRate * duration);
+        float[] samples = new float[sampleCount];
+
+        for (int i = 0; i < sampleCount; i++)
+        {
+            float t = (float)i / SampleRate;
+            float decay = Mathf.Exp(-t * 8f);
+            // Formant approximation: 350Hz fundamental with 700Hz and 1050Hz throat harmonics
+            float f1 = Mathf.Sin(2f * Mathf.PI * 350f * t);
+            float f2 = Mathf.Sin(2f * Mathf.PI * 700f * t) * 0.6f;
+            float f3 = Mathf.Sin(2f * Mathf.PI * 1050f * t) * 0.35f;
+            float breath = (Random.value * 2f - 1f) * 0.2f;
+            samples[i] = (f1 + f2 + f3 + breath) * decay * 0.5f;
+        }
+
+        AudioClip clip = AudioClip.Create("GuardAlertShout", sampleCount, 1, SampleRate, false);
+        clip.SetData(samples, 0);
+        return clip;
+    }
+
+    /// <summary>
     /// Synthesizes a military radio static burst & microphone click.
     /// Played when patrol guards transmit alerts or coordinate searchlight sweeps.
     /// </summary>

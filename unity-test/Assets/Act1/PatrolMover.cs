@@ -159,6 +159,16 @@ public class PatrolMover : MonoBehaviour
 
             if (suspicionMeter >= 0.8f)
             {
+                if (currentState != GuardState.Alert)
+                {
+                    // Synthesize guard alert vocal shout
+                    try
+                    {
+                        AudioClip shout = ProceduralAudio.CreateGuardAlertShoutClip();
+                        ProceduralAudio.PlayClipAtPoint(shout, transform.position, 0.9f);
+                    }
+                    catch (System.Exception) {}
+                }
                 currentState = GuardState.Alert;
                 BroadcastRadioAlert();
                 SignalNearbySearchlights(lastKnownPlayerPos, 5.0f);

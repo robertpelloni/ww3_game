@@ -804,6 +804,10 @@ namespace WW3.StealthSim
 
                 if (guard.Suspicion >= 85.0)
                 {
+                    if (guard.State != AIState.Chase)
+                    {
+                        ProceduralAudioLog.Add($"GuardAlertShout from {guard.Name} at ({guard.Position.X:F1}, {guard.Position.Y:F1})");
+                    }
                     guard.State = AIState.Chase;
                     BroadcastRadioAlert(guard);
                 }
@@ -1627,6 +1631,25 @@ namespace WW3.StealthSim
             bool radioLogged = simAudioEsc.ProceduralAudioLog.Exists(a => a.StartsWith("RadioStaticClick"));
 
             Assert(radioLogged, "Guard radio alert broadcasts synthesize military radio click audio and dispatch event logs");
+
+            // Test 39: Guard alert shout vocalization synthesis and event logging
+            var simShout = new SimulationWorld();
+            var alertGuard = simShout.Guards[0];
+            alertGuard.Position = new Vec2(15.0, 5.0);
+            alertGuard.Forward = new Vec2(0, 1);
+            simShout.PlayerCharacter.Position = new Vec2(15.0, 8.0); // Directly in front under bright lamp
+            simShout.PlayerCharacter.CurrentStance = Stance.Sprint;
+            simShout.CurfewSearchlight.Center = new Vec2(15.0, 8.0);
+            simShout.CurfewSearchlight.Radius = 6.0;
+
+            for (int i = 0; i < 15; i++)
+            {
+                simShout.Step(0.1, new Vec2(0, 0));
+                if (alertGuard.State == AIState.Chase) break;
+            }
+
+            bool shoutTriggered = simShout.ProceduralAudioLog.Exists(a => a.StartsWith("GuardAlertShout"));
+            Assert(shoutTriggered, "Guard alert shout vocalization synthesizes audio cue when player is spotted and chased");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

@@ -1,6 +1,10 @@
-# HANDOFF — session 2026-11-04 (v0.6.2)
+# HANDOFF — session 2026-11-04 (v0.6.3)
 
 ## What was accomplished this session
+- **Guard Alert Shout Vocalization Audio Synthesis (`PatrolMover.cs` & `ProceduralAudio.cs`)**:
+  * Implemented `CreateGuardAlertShoutClip` in `ProceduralAudio.cs` synthesizing a harsh 350Hz formant vocal alert shout with throat harmonics when patrol guards transition to `Alert`.
+  * Wired into `PatrolMover.cs` and mirrored in pure-C# `SimulationWorld` event logs.
+  * Pure-C# simulation updated with 39/39 automated tests passing (`prototypes/StealthSim`).
 - **Guard Radio Static Click Synthesis & Acoustic Threat Escalation (`PatrolMover.cs` & `ProceduralAudio.cs`)**:
   * Synthesized military radio static click bursts in `ProceduralAudio.cs` (`CreateRadioClickClip`) dispatched when patrol guards broadcast tactical convergence alerts.
   * Wired into `PatrolMover.cs` spatial audio playback and mirrored in pure-C# `SimulationWorld` event logs.
@@ -80,11 +84,11 @@
 - **Procedural Lo-Fi Audio Synthesizer (`ProceduralAudio.cs`)**:
   * Generates 22kHz mono PCM audio clips directly in memory without external asset overhead.
 - **Unified Command Center & Governance Sync**:
-  * Synchronized `dashboard.html` to `v0.6.2`.
-  * Updated `scripts/run_checks.py` to track 38/38 passing StealthSim tests.
+  * Synchronized `dashboard.html` to `v0.6.3`.
+  * Updated `scripts/run_checks.py` to track 39/39 passing StealthSim tests.
   * Updated `VERSION.md`, `CHANGELOG.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md`.
 
 ## For the successor
-1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (38/38 StealthSim tests, docs, server statuses).
+1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (39/39 StealthSim tests, docs, server statuses).
 2. Open `dashboard.html` in a web browser to inspect the updated Command Center console.
 3. Next priority: Unity URP scaffold in `unity-project/` (Hub 2022.3 LTS, 3D URP, Very Low preset locked).
