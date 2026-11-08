@@ -80,6 +80,8 @@ namespace WW3.StealthSim
         public double SpatialSleepDistance { get; set; } = 35.0; // >35m drops to 2Hz
         public double SleepInterval { get; set; } = 0.50; // 2Hz sensory sleep
         public double DynamicLoadMultiplier { get; set; } = 1.0;
+        public int InvestigationStage { get; set; } = 0;
+        public Vec2 SecondaryInvestigateTarget { get; set; } = Vec2.Zero;
         public double SensorTimer { get; set; } = 0.0;
         public int SensorEvaluationCount { get; set; } = 0;
     }
@@ -222,6 +224,7 @@ namespace WW3.StealthSim
         public double SweepRange { get; set; } = 10.0;
         public double SweepSpeed { get; set; } = 1.5;
         public double SweepTime { get; set; } = 0.0;
+        public double MotorJitter { get; set; } = 0.25;
         public Vec2? FocusTarget { get; set; } = null;
         public double FocusTimer { get; set; } = 0.0;
         public bool IsAcquiringTarget { get; set; } = false;
@@ -235,7 +238,8 @@ namespace WW3.StealthSim
             {
                 return FocusTarget.Value;
             }
-            double offset = Math.Sin(SweepTime * SweepSpeed) * SweepRange;
+            double jitter = Math.Sin(SweepTime * 17.3) * MotorJitter;
+            double offset = Math.Sin(SweepTime * SweepSpeed) * SweepRange + jitter;
             return new Vec2(Center.X + offset, Center.Y);
         }
 
@@ -838,11 +842,21 @@ namespace WW3.StealthSim
                     break;
 
                 case AIState.Investigate:
-                    ExecuteMoveTowards(guard, guard.LastInvestigateTarget, guard.PatrolSpeed * 1.2, dt);
-                    if (Vec2.Distance(guard.Position, guard.LastInvestigateTarget) < 1.0)
+                    Vec2 targetProbe = (guard.InvestigationStage == 0) ? guard.LastInvestigateTarget : guard.SecondaryInvestigateTarget;
+                    ExecuteMoveTowards(guard, targetProbe, guard.PatrolSpeed * 1.2, dt);
+                    if (Vec2.Distance(guard.Position, targetProbe) < 1.0)
                     {
-                        guard.State = AIState.Search;
-                        guard.SearchTimer = 3.0;
+                        if (guard.InvestigationStage == 0)
+                        {
+                            guard.InvestigationStage = 1;
+                            guard.SecondaryInvestigateTarget = guard.LastInvestigateTarget + new Vec2(3.0, 2.0);
+                        }
+                        else
+                        {
+                            guard.State = AIState.Search;
+                            guard.SearchTimer = 3.0;
+                            guard.InvestigationStage = 0;
+                        }
                     }
                     break;
 
@@ -1574,6 +1588,34 @@ namespace WW3.StealthSim
 
             Assert(missionWon && routeTracked && timeRecorded,
                 "Act 1 mission completion records victory statistics, route attribution, and mission elapsed time");
+
+            // Test 37: Staged multi-point investigation probing and searchlight mechanical jitter
+            var simProbe = new SimulationWorld();
+            var probeGuard = simProbe.Guards[0]; // Patrol-1 at (15, 5)
+            Vec2 lurePos = new Vec2(17.5, 5.0);
+            probeGuard.LastInvestigateTarget = lurePos;
+            probeGuard.State = AIState.Investigate;
+            probeGuard.Suspicion = 50.0;
+            probeGuard.InvestigationStage = 0;
+
+            // Move to first waypoint
+            for (int i = 0; i < 20; i++)
+            {
+                simProbe.Step(0.1, new Vec2(0, 0));
+                if (probeGuard.InvestigationStage == 1) break;
+            }
+
+            bool stageProbed = probeGuard.InvestigationStage == 1 &&
+                               Vec2.Distance(probeGuard.SecondaryInvestigateTarget, lurePos) > 1.0;
+
+            // Check motor mechanical jitter variance on searchlight
+            Vec2 spotPos1 = simProbe.CurfewSearchlight.GetCurrentPosition();
+            simProbe.CurfewSearchlight.SweepTime = 1.0;
+            Vec2 spotPos2 = simProbe.CurfewSearchlight.GetCurrentPosition();
+            bool jitterActive = simProbe.CurfewSearchlight.MotorJitter > 0;
+
+            Assert(stageProbed && jitterActive,
+                "Guards execute multi-point staged search probing and searchlights exhibit motor mechanical jitter");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

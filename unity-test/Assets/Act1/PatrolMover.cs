@@ -42,6 +42,8 @@ public class PatrolMover : MonoBehaviour
     public float wallSoundOcclusionFactor = 0.35f;
     public float radioBroadcastRadius = 25.0f;
     public float tacticalFlankOffset = 0f; // Lateral fanning offset for pincer convergence
+    public int investigationStage = 0; // 0 = primary origin, 1 = secondary probe point
+    private Vector3 secondarySearchPos;
     private float searchTimer = 0f;
     private float alertBroadcastCooldown = 0f;
     private float searchlightSignalCooldown = 0f;
@@ -247,8 +249,9 @@ public class PatrolMover : MonoBehaviour
                 break;
 
             case GuardState.Investigating:
-                // Move towards last heard or seen position with flashlight sweeping
-                Vector3 investDir = (lastKnownPlayerPos - transform.position);
+                // Multi-stage investigation: primary origin probe then secondary vantage point probe
+                Vector3 currentTarget = (investigationStage == 0) ? lastKnownPlayerPos : secondarySearchPos;
+                Vector3 investDir = (currentTarget - transform.position);
                 investDir.y = 0;
                 if (investDir.magnitude > 1.2f)
                 {
@@ -260,9 +263,18 @@ public class PatrolMover : MonoBehaviour
                 }
                 else
                 {
-                    // Arrived at search origin: execute wider sweeping look-around
-                    float wideSweep = Mathf.Sin(Time.time * flashlightSweepSpeed) * flashlightSweepAngle;
-                    transform.Rotate(Vector3.up, (35f + wideSweep * 0.5f) * Time.deltaTime);
+                    // Arrived at primary waypoint: probe secondary vantage point
+                    if (investigationStage == 0)
+                    {
+                        investigationStage = 1;
+                        secondarySearchPos = lastKnownPlayerPos + transform.right * 3.5f;
+                    }
+                    else
+                    {
+                        // Arrived at secondary search origin: execute wide sweeping look-around
+                        float wideSweep = Mathf.Sin(Time.time * flashlightSweepSpeed) * flashlightSweepAngle;
+                        transform.Rotate(Vector3.up, (35f + wideSweep * 0.5f) * Time.deltaTime);
+                    }
                 }
                 break;
 
@@ -383,6 +395,7 @@ public class PatrolMover : MonoBehaviour
         if (currentState == GuardState.Patrolling || currentState == GuardState.Investigating)
         {
             currentState = GuardState.Suspicious;
+            investigationStage = 0;
             searchTimer = searchWaitTime;
             Debug.Log($"[PatrolMover] {gameObject.name} received radio alert! Converging on {targetLocation}");
         }

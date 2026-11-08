@@ -25,6 +25,7 @@ public class LightExposureZone : MonoBehaviour
     public bool isSweepingSpotlight = false;
     public float sweepRangeX = 8.0f;
     public float sweepSpeed = 1.2f;
+    public float motorMechanicalJitter = 0.25f; // Slight erratic motor vibration
     public float focusLingerTimer = 0f;
     public bool isAcquiringTarget = false;
     public float acquisitionWarningTimer = 0f;
@@ -97,8 +98,9 @@ public class LightExposureZone : MonoBehaviour
         {
             // Recover baseline radius
             radius = Mathf.Lerp(radius, baseRadius, Time.deltaTime * 2.0f);
-            // Oscillate spotlight beam horizontally across alley smoothly
-            float offsetX = Mathf.Sin(Time.time * sweepSpeed) * sweepRangeX;
+            // Oscillate spotlight beam horizontally across alley with realistic motor jitter
+            float jitter = Mathf.Sin(Time.time * 17.3f) * motorMechanicalJitter;
+            float offsetX = Mathf.Sin(Time.time * sweepSpeed) * sweepRangeX + jitter;
             Vector3 sweepTarget = new Vector3(initialPosition.x + offsetX, initialPosition.y, initialPosition.z);
             transform.position = Vector3.Lerp(transform.position, sweepTarget, Time.deltaTime * 4.0f);
         }

@@ -2,6 +2,17 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.6.1 — 2026-11-04
+- **Multi-Stage Investigation Search Probing (`PatrolMover.cs`)**:
+  - Guards investigating disturbances now execute a two-stage perimeter search: first probing the primary disturbance coordinates, pausing for a directional scan, and then inspecting a secondary vantage point (+3.5m lateral offset) before completing search.
+- **Searchlight Motor Mechanical Jitter (`LightExposureZone.cs`)**:
+  - Added realistic mechanical motor jitter and oscillation variance to sweeping curfew spotlights, eliminating unnatural harmonic perfection without compute shader overhead.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored multi-stage search probing and motor jitter in `SimulationWorld`.
+  - Added automated Test 37 validating two-stage guard search probing and searchlight mechanical jitter (37/37 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` and governance docs to version 0.6.1.
+
 ## 0.6.0 — 2026-11-04 — Milestone 1 Vertical Slice Final Release
 - **Act 1 Chongjin Vertical Slice Completion (`SurvivalSystem.cs` & `PlayerMove.cs`)**:
   - Implemented end-of-mission Victory summary overlay displaying stealth metrics: elapsed time, route attribution (Checkpoint Gate vs Wire-Cut Shortcut), health condition, and remaining food rations.

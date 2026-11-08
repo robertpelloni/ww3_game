@@ -1,13 +1,14 @@
 # ROADMAP — major structural milestones
 
-**Version:** 0.6.0 (see [VERSION.md](VERSION.md)).
+**Version:** 0.6.1 (see [VERSION.md](VERSION.md)).
 
 ## M1 — Vertical slice: Act 1 Blackout Chongjin (Milestone Completed & Verified)
 - 1 street 60x20m, night + fog + searchlight, 2 patrols + 1 checkpoint guard.
 - Win = reach safehouse; lose + retry < 3s; 30fps+ HD 520 Very Low locked.
 - State:
-  * Pure-C# console sim verified in `prototypes/StealthSim` (36/36 tests passing).
+  * Pure-C# console sim verified in `prototypes/StealthSim` (37/37 tests passing).
   * Scene + patrol/player starter scripts live in `unity-test/` (see [docs/MCP_TESTS.md](docs/MCP_TESTS.md)).
+  * Multi-stage guard perimeter investigation probing and searchlight motor mechanical jitter.
   * Complete end-of-mission Victory summary overlay with route attribution and mission timer metrics.
   * Atmospheric fog extinction and searchlight scattering modulation without GPU compute overhead.
   * Real-time FPS profiler HUD and dynamic sensor decimation under load (1.5x) ensuring locked 30fps+ on Intel HD 520.
