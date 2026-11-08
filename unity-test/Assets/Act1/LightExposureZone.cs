@@ -154,9 +154,11 @@ public class LightExposureZone : MonoBehaviour
             return baseExp;
         }
 
-        // Smooth cosine penumbra falloff from core to outer rim
-        float t = (dist - coreRadius) / (radius - coreRadius);
-        return Mathf.Lerp(baseExp, 0.15f, t);
+        // Smooth cosine penumbra falloff from core to outer rim with clamped lookup
+        float t = Mathf.Clamp01((dist - coreRadius) / Mathf.Max(0.01f, radius - coreRadius));
+        // Smoothstep polynomial S-curve falloff to eliminate expensive trigonometric calls
+        float smoothT = t * t * (3f - 2f * t);
+        return Mathf.Lerp(baseExp, 0.15f, smoothT);
     }
 
     /// <summary>

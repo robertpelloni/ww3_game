@@ -65,26 +65,26 @@ public class PatrolMover : MonoBehaviour
 
     // Static preallocated cache to eliminate per-frame GC allocations
     private static LightExposureZone[] cachedLightZones;
-    private static float lightZoneCacheTimer = 0f;
+    private static float lastLightZoneCacheTime = -999f;
     private static PatrolMover[] cachedGuards;
-    private static float guardCacheTimer = 0f;
+    private static float lastGuardCacheTime = -999f;
 
     private static void UpdateCachedLightZones()
     {
-        lightZoneCacheTimer += Time.deltaTime;
-        if (cachedLightZones == null || lightZoneCacheTimer >= 1.0f)
+        // Decoupled time-stamp invalidation: refreshes exactly once per second regardless of guard count
+        if (cachedLightZones == null || (Time.unscaledTime - lastLightZoneCacheTime) >= 1.0f)
         {
-            lightZoneCacheTimer = 0f;
+            lastLightZoneCacheTime = Time.unscaledTime;
             cachedLightZones = FindObjectsByType<LightExposureZone>(FindObjectsSortMode.None);
         }
     }
 
     private static void UpdateCachedGuards()
     {
-        guardCacheTimer += Time.deltaTime;
-        if (cachedGuards == null || guardCacheTimer >= 1.0f)
+        // Decoupled time-stamp invalidation: refreshes exactly once per second regardless of guard count
+        if (cachedGuards == null || (Time.unscaledTime - lastGuardCacheTime) >= 1.0f)
         {
-            guardCacheTimer = 0f;
+            lastGuardCacheTime = Time.unscaledTime;
             cachedGuards = FindObjectsByType<PatrolMover>(FindObjectsSortMode.None);
         }
     }

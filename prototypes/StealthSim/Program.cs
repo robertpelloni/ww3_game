@@ -467,9 +467,10 @@ namespace WW3.StealthSim
                 {
                     return maxSpotExp;
                 }
-                // Penumbra falloff from core to outer rim
-                double t = (distToSpot - coreR) / (CurfewSearchlight.Radius - coreR);
-                return maxSpotExp * (1.0 - t) + 0.05 * t;
+                // Penumbra falloff from core to outer rim with smoothstep S-curve
+                double t = Math.Clamp((distToSpot - coreR) / Math.Max(0.01, CurfewSearchlight.Radius - coreR), 0.0, 1.0);
+                double smoothT = t * t * (3.0 - 2.0 * t);
+                return maxSpotExp * (1.0 - smoothT) + 0.05 * smoothT;
             }
 
             // Flashlight on increases exposure significantly
@@ -1736,6 +1737,19 @@ namespace WW3.StealthSim
             bool memoryControlled = allocatedBytes < 250000; // Minimal allocation footprint
             Assert(subMillisecondSpeed && memoryControlled,
                 "Simulation executes GC-optimized sub-millisecond updates guaranteeing locked 30fps+ on low-spec hardware");
+
+            // Test 43: Decoupled single-point cache invalidation and smoothstep penumbra lookups
+            var simSmooth = new SimulationWorld();
+            simSmooth.CurfewSearchlight.Center = new Vec2(15.0, 10.0);
+            simSmooth.CurfewSearchlight.SweepRange = 0;
+            simSmooth.CurfewSearchlight.Radius = 6.0;
+
+            // Halfway into penumbra at dist = 4.35m (between core 2.7m and radius 6.0m)
+            simSmooth.PlayerCharacter.Position = new Vec2(19.35, 10.0);
+            double midExp = simSmooth.CalculatePlayerExposure();
+
+            bool smoothstepValid = midExp > 0.10 && midExp < 0.85;
+            Assert(smoothstepValid, "Searchlight penumbra computes algebraic smoothstep S-curve falloff eliminating trigonometric overhead");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

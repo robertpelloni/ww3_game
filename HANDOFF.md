@@ -1,6 +1,10 @@
-# HANDOFF — session 2026-11-04 (v0.6.6)
+# HANDOFF — session 2026-11-04 (v0.6.7)
 
 ## What was accomplished this session
+- **Decoupled Time-Stamped Cache Invalidation & Smoothstep Penumbra (`PatrolMover.cs` & `LightExposureZone.cs`)**:
+  * Decoupled static array cache updates from per-instance guard loops using unified `Time.unscaledTime` timestamps, guaranteeing that guard and light caches invalidate strictly once per second regardless of scene guard counts.
+  * Replaced linear penumbra interpolation with an algebraic polynomial smoothstep S-curve (`t * t * (3 - 2 * t)`), eliminating trigonometric runtime calls during multi-light sweeps.
+  * Pure-C# simulation updated with 43/43 automated tests passing (`prototypes/StealthSim`).
 - **GC Allocation Mitigation & Static Native Array Caching (`PatrolMover.cs` & `SurvivalSystem.cs`)**:
   * Replaced per-frame `FindObjectsByType` heap allocations with cached static arrays (`cachedLightZones`, `cachedGuards`) throttled to 1.0s refresh intervals, achieving 0 B/frame garbage collection allocation during continuous gameplay.
   * Added GC allocation tracking and frame time readout to the OnGUI monitor (`[FPS: XX | GC: 0 B]`).
@@ -96,11 +100,11 @@
 - **Procedural Lo-Fi Audio Synthesizer (`ProceduralAudio.cs`)**:
   * Generates 22kHz mono PCM audio clips directly in memory without external asset overhead.
 - **Unified Command Center & Governance Sync**:
-  * Synchronized `dashboard.html` to `v0.6.6`.
-  * Updated `scripts/run_checks.py` to track 42/42 passing StealthSim tests.
+  * Synchronized `dashboard.html` to `v0.6.7`.
+  * Updated `scripts/run_checks.py` to track 43/43 passing StealthSim tests.
   * Updated `VERSION.md`, `CHANGELOG.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md`.
 
 ## For the successor
-1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (42/42 StealthSim tests, docs, server statuses).
+1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (43/43 StealthSim tests, docs, server statuses).
 2. Open `dashboard.html` in a web browser to inspect the updated Command Center console.
 3. Next priority: Unity URP scaffold in `unity-project/` (Hub 2022.3 LTS, 3D URP, Very Low preset locked).

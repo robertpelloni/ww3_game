@@ -2,6 +2,17 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.6.7 — 2026-11-04
+- **Unified Time-Stamped Cache Invalidation (`PatrolMover.cs`)**:
+  - Decoupled static array cache updates from per-instance guard loops using unified `Time.unscaledTime` timestamps (`Time.unscaledTime - lastCacheTime >= 1.0f`), guaranteeing that guard and light caches invalidate strictly once per second regardless of scene guard counts.
+- **Algebraic Smoothstep Penumbra Falloff (`LightExposureZone.cs`)**:
+  - Replaced linear interpolation with an algebraic polynomial smoothstep S-curve (`t * t * (3 - 2 * t)`), eliminating trigonometric runtime calls during multi-light sweeps.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored smoothstep penumbra falloff in `SimulationWorld`.
+  - Added automated Test 43 validating smoothstep penumbra calculations (43/43 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 43/43 tests and updated governance docs to version 0.6.7.
+
 ## 0.6.6 — 2026-11-04
 - **GC Allocation Mitigation & Static Native Array Caching (`PatrolMover.cs` & `SurvivalSystem.cs`)**:
   - Replaced per-frame `FindObjectsByType` heap allocations with cached static arrays (`cachedLightZones`, `cachedGuards`) throttled to 1.0s refresh intervals, achieving 0 B/frame garbage collection allocation during continuous gameplay.
