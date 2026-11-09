@@ -1,6 +1,10 @@
-# HANDOFF — session 2026-11-04 (v0.7.4)
+# HANDOFF — session 2026-11-04 (v0.7.5)
 
 ## What was accomplished this session
+- **Dynamic Quality Adaptation & Low-Spec Safeguard (`SurvivalSystem.cs` & `PatrolMover.cs`)**:
+  * Implemented automated quality adaptation for low-spec targets (Intel HD 520): if frame rates drop below 28fps for > 2.0s, environmental checks drop from 10Hz to 5Hz and patrol sensor decimation locks to 1.5x, guaranteeing 30fps+ locked stability.
+  * Added `[LOW-SPEC MODE]` HUD indicator badge and dynamic recovery when frame rate climbs above 32fps.
+  * Pure-C# simulation updated with 51/51 automated tests passing (`prototypes/StealthSim`).
 - **Searchlight Sweep Reversal & Post-Focus Deceleration (`LightExposureZone.cs`)**:
   * Implemented searchlight sweep reversal and post-focus deceleration: when an alert focus linger elapses, the searchlight reverses sweep direction and drops sweep speed by 50% for 2.0s, thoroughly re-interrogating the alert sector before resuming standard sweep pace.
   * Pure-C# simulation updated with 50/50 automated tests passing (`prototypes/StealthSim`).

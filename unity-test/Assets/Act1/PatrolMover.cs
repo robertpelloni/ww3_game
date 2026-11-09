@@ -112,6 +112,17 @@ public class PatrolMover : MonoBehaviour
         float distToPlayer = targetPlayer != null ? Vector3.Distance(transform.position, targetPlayer.position) : 999f;
         bool isDistant = distToPlayer > spatialSleepDistance && currentState == GuardState.Patrolling && suspicionMeter <= 0.05f;
 
+        // Check if low-spec dynamic quality adaptation is active on survival system
+        var survival = targetPlayer != null ? targetPlayer.GetComponent<SurvivalSystem>() : null;
+        if (survival != null && survival.isLowSpecSafeguardActive)
+        {
+            dynamicLoadDecimationMultiplier = 1.5f; // Automatically engage sensor decimation safeguard
+        }
+        else if (Time.deltaTime <= 0.0333f)
+        {
+            dynamicLoadDecimationMultiplier = 1.0f;
+        }
+
         float currentSensorInterval = 0f;
         if (isDistant)
         {
@@ -158,7 +169,6 @@ public class PatrolMover : MonoBehaviour
                     }
                 }
 
-                var survival = targetPlayer.GetComponent<SurvivalSystem>();
                 if (survival != null)
                 {
                     lightExposure = survival.currentLightExposure;

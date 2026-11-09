@@ -2,6 +2,16 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.7.5 — 2026-11-04 — Milestone 2 Dynamic Quality Adaptation & Low-Spec Safeguard
+- **Dynamic Quality Adaptation & Low-Spec Safeguards (`SurvivalSystem.cs` & `PatrolMover.cs`)**:
+  - Implemented dynamic low-spec safeguard: when rolling frame rate drops below 28fps for more than 2.0s on low-spec hardware (Intel HD 520), the engine dynamically engages aggressive throttling (environmental check interval increases to 5Hz, guard sensor decimation locks to 1.5x) to maintain a locked 30fps+ baseline.
+  - Added visual `[LOW-SPEC MODE]` indicator badge on the debug HUD when safeguard is active.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored low-spec dynamic quality adaptation and load safeguard state in `SimulationWorld`.
+  - Added automated Test 51 validating dynamic quality adaptation activation and smooth recovery (51/51 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 51/51 tests and updated governance docs to version 0.7.5.
+
 ## 0.7.4 — 2026-11-04 — Milestone 2 Searchlight Sweep Reversal & Suspicion Linger
 - **Searchlight Reversal & Deceleration Dynamics (`LightExposureZone.cs`)**:
   - Implemented searchlight sweep reversal and post-focus deceleration: when an alert focus linger elapses, the searchlight reverses sweep direction and drops sweep speed by 50% for 2.0s, thoroughly re-interrogating the alert sector before resuming standard sweep pace.

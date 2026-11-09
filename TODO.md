@@ -1,6 +1,7 @@
-# TODO — granular short-term tasks (v0.7.4)
+# TODO — granular short-term tasks (v0.7.5)
 
 ## Verified working (keep green)
+- [x] Dynamic Quality Adaptation & Low-Spec Performance Safeguard in `SurvivalSystem.cs` & `PatrolMover.cs`
 - [x] Searchlight Sweep Reversal & Post-Focus Deceleration in `LightExposureZone.cs`
 - [x] Searchlight-Patrol Interlocking Sector Vigilance Coordination (<18m) in `PatrolMover.cs`
 - [x] Dynamic Ambient Wind Acoustic Masking & Sound Dampening in `PatrolMover.cs` & `SurvivalSystem.cs`

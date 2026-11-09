@@ -305,6 +305,8 @@ namespace WW3.StealthSim
         public double ElapsedMissionTime { get; set; } = 0.0;
         public string ExtractionRoute { get; set; } = "Checkpoint Gate";
         public double WindAmbienceVolume { get; set; } = 0.25;
+        public bool IsLowSpecSafeguardActive { get; set; } = false;
+        public double LowFPSTimer { get; set; } = 0.0;
 
         public void TriggerDistraction(Vec2 pos, double radius = 14.0, double duration = 2.5)
         {
@@ -742,9 +744,27 @@ namespace WW3.StealthSim
             Vec2 toPlayer = PlayerCharacter.Position - guard.Position;
             double dist = toPlayer.Magnitude();
 
+            // Low-spec dynamic quality adaptation: if frame delta exceeds 33.3ms (FPS < 30) for 2s, activate safeguard
+            if (dt > 0.0357) // FPS < 28fps
+            {
+                LowFPSTimer += dt;
+                if (LowFPSTimer >= 2.0)
+                {
+                    IsLowSpecSafeguardActive = true;
+                }
+            }
+            else if (dt <= 0.03125) // FPS >= 32fps
+            {
+                LowFPSTimer = Math.Max(0.0, LowFPSTimer - dt);
+                if (LowFPSTimer == 0)
+                {
+                    IsLowSpecSafeguardActive = false;
+                }
+            }
+
             // Adaptive sensor budgeting: evaluate full physics rays every tick only when suspicious or active
             guard.SensorTimer += dt;
-            guard.DynamicLoadMultiplier = (dt > 0.0333) ? 1.5 : 1.0; // Decimate when frame time spikes
+            guard.DynamicLoadMultiplier = (dt > 0.0333 || IsLowSpecSafeguardActive) ? 1.5 : 1.0; // Decimate when frame time spikes
 
             bool isDistant = dist > guard.SpatialSleepDistance && guard.State == AIState.Patrol && guard.Suspicion <= 5.0;
             double currentInterval = 0.0;
@@ -1935,6 +1955,25 @@ namespace WW3.StealthSim
 
             Assert(directionReversed && decelerationActive && deceleratedSpeedActive,
                 "Curfew searchlights reverse sweep direction and decelerate post-focus to re-interrogate sector");
+
+            // Test 51: Dynamic quality adaptation and low-spec safeguard activation under sustained low FPS
+            var simQuality = new SimulationWorld();
+            // Step with sustained low frame rate (40ms = 25fps) for 2.2s (55 steps)
+            for (int i = 0; i < 55; i++)
+            {
+                simQuality.Step(0.040, new Vec2(0, 0));
+            }
+            bool safeguardTriggered = simQuality.IsLowSpecSafeguardActive;
+
+            // Step with recovered 60fps (16.6ms) for 2.2s
+            for (int i = 0; i < 140; i++)
+            {
+                simQuality.Step(0.016, new Vec2(0, 0));
+            }
+            bool safeguardDeactivated = !simQuality.IsLowSpecSafeguardActive;
+
+            Assert(safeguardTriggered && safeguardDeactivated,
+                "Dynamic quality adaptation activates low-spec safeguard under sub-30fps dips and recovers smoothly");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

@@ -53,6 +53,8 @@ public class SurvivalSystem : MonoBehaviour
     [Header("Debug HUD")]
     public bool showDebugHUD = true;
     public float rollingFPS = 60f;
+    public bool isLowSpecSafeguardActive = false;
+    private float lowFPSTimer = 0f;
     private float fpsAccumulator = 0f;
     private int fpsFrameCount = 0;
     private float fpsTimer = 0f;
@@ -112,7 +114,7 @@ public class SurvivalSystem : MonoBehaviour
             missionTimer += dt;
         }
 
-        // Rolling FPS monitoring
+        // Rolling FPS monitoring & dynamic quality adaptation
         fpsAccumulator += (dt > 0f) ? (1f / dt) : 60f;
         fpsFrameCount++;
         fpsTimer += dt;
@@ -122,6 +124,26 @@ public class SurvivalSystem : MonoBehaviour
             fpsAccumulator = 0f;
             fpsFrameCount = 0;
             fpsTimer = 0f;
+
+            // Low-spec safeguard: if frame rate drops below 28fps for > 2s, enable aggressive throttling
+            if (rollingFPS < 28f)
+            {
+                lowFPSTimer += 0.5f;
+                if (lowFPSTimer >= 2.0f)
+                {
+                    isLowSpecSafeguardActive = true;
+                    envCheckInterval = 0.20f; // Drop environmental checks to 5Hz
+                }
+            }
+            else if (rollingFPS >= 32f)
+            {
+                lowFPSTimer = Mathf.Max(0f, lowFPSTimer - 0.5f);
+                if (lowFPSTimer == 0f)
+                {
+                    isLowSpecSafeguardActive = false;
+                    envCheckInterval = 0.10f; // Restore 10Hz checks
+                }
+            }
         }
 
         // Dynamic wind volume based on shelter and cold level
@@ -442,7 +464,8 @@ public class SurvivalSystem : MonoBehaviour
     {
         if (!showDebugHUD) return;
 
-        GUI.Box(new Rect(10, 10, 290, 290), $"Jun-ho Survival Monitor [FPS: {rollingFPS:F0} | GC: 0 B]");
+        string perfBadge = isLowSpecSafeguardActive ? " [LOW-SPEC MODE]" : "";
+        GUI.Box(new Rect(10, 10, 290, 290), $"Jun-ho Survival Monitor [FPS: {rollingFPS:F0}{perfBadge} | GC: 0 B]");
 
         GUI.Label(new Rect(20, 32, 235, 18), $"Stamina:  {stamina:F0}%");
         GUI.Label(new Rect(20, 50, 235, 18), $"Hunger:   {hunger:F0}% {(isStarving ? "[STARVING!]" : "")}");
