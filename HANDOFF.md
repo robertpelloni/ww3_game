@@ -1,6 +1,9 @@
-# HANDOFF — session 2026-11-04 (v0.7.5)
+# HANDOFF — session 2026-11-04 (v0.7.6)
 
 ## What was accomplished this session
+- **Procedural Breath Condensation Vapor Dissipation Physics (`SurvivalSystem.cs`)**:
+  * Implemented continuous vapor expansion and progressive opacity decay: condensation puffs expand smoothly from 0.4m to 1.2m diameter over 0.75s while fading opacity and moonlight reflection from 1.0 to 0.0, avoiding abrupt binary visibility pop-in.
+  * Pure-C# simulation updated with 52/52 automated tests passing (`prototypes/StealthSim`).
 - **Dynamic Quality Adaptation & Low-Spec Safeguard (`SurvivalSystem.cs` & `PatrolMover.cs`)**:
   * Implemented automated quality adaptation for low-spec targets (Intel HD 520): if frame rates drop below 28fps for > 2.0s, environmental checks drop from 10Hz to 5Hz and patrol sensor decimation locks to 1.5x, guaranteeing 30fps+ locked stability.
   * Added `[LOW-SPEC MODE]` HUD indicator badge and dynamic recovery when frame rate climbs above 32fps.

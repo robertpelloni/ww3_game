@@ -154,6 +154,8 @@ namespace WW3.StealthSim
         public bool IsExhausted { get; set; } = false;
         public bool HasThermalBreathPuff { get; set; } = false;
         public double BreathPuffTimer { get; set; } = 0.0;
+        public double BreathVaporDiameter { get; set; } = 0.0;
+        public double BreathVaporAlpha { get; set; } = 0.0;
         public double ExhaustionTimer { get; set; } = 0.0;
         public double WhistleTimer { get; set; } = 0.0;
         public double FootstepTimer { get; set; } = 0.0;
@@ -511,8 +513,12 @@ namespace WW3.StealthSim
                 }
             }
 
-            // Default dark alley shadow (elevated if thermal breath puff active)
-            return PlayerCharacter.HasThermalBreathPuff ? 0.30 : 0.05;
+            // Default dark alley shadow (gradually elevated proportional to dissipating breath vapor opacity)
+            if (PlayerCharacter.HasThermalBreathPuff && PlayerCharacter.BreathVaporAlpha > 0.05)
+            {
+                return 0.05 + 0.25 * PlayerCharacter.BreathVaporAlpha;
+            }
+            return 0.05;
         }
 
         public void TriggerWhistle()
@@ -641,6 +647,8 @@ namespace WW3.StealthSim
             {
                 PlayerCharacter.HasThermalBreathPuff = false;
                 PlayerCharacter.BreathPuffTimer = 0.0;
+                PlayerCharacter.BreathVaporDiameter = 0.0;
+                PlayerCharacter.BreathVaporAlpha = 0.0;
                 WindAmbienceVolume = Math.Max(0.08, WindAmbienceVolume - dt * 0.5);
                 PlayerCharacter.Cold = Math.Max(0.0, PlayerCharacter.Cold - 6.0 * dt);
             }
@@ -652,16 +660,27 @@ namespace WW3.StealthSim
                     if (PlayerCharacter.BreathPuffTimer >= 2.5)
                     {
                         PlayerCharacter.BreathPuffTimer = 0.0;
-                        PlayerCharacter.HasThermalBreathPuff = true;
                     }
-                    else if (PlayerCharacter.BreathPuffTimer >= 0.75)
+
+                    if (PlayerCharacter.BreathPuffTimer <= 0.75)
+                    {
+                        PlayerCharacter.HasThermalBreathPuff = true;
+                        double progress = PlayerCharacter.BreathPuffTimer / 0.75;
+                        PlayerCharacter.BreathVaporDiameter = 0.4 + (1.2 - 0.4) * progress;
+                        PlayerCharacter.BreathVaporAlpha = 1.0 - progress;
+                    }
+                    else
                     {
                         PlayerCharacter.HasThermalBreathPuff = false;
+                        PlayerCharacter.BreathVaporDiameter = 0.0;
+                        PlayerCharacter.BreathVaporAlpha = 0.0;
                     }
                 }
                 else
                 {
                     PlayerCharacter.HasThermalBreathPuff = false;
+                    PlayerCharacter.BreathVaporDiameter = 0.0;
+                    PlayerCharacter.BreathVaporAlpha = 0.0;
                 }
 
                 double targetWind = 0.20 + (PlayerCharacter.Cold / 100.0) * 0.35;
@@ -1974,6 +1993,31 @@ namespace WW3.StealthSim
 
             Assert(safeguardTriggered && safeguardDeactivated,
                 "Dynamic quality adaptation activates low-spec safeguard under sub-30fps dips and recovers smoothly");
+
+            // Test 52: Procedural breath condensation vapor dissipation physics and progressive exposure scaling
+            var simVapor = new SimulationWorld();
+            simVapor.PlayerCharacter.Cold = 75.0; // Freezing
+            simVapor.PlayerCharacter.Position = new Vec2(2.0, 10.0);
+            simVapor.CurfewSearchlight.Radius = 0; // Dark shadows
+
+            // Step 2.5s to trigger exhalation start
+            simVapor.Step(2.5, new Vec2(0, 0));
+            double initialDiameter = simVapor.PlayerCharacter.BreathVaporDiameter;
+            double initialAlpha = simVapor.PlayerCharacter.BreathVaporAlpha;
+            double initialExposure = simVapor.CalculatePlayerExposure();
+
+            // Advance 0.35s midway into vapor dissipation
+            simVapor.Step(0.35, new Vec2(0, 0));
+            double midDiameter = simVapor.PlayerCharacter.BreathVaporDiameter;
+            double midAlpha = simVapor.PlayerCharacter.BreathVaporAlpha;
+            double midExposure = simVapor.CalculatePlayerExposure();
+
+            bool expandingDiameter = midDiameter > initialDiameter && midDiameter <= 1.2;
+            bool fadingAlpha = midAlpha < initialAlpha && midAlpha > 0.0;
+            bool progressiveExposureDecay = midExposure < initialExposure && midExposure > 0.05;
+
+            Assert(expandingDiameter && fadingAlpha && progressiveExposureDecay,
+                "Thermal breath vapor expands from 0.4m to 1.2m while fading opacity and exposure progressively");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

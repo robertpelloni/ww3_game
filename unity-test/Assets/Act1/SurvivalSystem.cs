@@ -42,6 +42,8 @@ public class SurvivalSystem : MonoBehaviour
     public float exhaustionCooldown = 0f;
     public bool hasThermalBreathPuff = false;
     public float breathPuffTimer = 0f;
+    public float breathVaporDiameter = 0f; // Expands from 0.4m to 1.2m
+    public float breathVaporAlpha = 0f;    // Fades from 1.0 to 0.0
 
     [Header("Game Loop State")]
     public bool isGameOver = false;
@@ -190,24 +192,36 @@ public class SurvivalSystem : MonoBehaviour
             cold = Mathf.Clamp(cold + coldRate * exposureThermalFactor * dt, 0f, 100f);
         }
 
-        // Thermal breath vapor exhalation (Cold >= 60% and unsheltered): emits visible condensation puff every 2.5s
+        // Thermal breath vapor exhalation & dissipation physics (Cold >= 60% and unsheltered):
+        // Emits condensation puff every 2.5s expanding from 0.4m to 1.2m and fading over 0.75s
         if (!isSheltered && cold >= 60f)
         {
             breathPuffTimer += dt;
             if (breathPuffTimer >= 2.5f)
             {
                 breathPuffTimer = 0f;
-                hasThermalBreathPuff = true;
             }
-            else if (breathPuffTimer >= 0.75f)
+
+            if (breathPuffTimer <= 0.75f)
+            {
+                hasThermalBreathPuff = true;
+                float progress = breathPuffTimer / 0.75f;
+                breathVaporDiameter = Mathf.Lerp(0.4f, 1.2f, progress);
+                breathVaporAlpha = Mathf.Lerp(1.0f, 0.0f, progress);
+            }
+            else
             {
                 hasThermalBreathPuff = false;
+                breathVaporDiameter = 0f;
+                breathVaporAlpha = 0f;
             }
         }
         else
         {
             hasThermalBreathPuff = false;
             breathPuffTimer = 0f;
+            breathVaporDiameter = 0f;
+            breathVaporAlpha = 0f;
         }
 
         // Shivering mechanic (Cold >= 70%): generates acoustic noise & reduces stamina regen
@@ -402,9 +416,10 @@ public class SurvivalSystem : MonoBehaviour
 
         // Deep shadow default baseline in curfew night alleys (amplified by thermal breath puff)
         float baselineShadow = isSheltered ? 0.05f : 0.15f;
-        if (hasThermalBreathPuff)
+        if (hasThermalBreathPuff && breathVaporAlpha > 0.05f)
         {
-            baselineShadow += 0.25f; // Thermal vapor cloud reflects ambient moonlight
+            // Dissipating thermal vapor reflects ambient moonlight proportional to opacity
+            baselineShadow += 0.25f * breathVaporAlpha;
         }
 
         float maxExposure = baselineShadow;

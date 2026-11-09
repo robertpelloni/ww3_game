@@ -2,6 +2,15 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.7.6 — 2026-11-04 — Milestone 2 Breath Condensation Vapor Dissipation Physics
+- **Procedural Breath Condensation Vapor Dissipation (`SurvivalSystem.cs`)**:
+  - Implemented continuous vapor expansion and progressive opacity decay: condensation puffs expand from 0.4m to 1.2m diameter over 0.75s while fading opacity and moonlight reflection from 1.0 to 0.0, avoiding abrupt binary visibility pop-in.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored continuous breath vapor expansion, progressive opacity decay, and exposure falloff in `SimulationWorld`.
+  - Added automated Test 52 validating continuous breath vapor dissipation physics and progressive exposure scaling (52/52 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 52/52 tests and updated governance docs to version 0.7.6.
+
 ## 0.7.5 — 2026-11-04 — Milestone 2 Dynamic Quality Adaptation & Low-Spec Safeguard
 - **Dynamic Quality Adaptation & Low-Spec Safeguards (`SurvivalSystem.cs` & `PatrolMover.cs`)**:
   - Implemented dynamic low-spec safeguard: when rolling frame rate drops below 28fps for more than 2.0s on low-spec hardware (Intel HD 520), the engine dynamically engages aggressive throttling (environmental check interval increases to 5Hz, guard sensor decimation locks to 1.5x) to maintain a locked 30fps+ baseline.
