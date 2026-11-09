@@ -299,6 +299,7 @@ namespace WW3.StealthSim
         public bool CheckpointAlarmTripped { get; set; } = false;
         public bool CheckpointInterrogating { get; set; } = false;
         public double CheckpointInterrogationTimer { get; set; } = 0.0;
+        public bool CheckpointTorchSweeping { get; set; } = false;
         public Vec2? ActiveDistractionPos { get; set; } = null;
         public double ActiveDistractionRadius { get; set; } = 14.0;
         public double ActiveDistractionTimer { get; set; } = 0.0;
@@ -774,6 +775,7 @@ namespace WW3.StealthSim
                 if (!CheckpointInterrogating)
                 {
                     CheckpointInterrogating = true;
+                    CheckpointTorchSweeping = true;
                     // Shadow inspection grace: crouching in deep shadow (exposure <= 0.20) extends grace to 4.5s
                     double exp = CalculatePlayerExposure();
                     CheckpointInterrogationTimer = (exp <= 0.20) ? 4.5 : 3.0;
@@ -789,6 +791,7 @@ namespace WW3.StealthSim
             else if (distToCheckpoint > 3.5 && CheckpointInterrogating && !CheckpointAlarmTripped)
             {
                 CheckpointInterrogating = false;
+                CheckpointTorchSweeping = false;
                 CheckpointInterrogationTimer = 0.0;
             }
 
@@ -2213,6 +2216,22 @@ namespace WW3.StealthSim
 
             Assert(voiceBudgetEnforced,
                 "Procedural audio concurrency is capped at 8 voices to prevent buffer underruns on dual-core low-spec CPUs");
+
+            // Test 61: Checkpoint guard inspection torch sweep activation during interrogation
+            var simTorch = new SimulationWorld();
+            simTorch.PlayerCharacter.Position = new Vec2(39.0, 10.0); // 1.0m from gate
+            simTorch.Step(0.2, new Vec2(0, 0));
+
+            bool torchSweepEngaged = simTorch.CheckpointInterrogating && simTorch.CheckpointTorchSweeping;
+
+            // Step away beyond 3.5m
+            simTorch.PlayerCharacter.Position = new Vec2(35.0, 10.0); // 5.0m from gate
+            simTorch.Step(0.1, new Vec2(0, 0));
+
+            bool torchDisengagedOnExit = !simTorch.CheckpointInterrogating && !simTorch.CheckpointTorchSweeping;
+
+            Assert(torchSweepEngaged && torchDisengagedOnExit,
+                "Checkpoint guard activates inspection torch sweep during interrogation and disengages when player retreats");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

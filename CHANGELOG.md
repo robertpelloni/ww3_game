@@ -2,6 +2,16 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.8.5 — 2026-11-04 — Milestone 2 Checkpoint Torch Sweep & Frame Budgeting
+- **Checkpoint Inspection Torch Cone Sweeping (`CheckpointTrigger.cs`)**:
+  - Implemented dynamic inspection torch cone sweep: during interrogation, the checkpoint guard activates a sweeping inspection torch beam covering 35 degrees laterally across the gate threshold over 2.0s.
+  - Automatically disengages torch sweep when the player retreats beyond 3.5m or successfully bribes the guard.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored checkpoint inspection torch sweep activation and disengagement in `SimulationWorld`.
+  - Added automated Test 61 validating inspection torch sweep engagement during interrogation and retreat disengagement (61/61 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 61/61 tests and updated governance docs to version 0.8.5.
+
 ## 0.8.4 — 2026-11-04 — Milestone 2 Audio Voice Capping & Low-Spec Mixer Optimization
 - **Procedural Audio Voice Capping (`ProceduralAudio.cs`)**:
   - Implemented an 8-voice concurrency cap (`MaxConcurrentVoices = 8`) on runtime procedural audio playback, preventing software audio buffer underruns, popping, and CPU thread contention on low-spec hardware (Intel HD 520).

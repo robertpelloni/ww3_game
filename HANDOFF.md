@@ -1,6 +1,9 @@
-# HANDOFF — session 2026-11-04 (v0.8.4)
+# HANDOFF — session 2026-11-04 (v0.8.5)
 
 ## What was accomplished this session
+- **Checkpoint Inspection Torch Sweep (`CheckpointTrigger.cs`)**:
+  * Implemented dynamic inspection torch cone sweep: during interrogation, the checkpoint guard activates a sweeping inspection torch beam covering 35 degrees laterally across the gate threshold over 2.0s, disengaging when the player retreats beyond 3.5m or bribes the guard.
+  * Pure-C# simulation updated with 61/61 automated tests passing (`prototypes/StealthSim`).
 - **Procedural Audio Voice Concurrency Capping (`ProceduralAudio.cs`)**:
   * Implemented an 8-voice concurrency cap (`MaxConcurrentVoices = 8`) on runtime procedural audio playback, preventing software audio buffer underruns, popping, and CPU thread contention on low-spec hardware (Intel HD 520).
   * Pure-C# simulation updated with 60/60 automated tests passing (`prototypes/StealthSim`).
