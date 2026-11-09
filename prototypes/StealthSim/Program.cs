@@ -966,7 +966,12 @@ namespace WW3.StealthSim
 
         private void ExecutePatrol(Guard guard, double dt)
         {
-            // Searchlight beam glance synergy: if searchlight is lingering on disturbance nearby, turn towards it
+            // Searchlight beam glance & interlocking sector vigilance synergy:
+            // If searchlight is lingering on disturbance or sweeping within 18m, bias guard vigilance towards illuminated beam
+            Vec2 activeSearchlightPos = CurfewSearchlight.GetCurrentPosition();
+            double distToSpot = Vec2.Distance(guard.Position, activeSearchlightPos);
+            bool interlockingCoordinated = false;
+
             if (CurfewSearchlight.FocusTimer > 0 && CurfewSearchlight.FocusTarget.HasValue)
             {
                 double distToBeam = Vec2.Distance(guard.Position, CurfewSearchlight.FocusTarget.Value);
@@ -974,7 +979,14 @@ namespace WW3.StealthSim
                 {
                     Vec2 beamDir = (CurfewSearchlight.FocusTarget.Value - guard.Position).Normalized();
                     guard.Forward = beamDir;
+                    interlockingCoordinated = true;
                 }
+            }
+            else if (distToSpot <= 18.0 && guard.Suspicion > 5.0)
+            {
+                Vec2 beamDir = (activeSearchlightPos - guard.Position).Normalized();
+                guard.Forward = beamDir;
+                interlockingCoordinated = true;
             }
 
             Vec2 target = guard.WaypointDir > 0 ? guard.WaypointB : guard.WaypointA;
@@ -989,7 +1001,7 @@ namespace WW3.StealthSim
 
             Vec2 dir = diff.Normalized();
             guard.Position = guard.Position + dir * (guard.PatrolSpeed * dt);
-            if (CurfewSearchlight.FocusTimer <= 0)
+            if (!interlockingCoordinated)
             {
                 guard.Forward = dir;
             }
@@ -1884,6 +1896,20 @@ namespace WW3.StealthSim
 
             Assert(footstepMaskedByWind && loudDistractionPiercesWind,
                 "Curfew wind gusts mask subtle footsteps (-25% hearing range) while loud whistles reliably alert guards");
+
+            // Test 49: Searchlight beam interlocking vigilance coordination with nearby patrolling guards
+            var simInterlock = new SimulationWorld();
+            var gInterlock = simInterlock.Guards[0]; // Patrol-1 at (15, 5)
+            gInterlock.Suspicion = 10.0; // Mild alertness
+            simInterlock.CurfewSearchlight.Center = new Vec2(22.0, 5.0); // 7m away from guard
+            simInterlock.CurfewSearchlight.SweepRange = 0; // Fixed illuminated hotspot
+
+            simInterlock.Step(0.1, new Vec2(0, 0));
+            // Guard forward should be biased towards searchlight position (22, 5) -> pointing east (X > 0.9)
+            bool searchlightInterlockingActive = gInterlock.Forward.X > 0.85;
+
+            Assert(searchlightInterlockingActive,
+                "Nearby guards interlock patrol vigilance towards actively illuminated searchlight sectors within 18m");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

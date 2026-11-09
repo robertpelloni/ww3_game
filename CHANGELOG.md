@@ -2,6 +2,16 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.7.3 — 2026-11-04 — Milestone 2 Searchlight-Patrol Interlocking Coordination
+- **Guard Searchlight Interlocking Coordination (`PatrolMover.cs`)**:
+  - Implemented interlocking sector vigilance: guards patrolling within 18m of an illuminated curfew searchlight hotspot bias their forward sightline towards the illuminated perimeter when mildly alerted or suspicious, interlocking coverage between mechanical spotlight sweeps and ground patrols.
+  - Leveraged static cached light zones (`cachedLightZones`) for searchlight beam lookups, eliminating runtime allocations on low-spec systems.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored searchlight beam interlocking vigilance coordination in `SimulationWorld`.
+  - Added automated Test 49 validating interlocking searchlight-patrol sight line coordination within 18m (49/49 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 49/49 tests and updated governance docs to version 0.7.3.
+
 ## 0.7.2 — 2026-11-04 — Milestone 2 Ambient Wind Acoustic Masking & Sound Dampening
 - **Ambient Wind Acoustic Masking (`PatrolMover.cs`)**:
   - Implemented dynamic wind sound masking: outdoor curfew wind gusts attenuate guard hearing sensitivity against subtle player footstep acoustics by -25%, allowing stealthy movement in howling wind while loud distractions (whistles, thrown bottle shatters) maintain penetration.

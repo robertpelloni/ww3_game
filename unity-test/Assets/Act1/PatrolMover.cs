@@ -538,15 +538,17 @@ public class PatrolMover : MonoBehaviour
     private bool CheckNearbySearchlightBeam(out Vector3 beamPosition)
     {
         beamPosition = Vector3.zero;
-        var lights = FindObjectsByType<LightExposureZone>(FindObjectsSortMode.None);
+        UpdateCachedLightZones();
+        var lights = cachedLightZones;
         if (lights == null) return false;
 
         foreach (var lz in lights)
         {
-            if (lz != null && lz.isSweepingSpotlight && lz.focusLingerTimer > 0f)
+            if (lz != null && lz.isSweepingSpotlight && (lz.focusLingerTimer > 0f || lz.exposureLevel >= 0.85f))
             {
                 float d = Vector3.Distance(transform.position, lz.transform.position);
-                if (d <= 25.0f)
+                // Interlocking searchlight-patrol sector coordination within 18m
+                if (d <= 18.0f)
                 {
                     beamPosition = lz.transform.position;
                     return true;

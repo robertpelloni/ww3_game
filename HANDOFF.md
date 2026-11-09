@@ -1,6 +1,10 @@
-# HANDOFF — session 2026-11-04 (v0.7.2)
+# HANDOFF — session 2026-11-04 (v0.7.3)
 
 ## What was accomplished this session
+- **Searchlight-Patrol Interlocking Sector Coordination (`PatrolMover.cs`)**:
+  * Implemented interlocking sector vigilance: guards patrolling within 18m of an active curfew searchlight beam orient their vigilance towards the illuminated sector when mildly alerted or suspicious.
+  * Utilized static cached light zones (`cachedLightZones`) to eliminate per-frame heap allocations during interlocking checks.
+  * Pure-C# simulation updated with 49/49 automated tests passing (`prototypes/StealthSim`).
 - **Dynamic Ambient Wind Acoustic Masking (`PatrolMover.cs`)**:
   * Implemented dynamic wind acoustic masking: howling outdoor curfew wind gusts attenuate guard acoustic detection of subtle player footsteps by -25%, rewarding players who move during wind gusts while ensuring loud distractions (whistles, bottle shatters) maintain tactical reliability.
   * Pure-C# simulation updated with 48/48 automated tests passing (`prototypes/StealthSim`).
