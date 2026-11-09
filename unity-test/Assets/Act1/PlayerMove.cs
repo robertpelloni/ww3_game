@@ -245,6 +245,29 @@ public class PlayerMove : MonoBehaviour
             }
         }
 
+        // [G] Key scavenges glass debris shards into inventory (+1 bottle count) when on GlassDebris surface
+        if (Input.GetKeyDown(KeyCode.G) && currentSurface == SurfaceType.GlassDebris)
+        {
+            if (survival != null && survival.bottleCount < 3)
+            {
+                survival.bottleCount++;
+                // Emit small scavenging noise (6m radius)
+                CurrentNoiseRadius = Mathf.Max(CurrentNoiseRadius, 6.0f);
+                SoundDistractionEvent.Create(transform.position, 6.0f, 1.0f);
+                try
+                {
+                    AudioClip clink = ProceduralAudio.CreateFootstepClip(SurfaceType.GlassDebris);
+                    ProceduralAudio.PlayClipAtPoint(clink, transform.position, 0.6f);
+                }
+                catch (System.Exception) {}
+                Debug.Log($"[PlayerMove] Scavenged glass shard into throwable bottle! Bottles: {survival.bottleCount}");
+            }
+            else
+            {
+                Debug.Log("[PlayerMove] Cannot carry more bottles (max 3) or not near survival inventory!");
+            }
+        }
+
         // [T] Key uses scavenged wire cutters to breach secondary perimeter fence shortcut
         if (Input.GetKeyDown(KeyCode.T))
         {

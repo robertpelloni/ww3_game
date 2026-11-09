@@ -329,6 +329,15 @@ namespace WW3.StealthSim
             return true;
         }
 
+        public bool ScavengeGlassBottle()
+        {
+            if (PlayerCharacter.CurrentSurface != SurfaceType.GlassDebris || PlayerCharacter.BottleCount >= 3) return false;
+            PlayerCharacter.BottleCount++;
+            TriggerDistraction(PlayerCharacter.Position, 6.0, 1.0);
+            ProceduralAudioLog.Add("GlassBottleScavenged");
+            return true;
+        }
+
         public bool BribeCheckpointGuard()
         {
             if (PlayerCharacter.RiceCount < 2) return false;
@@ -2148,6 +2157,19 @@ namespace WW3.StealthSim
 
             Assert(exactShelterParity,
                 "Shelter warming completely halts outdoor cold accumulation with 1:1 parity between Unity and StealthSim");
+
+            // Test 58: Glass debris shard scavenging replenishes throwable bottle inventory
+            var simScavenge = new SimulationWorld();
+            simScavenge.PlayerCharacter.BottleCount = 0; // Empty bottles
+            simScavenge.PlayerCharacter.Position = new Vec2(33.0, 10.0); // Inside Broken Bottle Rubble zone
+            simScavenge.Step(0.1, new Vec2(0, 0)); // Updates surface to GlassDebris
+
+            bool scavenged = simScavenge.ScavengeGlassBottle();
+            bool bottleAcquired = simScavenge.PlayerCharacter.BottleCount == 1;
+            bool localNoiseEmitted = simScavenge.ActiveDistractionPos.HasValue && simScavenge.ActiveDistractionRadius == 6.0;
+
+            Assert(scavenged && bottleAcquired && localNoiseEmitted,
+                "Scavenging on broken glass debris creates throwable bottle and emits 6m local clinking noise");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

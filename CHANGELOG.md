@@ -2,6 +2,15 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.8.2 — 2026-11-04 — Milestone 2 Glass Shard Scavenging & Floor Bottle Arming
+- **Broken Glass Shard Scavenging (`PlayerMove.cs`)**:
+  - Implemented broken glass debris scavenging mechanics: pressing `[G]` while standing or crouching on `SurfaceType.GlassDebris` allows Jun-ho to gather fractured glass into a throwable distraction bottle (+1 bottle inventory, max 3) while emitting a local 6m clinking acoustic cue.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored glass shard scavenging and distraction bottle replenishment in `SimulationWorld`.
+  - Added automated Test 58 validating glass debris scavenging, inventory increments, and local acoustic emission (58/58 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 58/58 tests and updated governance docs to version 0.8.2.
+
 ## 0.8.1 — 2026-11-04 — Milestone 2 Simulation Parity & Scoped Thermal Thermodynamics
 - **Shelter Thermal Scoping Parity (`prototypes/StealthSim`)**:
   - Scoped outdoor curfew cold accumulation and thermal factor calculation cleanly inside the `else` branch of `IsPlayerSheltered()`, achieving 1:1 parity with Unity's `SurvivalSystem.cs` and ensuring shelter warming (`-6.0/s`) completely halts outdoor frostbite accumulation.

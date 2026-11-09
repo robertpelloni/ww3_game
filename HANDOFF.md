@@ -1,6 +1,9 @@
-# HANDOFF — session 2026-11-04 (v0.8.1)
+# HANDOFF — session 2026-11-04 (v0.8.2)
 
 ## What was accomplished this session
+- **Broken Glass Shard Scavenging & Floor Bottle Arming (`PlayerMove.cs`)**:
+  * Implemented broken glass debris scavenging mechanics: pressing `[G]` while traversing `SurfaceType.GlassDebris` gathers glass shards into a throwable bottle (+1 bottle count, max 3) while emitting a local 6.0m clinking sound cue.
+  * Pure-C# simulation updated with 58/58 automated tests passing (`prototypes/StealthSim`).
 - **Shelter Thermal Scoping Parity & Simulation Alignment (`prototypes/StealthSim`)**:
   * Scoped outdoor curfew cold accumulation and thermal factor calculation cleanly inside the `else` branch of `IsPlayerSheltered()`, achieving 1:1 parity with Unity's `SurvivalSystem.cs` and ensuring shelter warming (`-6.0/s`) completely halts outdoor frostbite accumulation.
   * Added automated Test 57 validating exact shelter cold reduction rates (-6.0/s) without outdoor wind tunnel leakage.
