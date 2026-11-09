@@ -1,6 +1,8 @@
-# TODO — granular short-term tasks (v0.8.6)
+# TODO — granular short-term tasks (v0.8.7)
 
 ## Verified working (keep green)
+- [x] Guard Tactical Flashlight Direct Glare Detection Synergy in `PatrolMover.cs`
+- [x] Searchlight Mechanical Motor Whine Audio Cue in `LightExposureZone.cs`
 - [x] Stance Acoustic Footstep Audio Dampening on Hazardous Debris in `PlayerMove.cs`
 - [x] Searchlight Glare Distance Raycast Throttling (>22m) in `LightExposureZone.cs`
 - [x] Checkpoint Inspection Torch Sweep Across Barrier in `CheckpointTrigger.cs`

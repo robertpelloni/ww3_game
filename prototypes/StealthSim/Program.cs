@@ -261,7 +261,7 @@ namespace WW3.StealthSim
             return new Vec2(Center.X + offset, Center.Y);
         }
 
-        public void FocusOn(Vec2 target, double duration = 5.0)
+        public void FocusOn(Vec2 target, double duration = 5.0, List<string>? audioLog = null)
         {
             FocusTarget = target;
             FocusTimer = Math.Max(FocusTimer, duration);
@@ -271,6 +271,7 @@ namespace WW3.StealthSim
             {
                 IsAcquiringTarget = true;
                 AcquisitionWarningTimer = 0.5; // 0.5s pre-focus strobe cue
+                audioLog?.Add($"SearchlightMotorWhine at ({target.X:F1}, {target.Y:F1})");
             }
             Radius = BaseRadius * 1.4; // Expand beam radius on alert lock
         }
@@ -980,6 +981,13 @@ namespace WW3.StealthSim
                 // Detection scales with exposure, stance, and proximity. Flashlight illuminates target directly.
                 double effectiveExposure = guard.FlashlightActive ? Math.Max(playerExposure, 0.75) : playerExposure;
                 double lightFactor = effectiveExposure >= 0.75 ? effectiveExposure * 2.5 : effectiveExposure;
+
+                // Flashlight direct illumination synergy: if flashlight is active and aimed within flashlight cone
+                if (guard.FlashlightActive && dist <= guard.VisionRange * 0.7)
+                {
+                    lightFactor *= 1.50;
+                }
+
                 double stanceMod = PlayerCharacter.GetStanceDetectionMultiplier();
 
                 // Backlit Silhouette Check: if light source is directly behind player relative to guard
@@ -1143,7 +1151,7 @@ namespace WW3.StealthSim
             // Signal nearby sweeping searchlights to focus beam
             if (Vec2.Distance(callingGuard.Position, CurfewSearchlight.Center) <= 25.0)
             {
-                CurfewSearchlight.FocusOn(callingGuard.LastInvestigateTarget, 5.0);
+                CurfewSearchlight.FocusOn(callingGuard.LastInvestigateTarget, 5.0, ProceduralAudioLog);
             }
 
             int fIndex = 0;
@@ -2259,6 +2267,35 @@ namespace WW3.StealthSim
             bool crouchDampenedStepLogged = simStanceDamp.ProceduralAudioLog.Exists(a => a.StartsWith("Footstep_MetalGrate_Vol0.16"));
             Assert(crouchDampenedStepLogged,
                 "Crouching attenuates footstep audio volume on metallic grating and glass debris surfaces");
+
+            // Test 63: Guard tactical search flashlight direct glare detection synergy
+            var simFlashSynergy = new SimulationWorld();
+            var gFlash = simFlashSynergy.Guards[0]; // (15, 5) facing East (1, 0)
+            gFlash.Position = new Vec2(10.0, 10.0);
+            gFlash.Forward = new Vec2(1.0, 0.0);
+            simFlashSynergy.PlayerCharacter.Position = new Vec2(14.0, 10.0); // 4.0m directly ahead
+
+            // In Patrol state (flashlight inactive)
+            gFlash.State = AIState.Patrol;
+            gFlash.Suspicion = 0.0;
+            simFlashSynergy.Step(0.1, new Vec2(0, 0));
+            double suspicionWithoutFlash = gFlash.Suspicion;
+
+            // In Investigate state (flashlight active)
+            var simFlashOn = new SimulationWorld();
+            var gFlashOn = simFlashOn.Guards[0];
+            gFlashOn.Position = new Vec2(10.0, 10.0);
+            gFlashOn.Forward = new Vec2(1.0, 0.0);
+            simFlashOn.PlayerCharacter.Position = new Vec2(14.0, 10.0);
+            gFlashOn.State = AIState.Investigate;
+            gFlashOn.LastInvestigateTarget = new Vec2(14.0, 10.0);
+            gFlashOn.Suspicion = 30.0; // Investigate base
+            simFlashOn.Step(0.1, new Vec2(0, 0));
+            double suspicionDeltaWithFlash = gFlashOn.Suspicion - 30.0;
+
+            bool flashlightSynergyWorking = suspicionDeltaWithFlash > (suspicionWithoutFlash * 1.3);
+            Assert(flashlightSynergyWorking,
+                "Guard tactical search flashlight directly escalates detection rate and suspicion accumulation in shadows");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

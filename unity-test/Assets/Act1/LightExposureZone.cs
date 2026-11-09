@@ -133,6 +133,14 @@ public class LightExposureZone : MonoBehaviour
         {
             isAcquiringTarget = true;
             acquisitionWarningTimer = 0.5f; // 0.5s pre-lock strobe cue
+
+            // Play searchlight mechanical motor whine audio cue
+            try
+            {
+                AudioClip motorWhine = ProceduralAudio.CreateSearchlightHumClip();
+                ProceduralAudio.PlayClipAtPoint(motorWhine, transform.position, 0.40f);
+            }
+            catch (System.Exception) {}
         }
     }
 

@@ -2,6 +2,17 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.8.7 — 2026-11-04 — Milestone 2 Guard Flashlight Synergy & Searchlight Whine
+- **Guard Tactical Search Flashlight Glare Synergy (`PatrolMover.cs`)**:
+  - Implemented direct flashlight beam detection synergy: when an investigating or alert guard directs their active search flashlight cone onto the player within 10m, suspicion accumulation accelerates by 1.50x even in dark shadows, simulating high-beam target acquisition.
+- **Searchlight Mechanical Motor Whine Audio Cue (`LightExposureZone.cs`)**:
+  - Added acoustic motor whine audio cue (`ProceduralAudio.CreateSearchlightHumClip`) triggered whenever sweeping searchlights lock onto guard radio pings.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored flashlight glare synergy and searchlight motor whine audio logging in `SimulationWorld`.
+  - Added automated Test 63 validating tactical search flashlight direct glare detection (63/63 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 63/63 tests and updated governance docs to version 0.8.7.
+
 ## 0.8.6 — 2026-11-04 — Milestone 2 Stance Audio Dampening & Searchlight Ray Culling
 - **Stance Acoustic Footstep Volume Dampening (`PlayerMove.cs`)**:
   - Implemented stance-dependent volume attenuation: crouched stance attenuates footstep volume on loud surfaces (MetalGrate and GlassDebris) by 35% (0.65x multiplier), and prone stance attenuates by 55% (0.45x multiplier), rewarding deliberate tactical movement across hazardous debris.

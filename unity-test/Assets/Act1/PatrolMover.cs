@@ -25,6 +25,8 @@ public class PatrolMover : MonoBehaviour
     public float fogExtinctionDistanceReduction = 0.166f; // Reduces unassisted view distance from 12m to 10m
     public float flashlightSweepAngle = 45f;
     public float flashlightSweepSpeed = 2.5f;
+    public float flashlightRange = 10f;
+    public float flashlightAngle = 50f;
     public float searchlightAlertMultiplier = 2.5f;
     public float silhouetteDetectionMultiplier = 1.8f;
     public float glareBlindnessDistanceReduction = 0.30f; // -30% view distance when looking into light source
@@ -180,6 +182,17 @@ public class PatrolMover : MonoBehaviour
             {
                 // Spotlight glare alert: high-visibility searchlight direct exposure
                 lightFactor *= searchlightAlertMultiplier;
+            }
+
+            // Flashlight direct illumination synergy: if flashlight is active and aiming within cone of player
+            if (isFlashlightActive && targetPlayer != null)
+            {
+                Vector3 toPlayer = (targetPlayer.position - transform.position);
+                toPlayer.y = 0;
+                if (toPlayer.magnitude <= flashlightRange && Vector3.Angle(transform.forward, toPlayer) <= (flashlightAngle * 0.5f))
+                {
+                    lightFactor *= 1.50f;
+                }
             }
 
             // Silhouette detection: if player is back-lit by an intense light source behind them

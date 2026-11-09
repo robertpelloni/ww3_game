@@ -1,6 +1,11 @@
-# HANDOFF — session 2026-11-04 (v0.8.6)
+# HANDOFF — session 2026-11-04 (v0.8.7)
 
 ## What was accomplished this session
+- **Guard Tactical Flashlight Direct Glare Synergy (`PatrolMover.cs`)**:
+  * Implemented direct flashlight beam detection synergy: when an investigating or alert guard directs their active search flashlight cone onto the player within 10m, suspicion accumulation accelerates by 1.50x even in dark shadows, simulating high-beam target acquisition.
+  * Pure-C# simulation updated with 63/63 automated tests passing (`prototypes/StealthSim`).
+- **Searchlight Mechanical Motor Whine Audio Cue (`LightExposureZone.cs`)**:
+  * Added acoustic motor whine audio cue (`ProceduralAudio.CreateSearchlightHumClip`) triggered whenever sweeping searchlights lock onto guard radio pings.
 - **Stance Acoustic Footstep Volume Dampening (`PlayerMove.cs`)**:
   * Implemented stance-dependent volume attenuation: crouched stance attenuates footstep volume on loud surfaces (MetalGrate and GlassDebris) by 35% (0.65x multiplier), and prone stance attenuates by 55% (0.45x multiplier), rewarding deliberate tactical movement across hazardous debris.
   * Pure-C# simulation updated with 62/62 automated tests passing (`prototypes/StealthSim`).
