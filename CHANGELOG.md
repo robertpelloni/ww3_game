@@ -2,6 +2,15 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.8.8 — 2026-11-04 — Milestone 2 Dynamic Low-Spec Spatial Sleep LOD
+- **Dynamic Guard Spatial Sleep Distance Contraction (`PatrolMover.cs`)**:
+  - Connected `SurvivalSystem.isLowSpecSafeguardActive` to guard spatial sleep LOD: when low-spec safeguard is active (<28fps), distant guard sensory sleep distance contracts from 35m to 25m, throttling cruising guards to 2Hz sensory ticks earlier and conserving vital CPU cycles on dual-core hardware.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored dynamic spatial sleep LOD distance contraction in `SimulationWorld.StepGuards`.
+  - Added automated Test 64 validating low-spec spatial sleep LOD distance contraction (64/64 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 64/64 tests and updated governance docs to version 0.8.8.
+
 ## 0.8.7 — 2026-11-04 — Milestone 2 Guard Flashlight Synergy & Searchlight Whine
 - **Guard Tactical Search Flashlight Glare Synergy (`PatrolMover.cs`)**:
   - Implemented direct flashlight beam detection synergy: when an investigating or alert guard directs their active search flashlight cone onto the player within 10m, suspicion accumulation accelerates by 1.50x even in dark shadows, simulating high-beam target acquisition.

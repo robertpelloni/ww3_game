@@ -856,7 +856,8 @@ namespace WW3.StealthSim
             guard.SensorTimer += dt;
             guard.DynamicLoadMultiplier = (dt > 0.0333 || IsLowSpecSafeguardActive) ? 1.5 : 1.0; // Decimate when frame time spikes
 
-            bool isDistant = dist > guard.SpatialSleepDistance && guard.State == AIState.Patrol && guard.Suspicion <= 5.0;
+            double effectiveSleepDist = IsLowSpecSafeguardActive ? (guard.SpatialSleepDistance * 0.714) : guard.SpatialSleepDistance;
+            bool isDistant = dist > effectiveSleepDist && guard.State == AIState.Patrol && guard.Suspicion <= 5.0;
             double currentInterval = 0.0;
             if (isDistant)
             {
@@ -2296,6 +2297,36 @@ namespace WW3.StealthSim
             bool flashlightSynergyWorking = suspicionDeltaWithFlash > (suspicionWithoutFlash * 1.3);
             Assert(flashlightSynergyWorking,
                 "Guard tactical search flashlight directly escalates detection rate and suspicion accumulation in shadows");
+
+            // Test 64: Low-spec spatial sleep distance contraction (25m threshold)
+            var simSleepLOD = new SimulationWorld();
+            var gLOD = simSleepLOD.Guards[0];
+            gLOD.Position = new Vec2(10.0, 10.0);
+            simSleepLOD.PlayerCharacter.Position = new Vec2(38.0, 10.0); // 28m distance
+            gLOD.State = AIState.Patrol;
+            gLOD.Suspicion = 0.0;
+
+            // In normal quality mode (>35m sleep threshold), guard at 28m evaluates at cruising 15Hz
+            simSleepLOD.IsLowSpecSafeguardActive = false;
+            gLOD.SensorEvaluationCount = 0;
+            for (int i = 0; i < 10; i++) simSleepLOD.Step(0.05, new Vec2(0, 0)); // 0.5s total
+            int normalSensors = gLOD.SensorEvaluationCount;
+
+            // In low-spec mode (25m sleep threshold), guard at 28m drops to 2Hz sleep LOD
+            var simLowSpec = new SimulationWorld();
+            var gLow = simLowSpec.Guards[0];
+            gLow.Position = new Vec2(10.0, 10.0);
+            simLowSpec.PlayerCharacter.Position = new Vec2(38.0, 10.0); // 28m distance
+            gLow.State = AIState.Patrol;
+            gLow.Suspicion = 0.0;
+            simLowSpec.IsLowSpecSafeguardActive = true;
+            gLow.SensorEvaluationCount = 0;
+            for (int i = 0; i < 10; i++) simLowSpec.Step(0.05, new Vec2(0, 0)); // 0.5s total
+            int lowSpecSensors = gLow.SensorEvaluationCount;
+
+            bool lodDecimationActive = lowSpecSensors < normalSensors;
+            Assert(lodDecimationActive,
+                "Low-spec safeguard contracts guard spatial sleep distance from 35m to 25m to conserve CPU cycles");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

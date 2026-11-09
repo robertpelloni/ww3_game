@@ -1,6 +1,9 @@
-# HANDOFF — session 2026-11-04 (v0.8.7)
+# HANDOFF — session 2026-11-04 (v0.8.8)
 
 ## What was accomplished this session
+- **Dynamic Guard Spatial Sleep Distance Contraction (`PatrolMover.cs`)**:
+  * Connected `SurvivalSystem.isLowSpecSafeguardActive` to guard spatial sleep LOD: when low-spec safeguard is active (<28fps), distant guard sensory sleep distance contracts from 35m to 25m, throttling cruising guards to 2Hz sensory ticks earlier and conserving vital CPU cycles on dual-core hardware.
+  * Pure-C# simulation updated with 64/64 automated tests passing (`prototypes/StealthSim`).
 - **Guard Tactical Flashlight Direct Glare Synergy (`PatrolMover.cs`)**:
   * Implemented direct flashlight beam detection synergy: when an investigating or alert guard directs their active search flashlight cone onto the player within 10m, suspicion accumulation accelerates by 1.50x even in dark shadows, simulating high-beam target acquisition.
   * Pure-C# simulation updated with 63/63 automated tests passing (`prototypes/StealthSim`).

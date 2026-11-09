@@ -110,13 +110,16 @@ public class PatrolMover : MonoBehaviour
         // Dynamic load decimation: if frame rate drops below 30fps (dt > 33.3ms), scale intervals
         dynamicLoadDecimationMultiplier = (Time.deltaTime > 0.0333f) ? 1.5f : 1.0f;
 
-        // Adaptive sensor frequency: 60Hz when active / suspicious, 15Hz when cruising on patrol, 2Hz if distant (>35m)
-        float distToPlayer = targetPlayer != null ? Vector3.Distance(transform.position, targetPlayer.position) : 999f;
-        bool isDistant = distToPlayer > spatialSleepDistance && currentState == GuardState.Patrolling && suspicionMeter <= 0.05f;
-
         // Check if low-spec dynamic quality adaptation is active on survival system
         var survival = targetPlayer != null ? targetPlayer.GetComponent<SurvivalSystem>() : null;
-        if (survival != null && survival.isLowSpecSafeguardActive)
+        bool lowSpecActive = (survival != null && survival.isLowSpecSafeguardActive);
+
+        // Adaptive sensor frequency: 60Hz when active / suspicious, 15Hz when cruising on patrol, 2Hz if distant (>35m, or >25m in low-spec mode)
+        float effectiveSleepDist = lowSpecActive ? (spatialSleepDistance * 0.714f) : spatialSleepDistance; // 25.0m threshold
+        float distToPlayer = targetPlayer != null ? Vector3.Distance(transform.position, targetPlayer.position) : 999f;
+        bool isDistant = distToPlayer > effectiveSleepDist && currentState == GuardState.Patrolling && suspicionMeter <= 0.05f;
+
+        if (lowSpecActive)
         {
             dynamicLoadDecimationMultiplier = 1.5f; // Automatically engage sensor decimation safeguard
         }
