@@ -2,6 +2,15 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.9.1 — 2026-11-04 — Milestone 2 Radio Alert Zero-GC Convergence Loop
+- **Radio Broadcast Zero-GC Array Iteration (`PatrolMover.cs`)**:
+  - Refactored `BroadcastRadioAlert` and `SignalNearbySearchlights` from `foreach` enumerations to indexed `for` loops on `cachedGuards` and `cachedLightZones`, completely eliminating heap allocations when guards radio in suspicious contacts.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored indexed zero-GC guard alert convergence loops in `SimulationWorld.BroadcastRadioAlert`.
+  - Added automated Test 67 validating zero-allocation radio alert broadcasts (67/67 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 67/67 tests and updated governance docs to version 0.9.1.
+
 ## 0.9.0 — 2026-11-04 — Milestone 2 Multi-Guard Proximity Capture & Global Reset
 - **Multi-Guard Proximity Capture Evaluation (`SurvivalSystem.cs`)**:
   - Replaced single-guard capture evaluation with multi-guard checks across preallocated static guard array (`cachedGuards`), validating capture proximity (<= 1.8m) against all active guards in Alert state.

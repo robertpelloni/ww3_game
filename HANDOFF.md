@@ -1,6 +1,9 @@
-# HANDOFF — session 2026-11-04 (v0.9.0)
+# HANDOFF — session 2026-11-04 (v0.9.1)
 
 ## What was accomplished this session
+- **Radio Broadcast Zero-GC Array Iteration (`PatrolMover.cs`)**:
+  * Refactored `BroadcastRadioAlert` and `SignalNearbySearchlights` from `foreach` enumerations to indexed `for` loops on `cachedGuards` and `cachedLightZones`, completely eliminating heap allocations when guards radio in suspicious contacts.
+  * Pure-C# simulation updated with 67/67 automated tests passing (`prototypes/StealthSim`).
 - **Multi-Guard Proximity Capture Evaluation (`SurvivalSystem.cs`)**:
   * Replaced single-guard capture evaluation with multi-guard checks across preallocated static guard array (`cachedGuards`), validating capture proximity (<= 1.8m) against all active guards in Alert state.
   * Updated `RestartLevel()` to reset suspicion meters and AI states across all cached guards cleanly with zero GC spikes.

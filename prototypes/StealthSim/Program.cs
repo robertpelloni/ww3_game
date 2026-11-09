@@ -1158,8 +1158,9 @@ namespace WW3.StealthSim
             }
 
             int fIndex = 0;
-            foreach (var other in Guards)
+            for (int i = 0; i < Guards.Count; i++)
             {
+                var other = Guards[i];
                 if (other == callingGuard) continue;
                 double d = Vec2.Distance(callingGuard.Position, other.Position);
                 if (d <= callingGuard.RadioBroadcastRadius)
@@ -2363,6 +2364,19 @@ namespace WW3.StealthSim
             bool playerCapturedByPatrol2 = simMultiCapture.GameOver && simMultiCapture.EndReason.Contains("caught you");
             Assert(playerCapturedByPatrol2,
                 "Player proximity capture evaluates across all active patrol guards rather than only primary guard");
+
+            // Test 67: Radio alert broadcast zero-GC indexed guard convergence
+            var simRadioZeroGC = new SimulationWorld();
+            var gBroadcaster = simRadioZeroGC.Guards[0];
+            gBroadcaster.LastInvestigateTarget = new Vec2(22.0, 10.0);
+            simRadioZeroGC.BroadcastRadioAlert(gBroadcaster);
+
+            var gReceiver = simRadioZeroGC.Guards[1]; // Within 25m radio radius
+            bool radioReceivedClean = gReceiver.State == AIState.Investigate &&
+                                      gReceiver.Suspicion >= 60.0 &&
+                                      simRadioZeroGC.ProceduralAudioLog.Exists(a => a.StartsWith("RadioStaticClick"));
+            Assert(radioReceivedClean,
+                "Radio alert broadcasts converge allied guards via zero-GC indexed array iterations");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

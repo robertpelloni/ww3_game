@@ -1,6 +1,7 @@
-# TODO — granular short-term tasks (v0.9.0)
+# TODO — granular short-term tasks (v0.9.1)
 
 ## Verified working (keep green)
+- [x] Radio Alert Broadcast Zero-GC Array Iteration in `PatrolMover.cs`
 - [x] Multi-Guard Proximity Capture Evaluation & Global Reset in `SurvivalSystem.cs`
 - [x] Checkpoint Alarm Zero-GC Static Guard Cache in `CheckpointTrigger.cs`
 - [x] Low-Spec Spatial Sleep LOD Distance Contraction (35m -> 25m) in `PatrolMover.cs`

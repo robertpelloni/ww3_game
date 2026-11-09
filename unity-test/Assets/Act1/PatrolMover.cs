@@ -448,8 +448,9 @@ public class PatrolMover : MonoBehaviour
         if (allGuards == null) return;
 
         int guardIndex = 0;
-        foreach (var other in allGuards)
+        for (int i = 0; i < allGuards.Length; i++)
         {
+            var other = allGuards[i];
             if (other == null || other == this) continue;
             float d = Vector3.Distance(transform.position, other.transform.position);
             if (d <= radioBroadcastRadius)
@@ -475,8 +476,9 @@ public class PatrolMover : MonoBehaviour
         var lights = cachedLightZones;
         if (lights == null) return;
 
-        foreach (var lz in lights)
+        for (int i = 0; i < lights.Length; i++)
         {
+            var lz = lights[i];
             if (lz != null && lz.isSweepingSpotlight)
             {
                 float dist = Vector3.Distance(transform.position, lz.transform.position);
