@@ -499,8 +499,9 @@ namespace WW3.StealthSim
 
         public bool IsPlayerSheltered()
         {
-            foreach (var s in Shelters)
+            for (int i = 0; i < Shelters.Count; i++)
             {
+                var s = Shelters[i];
                 if (Vec2.Distance(PlayerCharacter.Position, s.Position) <= s.Radius)
                 {
                     return true;
@@ -536,9 +537,10 @@ namespace WW3.StealthSim
                 return 0.85;
             }
 
-            // Street lamps
-            foreach (var lamp in Lamps)
+            // Street lamps (indexed zero-GC loop)
+            for (int i = 0; i < Lamps.Count; i++)
             {
+                var lamp = Lamps[i];
                 if (Vec2.Distance(pPos, lamp.Position) <= lamp.Radius)
                 {
                     return 0.50;
@@ -2377,6 +2379,18 @@ namespace WW3.StealthSim
                                       simRadioZeroGC.ProceduralAudioLog.Exists(a => a.StartsWith("RadioStaticClick"));
             Assert(radioReceivedClean,
                 "Radio alert broadcasts converge allied guards via zero-GC indexed array iterations");
+
+            // Test 68: Zero-GC indexed shelter and street lamp exposure evaluation loops
+            var simShelterLoop = new SimulationWorld();
+            simShelterLoop.PlayerCharacter.Position = simShelterLoop.Shelters[0].Position; // (20, 4) Alley Burn Barrel
+            bool shelterDetected = simShelterLoop.IsPlayerSheltered();
+
+            simShelterLoop.PlayerCharacter.Position = simShelterLoop.Lamps[0].Position; // (12, 10) Lamp 1
+            double lampExposure = simShelterLoop.CalculatePlayerExposure();
+            bool lampExposureDetected = Math.Abs(lampExposure - 0.50) < 0.01;
+
+            Assert(shelterDetected && lampExposureDetected,
+                "Shelter proximity and lamp exposure calculations execute via zero-GC indexed iterations");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

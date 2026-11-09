@@ -1,6 +1,10 @@
-# HANDOFF — session 2026-11-04 (v0.9.1)
+# HANDOFF — session 2026-11-04 (v0.9.2)
 
 ## What was accomplished this session
+- **Zero-GC Environmental Evaluation & Distance Ray Culling (`SurvivalSystem.cs`)**:
+  * Replaced `foreach` loops in `CheckShelterStatus` and `CheckLightExposure` with indexed `for` loops on `shelterZones` and `lightZones`, eliminating enumerator allocations during throttled 10Hz/5Hz updates.
+  * Added distance pre-culling (>30m) to bypass light exposure calculations against distant lamps and spotlights, freeing up frame cycles on dual-core low-spec machines.
+  * Pure-C# simulation updated with 68/68 automated tests passing (`prototypes/StealthSim`).
 - **Radio Broadcast Zero-GC Array Iteration (`PatrolMover.cs`)**:
   * Refactored `BroadcastRadioAlert` and `SignalNearbySearchlights` from `foreach` enumerations to indexed `for` loops on `cachedGuards` and `cachedLightZones`, completely eliminating heap allocations when guards radio in suspicious contacts.
   * Pure-C# simulation updated with 67/67 automated tests passing (`prototypes/StealthSim`).

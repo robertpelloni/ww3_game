@@ -2,6 +2,16 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.9.2 — 2026-11-04 — Milestone 2 Survival Zero-GC Environmental Evaluation
+- **Zero-GC Environmental Evaluation & Distance Ray Culling (`SurvivalSystem.cs`)**:
+  - Replaced `foreach` loops in `CheckShelterStatus` and `CheckLightExposure` with indexed `for` loops on `shelterZones` and `lightZones`, eliminating enumerator allocations during throttled 10Hz/5Hz updates.
+  - Added distance pre-culling (>30m) to bypass light exposure calculations against distant lamps and spotlights, freeing up frame cycles on dual-core low-spec machines.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored zero-GC indexed loops in `IsPlayerSheltered` and `CalculatePlayerExposure`.
+  - Added automated Test 68 validating zero-GC indexed environmental loops (68/68 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 68/68 tests and updated governance docs to version 0.9.2.
+
 ## 0.9.1 — 2026-11-04 — Milestone 2 Radio Alert Zero-GC Convergence Loop
 - **Radio Broadcast Zero-GC Array Iteration (`PatrolMover.cs`)**:
   - Refactored `BroadcastRadioAlert` and `SignalNearbySearchlights` from `foreach` enumerations to indexed `for` loops on `cachedGuards` and `cachedLightZones`, completely eliminating heap allocations when guards radio in suspicious contacts.

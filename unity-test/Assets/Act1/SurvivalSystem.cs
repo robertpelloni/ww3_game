@@ -405,8 +405,9 @@ public class SurvivalSystem : MonoBehaviour
 
         if (shelterZones != null)
         {
-            foreach (var zone in shelterZones)
+            for (int i = 0; i < shelterZones.Length; i++)
             {
+                var zone = shelterZones[i];
                 if (zone != null && zone.IsPlayerInside())
                 {
                     isSheltered = true;
@@ -454,14 +455,21 @@ public class SurvivalSystem : MonoBehaviour
 
         if (lightZones != null)
         {
-            foreach (var lz in lightZones)
+            for (int i = 0; i < lightZones.Length; i++)
             {
-                if (lz != null && lz.IsPlayerInside())
+                var lz = lightZones[i];
+                if (lz != null)
                 {
-                    float zoneExp = lz.GetExposureAtPosition(transform.position);
-                    if (zoneExp > maxExposure)
+                    // Skip distance evaluations if light zone is excessively distant (>30m)
+                    if (Vector3.Distance(transform.position, lz.transform.position) > 30.0f) continue;
+
+                    if (lz.IsPlayerInside())
                     {
-                        maxExposure = zoneExp;
+                        float zoneExp = lz.GetExposureAtPosition(transform.position);
+                        if (zoneExp > maxExposure)
+                        {
+                            maxExposure = zoneExp;
+                        }
                     }
                 }
             }
