@@ -2,6 +2,15 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.7.9 — 2026-11-04 — Milestone 2 Searchlight-Guard Intersect Synergy
+- **Searchlight-Guard Investigation Intersect Synergy (`PatrolMover.cs`)**:
+  - Implemented searchlight-guard coordination: when an investigating guard probes a disturbance that is co-illuminated by an active searchlight beam within 5.0m, the guard's search tempo accelerates by 1.35x, simulating coordinated ground-aerial pressure against infiltrators.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored searchlight-guard intersect tempo acceleration in `SimulationWorld`.
+  - Added automated Test 55 validating investigation tempo acceleration when co-illuminated by searchlights (55/55 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 55/55 tests and updated governance docs to version 0.7.9.
+
 ## 0.7.8 — 2026-11-04 — Milestone 2 Distance-Based Shadow Culling & 30FPS Safeguard
 - **Distance-Based Shadow Ray Culling (`LightExposureZone.cs`)**:
   - Implemented distance-based shadow occlusion culling: when entities are located beyond 22m from an active searchlight, obstacle shadow raycasting is bypassed and ambient shadow is assigned directly, saving physics raycast CPU overhead on low-spec systems (Intel HD 520).

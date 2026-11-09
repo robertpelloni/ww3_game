@@ -310,13 +310,22 @@ public class PatrolMover : MonoBehaviour
                 Vector3 currentTarget = (investigationStage == 0) ? lastKnownPlayerPos : secondarySearchPos;
                 Vector3 investDir = (currentTarget - transform.position);
                 investDir.y = 0;
+
+                // Searchlight-guard intersect synergy: if searchlight beam sweeps within 5.0m of search target, accelerate tempo by 1.35x
+                float effectiveInvestigateSpeed = investigateSpeed;
+                Vector3 searchlightHotspotPos;
+                if (CheckNearbySearchlightBeam(out searchlightHotspotPos) && Vector3.Distance(currentTarget, searchlightHotspotPos) <= 5.0f)
+                {
+                    effectiveInvestigateSpeed *= 1.35f;
+                }
+
                 if (investDir.magnitude > 1.2f)
                 {
                     Quaternion baseRot = Quaternion.LookRotation(investDir.normalized);
                     float sweep = Mathf.Sin(Time.time * flashlightSweepSpeed) * (flashlightSweepAngle * 0.4f);
                     Quaternion sweepRot = baseRot * Quaternion.Euler(0, sweep, 0);
                     transform.rotation = Quaternion.Slerp(transform.rotation, sweepRot, Time.deltaTime * 4f);
-                    transform.position += transform.forward * investigateSpeed * Time.deltaTime;
+                    transform.position += transform.forward * effectiveInvestigateSpeed * Time.deltaTime;
                 }
                 else
                 {

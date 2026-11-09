@@ -1006,7 +1006,14 @@ namespace WW3.StealthSim
 
                 case AIState.Investigate:
                     Vec2 targetProbe = (guard.InvestigationStage == 0) ? guard.LastInvestigateTarget : guard.SecondaryInvestigateTarget;
-                    ExecuteMoveTowards(guard, targetProbe, guard.PatrolSpeed * 1.2, dt);
+                    double moveSpeed = guard.PatrolSpeed * 1.2;
+                    // Searchlight-guard intersection tempo acceleration: if searchlight beam sweeps within 5.0m of target, tempo accelerates 1.35x
+                    Vec2 activeSpotPos = CurfewSearchlight.GetCurrentPosition();
+                    if (Vec2.Distance(targetProbe, activeSpotPos) <= 5.0)
+                    {
+                        moveSpeed *= 1.35;
+                    }
+                    ExecuteMoveTowards(guard, targetProbe, moveSpeed, dt);
                     if (Vec2.Distance(guard.Position, targetProbe) < 1.0)
                     {
                         if (guard.InvestigationStage == 0)
@@ -2090,6 +2097,27 @@ namespace WW3.StealthSim
             bool shadowCullingFunctional = withinCullExposure > 0.05 && culledExposure == 0.05;
             Assert(shadowCullingFunctional,
                 "Distance-based searchlight shadow culling drops raycast evaluation beyond 22m to conserve low-spec CPU");
+
+            // Test 55: Searchlight-guard intersection tempo acceleration during investigation
+            var simIntersect = new SimulationWorld();
+            var gInvest = simIntersect.Guards[0]; // Patrol-1 at (15, 5)
+            Vec2 targetProbePos = new Vec2(15.0, 10.0);
+            gInvest.Suspicion = 50.0; // High suspicion so it doesn't decay below 5.0 to Patrol
+            gInvest.State = AIState.Investigate;
+            gInvest.LastInvestigateTarget = targetProbePos;
+            gInvest.InvestigationStage = 0;
+
+            // Searchlight centered at target probe (15, 10)
+            simIntersect.CurfewSearchlight.Center = targetProbePos;
+            simIntersect.CurfewSearchlight.SweepRange = 0; // Fixed illumination over target
+
+            simIntersect.Step(0.5, new Vec2(0, 0));
+            // Distance traveled in 0.5s at 1.35x accelerated speed: (2.0 * 1.2 * 1.35) * 0.5 = 1.62m
+            double distTraveled = Vec2.Distance(gInvest.Position, new Vec2(15.0, 5.0));
+            bool tempoAccelerated = distTraveled >= 1.5;
+
+            Assert(tempoAccelerated,
+                "Guard search tempo accelerates by 1.35x when allied searchlight beam illuminates investigation target");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

@@ -1,6 +1,9 @@
-# HANDOFF — session 2026-11-04 (v0.7.8)
+# HANDOFF — session 2026-11-04 (v0.7.9)
 
 ## What was accomplished this session
+- **Searchlight-Guard Intersect Synergy (`PatrolMover.cs`)**:
+  * Implemented searchlight-guard coordination: when an investigating guard probes a disturbance that is co-illuminated by an active searchlight beam within 5.0m, the guard's search tempo accelerates by 1.35x, simulating coordinated ground-aerial pressure against infiltrators.
+  * Pure-C# simulation updated with 55/55 automated tests passing (`prototypes/StealthSim`).
 - **Distance-Based Shadow Ray Culling & 30FPS Low-Spec Optimization (`LightExposureZone.cs`)**:
   * Implemented distance-based shadow ray culling: when entities are located beyond 22m from an active searchlight, shadow occlusion raycasting against obstacle colliders is bypassed, returning ambient shadow values directly to conserve CPU cycles on dual-core low-spec machines (Intel HD 520).
   * Pure-C# simulation updated with 54/54 automated tests passing (`prototypes/StealthSim`).
