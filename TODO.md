@@ -1,6 +1,7 @@
-# TODO — granular short-term tasks (v0.9.2)
+# TODO — granular short-term tasks (v0.9.3)
 
 ## Verified working (keep green)
+- [x] Zero-GC Sound Distraction Array Caching & Raycast Pre-Filtering in `PatrolMover.cs`
 - [x] Zero-GC Environmental Shelter & Light Loops with Distance Pre-Culling (>30m) in `SurvivalSystem.cs`
 - [x] Radio Alert Broadcast Zero-GC Array Iteration in `PatrolMover.cs`
 - [x] Multi-Guard Proximity Capture Evaluation & Global Reset in `SurvivalSystem.cs`

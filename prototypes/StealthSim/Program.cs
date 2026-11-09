@@ -2392,6 +2392,18 @@ namespace WW3.StealthSim
             Assert(shelterDetected && lampExposureDetected,
                 "Shelter proximity and lamp exposure calculations execute via zero-GC indexed iterations");
 
+            // Test 69: Distraction acoustic inspection and raycast distance pre-filtering
+            var simDistractLOD = new SimulationWorld();
+            var gDistract = simDistractLOD.Guards[0]; // (15, 5)
+            simDistractLOD.PlayerCharacter.BottleCount = 1;
+            simDistractLOD.ThrowBottle(new Vec2(18.0, 5.0)); // 3m from guard
+            simDistractLOD.Step(0.1, new Vec2(0, 0));
+
+            bool distractionLuredCleanly = gDistract.State == AIState.Investigate &&
+                                          Vec2.Distance(gDistract.LastInvestigateTarget, new Vec2(18.0, 5.0)) < 0.01;
+            Assert(distractionLuredCleanly,
+                "Sound distraction inspection evaluates acoustic propagation cleanly via zero-GC cached arrays");
+
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;
         }

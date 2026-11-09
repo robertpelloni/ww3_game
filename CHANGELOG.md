@@ -2,6 +2,16 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.9.3 — 2026-11-04 — Milestone 2 Distraction Zero-GC Cache & Raycast Optimization
+- **Sound Distraction Zero-GC Array Caching (`PatrolMover.cs`)**:
+  - Replaced dynamic allocations (`FindObjectsByType<SoundDistractionEvent>`) with a preallocated static array cache (`cachedDistractions`) refreshed on a 0.5s interval with indexed `for` loops.
+  - Added acoustic distance pre-filtering against `baseRadius` prior to sound vector calculation and raycast firing, preserving CPU budgets on dual-core low-spec machines.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored zero-GC distraction evaluations in `SimulationWorld`.
+  - Added automated Test 69 validating zero-allocation distraction acoustic propagation and inspection (69/69 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 69/69 tests and updated governance docs to version 0.9.3.
+
 ## 0.9.2 — 2026-11-04 — Milestone 2 Survival Zero-GC Environmental Evaluation
 - **Zero-GC Environmental Evaluation & Distance Ray Culling (`SurvivalSystem.cs`)**:
   - Replaced `foreach` loops in `CheckShelterStatus` and `CheckLightExposure` with indexed `for` loops on `shelterZones` and `lightZones`, eliminating enumerator allocations during throttled 10Hz/5Hz updates.

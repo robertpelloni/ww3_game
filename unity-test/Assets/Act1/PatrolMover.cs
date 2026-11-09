@@ -70,6 +70,8 @@ public class PatrolMover : MonoBehaviour
     private static float lastLightZoneCacheTime = -999f;
     private static PatrolMover[] cachedGuards;
     private static float lastGuardCacheTime = -999f;
+    private static SoundDistractionEvent[] cachedDistractions;
+    private static float lastDistractionCacheTime = -999f;
 
     private static void UpdateCachedLightZones()
     {
@@ -88,6 +90,15 @@ public class PatrolMover : MonoBehaviour
         {
             lastGuardCacheTime = Time.unscaledTime;
             cachedGuards = FindObjectsByType<PatrolMover>(FindObjectsSortMode.None);
+        }
+    }
+
+    private static void UpdateCachedDistractions()
+    {
+        if (cachedDistractions == null || (Time.unscaledTime - lastDistractionCacheTime) >= 0.5f)
+        {
+            lastDistractionCacheTime = Time.unscaledTime;
+            cachedDistractions = FindObjectsByType<SoundDistractionEvent>(FindObjectsSortMode.None);
         }
     }
 
@@ -508,14 +519,16 @@ public class PatrolMover : MonoBehaviour
     private bool CheckDistractionEvents(out Vector3 eventPosition)
     {
         eventPosition = Vector3.zero;
-        var distractions = FindObjectsByType<SoundDistractionEvent>(FindObjectsSortMode.None);
+        UpdateCachedDistractions();
+        var distractions = cachedDistractions;
         if (distractions == null || distractions.Length == 0) return false;
 
         float closestDist = float.MaxValue;
         SoundDistractionEvent closestEvent = null;
 
-        foreach (var sde in distractions)
+        for (int i = 0; i < distractions.Length; i++)
         {
+            var sde = distractions[i];
             if (sde == null) continue;
             float d = Vector3.Distance(transform.position, sde.originPosition);
             float baseRadius = sde.noiseRadius * hearingMultiplier;

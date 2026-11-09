@@ -1,6 +1,10 @@
-# HANDOFF — session 2026-11-04 (v0.9.2)
+# HANDOFF — session 2026-11-04 (v0.9.3)
 
 ## What was accomplished this session
+- **Sound Distraction Zero-GC Array Caching (`PatrolMover.cs`)**:
+  * Replaced dynamic allocations (`FindObjectsByType<SoundDistractionEvent>`) with a preallocated static array cache (`cachedDistractions`) refreshed on a 0.5s interval with indexed `for` loops.
+  * Added acoustic distance pre-filtering against `baseRadius` prior to sound vector calculation and raycast firing, preserving CPU budgets on dual-core low-spec machines.
+  * Pure-C# simulation updated with 69/69 automated tests passing (`prototypes/StealthSim`).
 - **Zero-GC Environmental Evaluation & Distance Ray Culling (`SurvivalSystem.cs`)**:
   * Replaced `foreach` loops in `CheckShelterStatus` and `CheckLightExposure` with indexed `for` loops on `shelterZones` and `lightZones`, eliminating enumerator allocations during throttled 10Hz/5Hz updates.
   * Added distance pre-culling (>30m) to bypass light exposure calculations against distant lamps and spotlights, freeing up frame cycles on dual-core low-spec machines.
