@@ -78,9 +78,11 @@ public class CheckpointTrigger : MonoBehaviour
             if (!isInterrogating)
             {
                 isInterrogating = true;
-                interrogationTimer = interrogationGracePeriod;
+                // If crouching in deep shadow (exposure <= 0.20), guard squints and takes 4.5s to inspect
+                float effectiveGrace = (survival != null && survival.currentLightExposure <= 0.20f) ? 4.5f : interrogationGracePeriod;
+                interrogationTimer = effectiveGrace;
                 interrogationDialogue = "Halt! Curfew papers! Present identification immediately!";
-                Debug.Log($"[Checkpoint] {checkpointName}: {interrogationDialogue}");
+                Debug.Log($"[Checkpoint] {checkpointName}: {interrogationDialogue} (Grace: {effectiveGrace:F1}s)");
             }
             else
             {

@@ -1,6 +1,9 @@
-# HANDOFF — session 2026-11-04 (v0.7.9)
+# HANDOFF — session 2026-11-04 (v0.8.0)
 
 ## What was accomplished this session
+- **Checkpoint Shadow Inspection Grace Extension (`CheckpointTrigger.cs`)**:
+  * Implemented shadow-dependent inspection grace: when the player crouches in deep shadow beneath the barrier (exposure <= 0.20), the checkpoint guard squints into the darkness, extending the interrogation grace period from 3.0s to 4.5s before alarm sirens blare, rewarding covert players with additional time to execute food bribery.
+  * Pure-C# simulation updated with 56/56 automated tests passing (`prototypes/StealthSim`).
 - **Searchlight-Guard Intersect Synergy (`PatrolMover.cs`)**:
   * Implemented searchlight-guard coordination: when an investigating guard probes a disturbance that is co-illuminated by an active searchlight beam within 5.0m, the guard's search tempo accelerates by 1.35x, simulating coordinated ground-aerial pressure against infiltrators.
   * Pure-C# simulation updated with 55/55 automated tests passing (`prototypes/StealthSim`).

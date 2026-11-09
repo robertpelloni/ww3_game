@@ -1,6 +1,7 @@
-# TODO — granular short-term tasks (v0.7.9)
+# TODO — granular short-term tasks (v0.8.0)
 
 ## Verified working (keep green)
+- [x] Checkpoint Deep Shadow Inspection Grace Extension (4.5s) in `CheckpointTrigger.cs`
 - [x] Searchlight-Guard Investigation Intersect Tempo Acceleration in `PatrolMover.cs`
 - [x] Distance-Based Searchlight Shadow Culling (>22m) in `LightExposureZone.cs`
 - [x] Checkpoint Verbal Interrogation Cues & Food Bribery Dialogue State in `CheckpointTrigger.cs`
@@ -61,7 +62,7 @@
 - [x] Sound lure mechanics: Player whistle `[Q]` producing a 20m acoustic radius in `PlayerMove.cs`
 - [x] Guard acoustic hearing & `Investigating` AI state machine in `PatrolMover.cs`
 - [x] Checkpoint security gate & interrogation system (`CheckpointTrigger.cs`) with paper checks `[E]` and bribe `[B]`
-- [x] Pure-C# console sim `prototypes/StealthSim` (.NET 10/8, 55/55 tests passing)
+- [x] Pure-C# console sim `prototypes/StealthSim` (.NET 10/8, 56/56 tests passing)
 - [x] Unity MCP round-trip U-T1–U-T14 via AnkleBreaker (`unity-test/` Act 1 starter)
 - [x] Godot G-T1–G-T7 via Coding-Solo G1 (`godot-test/` boot + debug capture + compiled TypeScript)
 - [x] Unreal R-T1–R-T2 graceful no-engine failure (sam-david R8)

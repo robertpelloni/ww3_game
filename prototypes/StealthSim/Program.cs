@@ -750,7 +750,9 @@ namespace WW3.StealthSim
                 if (!CheckpointInterrogating)
                 {
                     CheckpointInterrogating = true;
-                    CheckpointInterrogationTimer = 3.0; // 3.0s inspection grace period
+                    // Shadow inspection grace: crouching in deep shadow (exposure <= 0.20) extends grace to 4.5s
+                    double exp = CalculatePlayerExposure();
+                    CheckpointInterrogationTimer = (exp <= 0.20) ? 4.5 : 3.0;
                     ProceduralAudioLog.Add("CheckpointInterrogationChallenge");
                 }
 
@@ -2118,6 +2120,20 @@ namespace WW3.StealthSim
 
             Assert(tempoAccelerated,
                 "Guard search tempo accelerates by 1.35x when allied searchlight beam illuminates investigation target");
+
+            // Test 56: Checkpoint shadow inspection grace period extension to 4.5s
+            var simGrace = new SimulationWorld();
+            simGrace.Lamps.Clear(); // Clear lamps so position at (39, 10) is in deep shadow
+            simGrace.PlayerCharacter.Position = new Vec2(39.0, 10.0); // 1m from gate
+            simGrace.PlayerCharacter.CurrentStance = Stance.Crouch;
+            simGrace.CurfewSearchlight.Radius = 0; // Deep shadow alley (exposure = 0.05 <= 0.20)
+
+            simGrace.Step(0.1, new Vec2(0, 0));
+            // Interrogation timer should be initialized to 4.5s (- 0.1s step = 4.4s) instead of 3.0s
+            bool extendedGraceActive = simGrace.CheckpointInterrogating && simGrace.CheckpointInterrogationTimer > 3.5;
+
+            Assert(extendedGraceActive,
+                "Crouching in deep shadow extends checkpoint inspection grace period to 4.5s giving more time to bribe");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

@@ -2,6 +2,15 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.8.0 — 2026-11-04 — Milestone 2 Checkpoint Shadow Grace & Low-Spec Polish
+- **Checkpoint Shadow Inspection Grace Extension (`CheckpointTrigger.cs`)**:
+  - Implemented shadow-dependent inspection grace: when the player crouches in deep shadow beneath the barrier (exposure <= 0.20), the checkpoint guard squints into the darkness, extending the interrogation grace period from 3.0s to 4.5s before alarm sirens blare, rewarding covert players with additional time to execute food bribery.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored shadow-dependent interrogation grace period extension in `SimulationWorld`.
+  - Added automated Test 56 validating deep shadow interrogation grace extension to 4.5s (56/56 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 56/56 tests and updated governance docs to version 0.8.0.
+
 ## 0.7.9 — 2026-11-04 — Milestone 2 Searchlight-Guard Intersect Synergy
 - **Searchlight-Guard Investigation Intersect Synergy (`PatrolMover.cs`)**:
   - Implemented searchlight-guard coordination: when an investigating guard probes a disturbance that is co-illuminated by an active searchlight beam within 5.0m, the guard's search tempo accelerates by 1.35x, simulating coordinated ground-aerial pressure against infiltrators.
