@@ -2,6 +2,15 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.8.3 — 2026-11-04 — Milestone 2 Checkpoint Barrier Pushback Dynamics
+- **Checkpoint Barrier Breach Pushback Physics (`CheckpointTrigger.cs`)**:
+  - Implemented physical shove pushback dynamics: when a player trips the checkpoint alarm without credentials, the guard physically pushes the player back 2.5m along the barrier normal before raising alarm sirens, preventing instant barrier clipping and establishing visceral physical collision consequences.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored barrier pushback physics on alarm siren trigger in `SimulationWorld`.
+  - Added automated Test 59 validating barrier breach pushback displacement (59/59 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 59/59 tests and updated governance docs to version 0.8.3.
+
 ## 0.8.2 — 2026-11-04 — Milestone 2 Glass Shard Scavenging & Floor Bottle Arming
 - **Broken Glass Shard Scavenging (`PlayerMove.cs`)**:
   - Implemented broken glass debris scavenging mechanics: pressing `[G]` while standing or crouching on `SurfaceType.GlassDebris` allows Jun-ho to gather fractured glass into a throwable distraction bottle (+1 bottle inventory, max 3) while emitting a local 6m clinking acoustic cue.

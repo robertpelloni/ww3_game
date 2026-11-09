@@ -141,6 +141,16 @@ public class CheckpointTrigger : MonoBehaviour
         if (alarmTriggered) return;
         alarmTriggered = true;
 
+        // Barrier pushback physics: push player back 2.5m along gate normal to prevent clipping
+        if (playerTransform != null)
+        {
+            Vector3 pushDir = (playerTransform.position - transform.position);
+            pushDir.y = 0;
+            if (pushDir.sqrMagnitude < 0.01f) pushDir = -transform.forward;
+            playerTransform.position += pushDir.normalized * 2.5f;
+            Debug.Log($"[Checkpoint] {checkpointName}: Guard shoves Jun-ho back 2.5m!");
+        }
+
         // Play security siren audio
         if (audioSource != null)
         {

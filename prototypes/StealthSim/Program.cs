@@ -352,6 +352,10 @@ namespace WW3.StealthSim
         public void TriggerCheckpointAlarm()
         {
             CheckpointAlarmTripped = true;
+            // Barrier pushback physics: push player back 2.5m along gate normal
+            Vec2 pushDir = (PlayerCharacter.Position - CheckpointPosition);
+            if (pushDir.Magnitude() < 0.01) pushDir = new Vec2(-1, 0);
+            PlayerCharacter.Position = PlayerCharacter.Position + pushDir.Normalized() * 2.5;
             ProceduralAudioLog.Add("CheckpointAlarmSiren");
             foreach (var g in Guards)
             {
@@ -2170,6 +2174,20 @@ namespace WW3.StealthSim
 
             Assert(scavenged && bottleAcquired && localNoiseEmitted,
                 "Scavenging on broken glass debris creates throwable bottle and emits 6m local clinking noise");
+
+            // Test 59: Checkpoint barrier breach pushback physics
+            var simPush = new SimulationWorld();
+            simPush.PlayerCharacter.Position = new Vec2(39.0, 10.0); // 1.0m from checkpoint gate at (40, 10)
+            Vec2 preAlarmPos = simPush.PlayerCharacter.Position;
+
+            simPush.TriggerCheckpointAlarm();
+            Vec2 postAlarmPos = simPush.PlayerCharacter.Position;
+
+            double pushDistance = Vec2.Distance(preAlarmPos, postAlarmPos);
+            bool pushedBack = pushDistance >= 2.4 && postAlarmPos.X < preAlarmPos.X;
+
+            Assert(pushedBack,
+                "Checkpoint security alarm breach shoves player back 2.5m along barrier normal preventing clipping");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;
