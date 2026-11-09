@@ -1,6 +1,9 @@
-# HANDOFF — session 2026-11-04 (v0.8.3)
+# HANDOFF — session 2026-11-04 (v0.8.4)
 
 ## What was accomplished this session
+- **Procedural Audio Voice Concurrency Capping (`ProceduralAudio.cs`)**:
+  * Implemented an 8-voice concurrency cap (`MaxConcurrentVoices = 8`) on runtime procedural audio playback, preventing software audio buffer underruns, popping, and CPU thread contention on low-spec hardware (Intel HD 520).
+  * Pure-C# simulation updated with 60/60 automated tests passing (`prototypes/StealthSim`).
 - **Checkpoint Barrier Breach Pushback Physics (`CheckpointTrigger.cs`)**:
   * Implemented physical shove pushback dynamics: when a player trips the checkpoint alarm without credentials, the guard physically pushes the player back 2.5m along the barrier normal before raising alarm sirens, preventing instant barrier clipping and establishing visceral physical collision consequences.
   * Pure-C# simulation updated with 59/59 automated tests passing (`prototypes/StealthSim`).

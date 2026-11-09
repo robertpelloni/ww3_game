@@ -303,6 +303,16 @@ namespace WW3.StealthSim
         public double ActiveDistractionRadius { get; set; } = 14.0;
         public double ActiveDistractionTimer { get; set; } = 0.0;
         public List<string> ProceduralAudioLog { get; } = new List<string>();
+        public int ActiveVoiceCount { get; set; } = 0;
+        public const int MaxConcurrentVoices = 8;
+
+        public bool PlayProceduralAudio(string eventName)
+        {
+            if (ActiveVoiceCount >= MaxConcurrentVoices) return false;
+            ActiveVoiceCount++;
+            ProceduralAudioLog.Add(eventName);
+            return true;
+        }
 
         public bool GameWon { get; set; } = false;
         public bool GameOver { get; set; } = false;
@@ -2188,6 +2198,21 @@ namespace WW3.StealthSim
 
             Assert(pushedBack,
                 "Checkpoint security alarm breach shoves player back 2.5m along barrier normal preventing clipping");
+
+            // Test 60: Low-spec procedural audio concurrency capping (Max 8 concurrent voices)
+            var simVoices = new SimulationWorld();
+            int playedCount = 0;
+            for (int i = 0; i < 12; i++)
+            {
+                if (simVoices.PlayProceduralAudio($"Footstep_{i}"))
+                {
+                    playedCount++;
+                }
+            }
+            bool voiceBudgetEnforced = playedCount == 8 && simVoices.ActiveVoiceCount == 8;
+
+            Assert(voiceBudgetEnforced,
+                "Procedural audio concurrency is capped at 8 voices to prevent buffer underruns on dual-core low-spec CPUs");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

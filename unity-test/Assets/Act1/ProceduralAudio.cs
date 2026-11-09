@@ -241,12 +241,37 @@ public static class ProceduralAudio
         return clip;
     }
 
+    // Low-spec concurrency capping: maximum 8 concurrent audio voices to prevent CPU buffer underruns
+    private static int activeVoiceCount = 0;
+    public const int MaxConcurrentVoices = 8;
+
     /// <summary>
-    /// Helper to play an AudioClip at a point in world space.
+    /// Helper to play an AudioClip at a point in world space with voice concurrency budgeting.
     /// </summary>
     public static void PlayClipAtPoint(AudioClip clip, Vector3 position, float volume = 1f)
     {
         if (clip == null) return;
+        if (activeVoiceCount >= MaxConcurrentVoices) return; // Drop low-priority voices when budget saturated
+
+        activeVoiceCount++;
         AudioSource.PlayClipAtPoint(clip, position, volume);
+
+        // Reset voice counter after sample playback duration
+        var runner = Object.FindFirstObjectByType<SurvivalSystem>();
+        if (runner != null)
+        {
+            float duration = clip.length;
+            runner.StartCoroutine(ReleaseVoiceAfterDuration(duration));
+        }
+        else
+        {
+            activeVoiceCount = Mathf.Max(0, activeVoiceCount - 1);
+        }
+    }
+
+    private static System.Collections.IEnumerator ReleaseVoiceAfterDuration(float duration)
+    {
+        yield return new WaitForSeconds(duration);
+        activeVoiceCount = Mathf.Max(0, activeVoiceCount - 1);
     }
 }

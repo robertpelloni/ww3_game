@@ -2,6 +2,15 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.8.4 — 2026-11-04 — Milestone 2 Audio Voice Capping & Low-Spec Mixer Optimization
+- **Procedural Audio Voice Capping (`ProceduralAudio.cs`)**:
+  - Implemented an 8-voice concurrency cap (`MaxConcurrentVoices = 8`) on runtime procedural audio playback, preventing software audio buffer underruns, popping, and CPU thread contention on low-spec hardware (Intel HD 520).
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored audio concurrency budgeting in `SimulationWorld.PlayProceduralAudio`.
+  - Added automated Test 60 validating procedural audio voice capping at 8 concurrent voices (60/60 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 60/60 tests and updated governance docs to version 0.8.4.
+
 ## 0.8.3 — 2026-11-04 — Milestone 2 Checkpoint Barrier Pushback Dynamics
 - **Checkpoint Barrier Breach Pushback Physics (`CheckpointTrigger.cs`)**:
   - Implemented physical shove pushback dynamics: when a player trips the checkpoint alarm without credentials, the guard physically pushes the player back 2.5m along the barrier normal before raising alarm sirens, preventing instant barrier clipping and establishing visceral physical collision consequences.
