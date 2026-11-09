@@ -2,6 +2,15 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.7.4 — 2026-11-04 — Milestone 2 Searchlight Sweep Reversal & Suspicion Linger
+- **Searchlight Reversal & Deceleration Dynamics (`LightExposureZone.cs`)**:
+  - Implemented searchlight sweep reversal and post-focus deceleration: when an alert focus linger elapses, the searchlight reverses sweep direction and drops sweep speed by 50% for 2.0s, thoroughly re-interrogating the alert sector before resuming standard sweep pace.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored searchlight sweep reversal and post-focus deceleration dynamics in `SimulationWorld`.
+  - Added automated Test 50 validating searchlight sweep direction reversal and deceleration post-focus (50/50 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 50/50 tests and updated governance docs to version 0.7.4.
+
 ## 0.7.3 — 2026-11-04 — Milestone 2 Searchlight-Patrol Interlocking Coordination
 - **Guard Searchlight Interlocking Coordination (`PatrolMover.cs`)**:
   - Implemented interlocking sector vigilance: guards patrolling within 18m of an illuminated curfew searchlight hotspot bias their forward sightline towards the illuminated perimeter when mildly alerted or suspicious, interlocking coverage between mechanical spotlight sweeps and ground patrols.

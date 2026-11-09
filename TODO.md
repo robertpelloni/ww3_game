@@ -1,6 +1,7 @@
-# TODO — granular short-term tasks (v0.7.3)
+# TODO — granular short-term tasks (v0.7.4)
 
 ## Verified working (keep green)
+- [x] Searchlight Sweep Reversal & Post-Focus Deceleration in `LightExposureZone.cs`
 - [x] Searchlight-Patrol Interlocking Sector Vigilance Coordination (<18m) in `PatrolMover.cs`
 - [x] Dynamic Ambient Wind Acoustic Masking & Sound Dampening in `PatrolMover.cs` & `SurvivalSystem.cs`
 - [x] Broken Glass Debris Acoustic Shards & Guard Suspicion Floor Escalation in `PlayerMove.cs` & `PatrolMover.cs`

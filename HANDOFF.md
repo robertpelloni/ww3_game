@@ -1,6 +1,9 @@
-# HANDOFF — session 2026-11-04 (v0.7.3)
+# HANDOFF — session 2026-11-04 (v0.7.4)
 
 ## What was accomplished this session
+- **Searchlight Sweep Reversal & Post-Focus Deceleration (`LightExposureZone.cs`)**:
+  * Implemented searchlight sweep reversal and post-focus deceleration: when an alert focus linger elapses, the searchlight reverses sweep direction and drops sweep speed by 50% for 2.0s, thoroughly re-interrogating the alert sector before resuming standard sweep pace.
+  * Pure-C# simulation updated with 50/50 automated tests passing (`prototypes/StealthSim`).
 - **Searchlight-Patrol Interlocking Sector Coordination (`PatrolMover.cs`)**:
   * Implemented interlocking sector vigilance: guards patrolling within 18m of an active curfew searchlight beam orient their vigilance towards the illuminated sector when mildly alerted or suspicious.
   * Utilized static cached light zones (`cachedLightZones`) to eliminate per-frame heap allocations during interlocking checks.

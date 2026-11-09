@@ -234,10 +234,13 @@ namespace WW3.StealthSim
         public double FogScatteringFactor { get; set; } = 0.85;
         public double SweepRange { get; set; } = 10.0;
         public double SweepSpeed { get; set; } = 1.5;
+        public double BaseSweepSpeed { get; set; } = 1.5;
         public double SweepTime { get; set; } = 0.0;
         public double MotorJitter { get; set; } = 0.25;
         public Vec2? FocusTarget { get; set; } = null;
         public double FocusTimer { get; set; } = 0.0;
+        public int SweepDirection { get; set; } = 1; // 1 = forward, -1 = reverse
+        public double DecelerationTimer { get; set; } = 0.0;
         public bool IsAcquiringTarget { get; set; } = false;
         public double AcquisitionWarningTimer { get; set; } = 0.0;
         public bool IsFlickering { get; set; } = false;
@@ -249,8 +252,9 @@ namespace WW3.StealthSim
             {
                 return FocusTarget.Value;
             }
+            double currentSpeed = (DecelerationTimer > 0) ? (BaseSweepSpeed * 0.50) : BaseSweepSpeed;
             double jitter = Math.Sin(SweepTime * 17.3) * MotorJitter;
-            double offset = Math.Sin(SweepTime * SweepSpeed) * SweepRange + jitter;
+            double offset = Math.Sin(SweepTime * currentSpeed * SweepDirection) * SweepRange + jitter;
             return new Vec2(Center.X + offset, Center.Y);
         }
 
@@ -258,6 +262,8 @@ namespace WW3.StealthSim
         {
             FocusTarget = target;
             FocusTimer = Math.Max(FocusTimer, duration);
+            DecelerationTimer = duration + 2.0;
+            SweepDirection *= -1; // Reverses sweep direction to re-interrogate sector
             if (!IsAcquiringTarget && FocusTimer <= duration)
             {
                 IsAcquiringTarget = true;
@@ -539,6 +545,11 @@ namespace WW3.StealthSim
                 {
                     CurfewSearchlight.IsAcquiringTarget = false;
                 }
+            }
+
+            if (CurfewSearchlight.DecelerationTimer > 0)
+            {
+                CurfewSearchlight.DecelerationTimer -= dt;
             }
 
             if (CurfewSearchlight.FocusTimer > 0)
@@ -982,7 +993,7 @@ namespace WW3.StealthSim
                     interlockingCoordinated = true;
                 }
             }
-            else if (distToSpot <= 18.0 && guard.Suspicion > 5.0)
+            else if (distToSpot <= 18.0 && guard.Suspicion > 5.0 && guard.Suspicion < 30.0 && guard.LastInvestigateTarget.Magnitude() < 0.01)
             {
                 Vec2 beamDir = (activeSearchlightPos - guard.Position).Normalized();
                 guard.Forward = beamDir;
@@ -1910,6 +1921,20 @@ namespace WW3.StealthSim
 
             Assert(searchlightInterlockingActive,
                 "Nearby guards interlock patrol vigilance towards actively illuminated searchlight sectors within 18m");
+
+            // Test 50: Searchlight sweep direction reversal and deceleration dynamics post-focus
+            var simDecel = new SimulationWorld();
+            int initialDir = simDecel.CurfewSearchlight.SweepDirection;
+            simDecel.CurfewSearchlight.FocusOn(new Vec2(25.0, 10.0), 1.0);
+
+            bool directionReversed = simDecel.CurfewSearchlight.SweepDirection == -initialDir;
+            bool decelerationActive = simDecel.CurfewSearchlight.DecelerationTimer > 0;
+
+            simDecel.Step(1.5, new Vec2(0, 0)); // Elapse focus duration into decelerated sweep
+            bool deceleratedSpeedActive = simDecel.CurfewSearchlight.FocusTimer <= 0 && simDecel.CurfewSearchlight.DecelerationTimer > 0;
+
+            Assert(directionReversed && decelerationActive && deceleratedSpeedActive,
+                "Curfew searchlights reverse sweep direction and decelerate post-focus to re-interrogate sector");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

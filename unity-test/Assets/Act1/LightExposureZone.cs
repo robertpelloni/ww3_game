@@ -26,6 +26,7 @@ public class LightExposureZone : MonoBehaviour
     public bool isSweepingSpotlight = false;
     public float sweepRangeX = 8.0f;
     public float sweepSpeed = 1.2f;
+    public float baseSweepSpeed = 1.2f;
     public float motorMechanicalJitter = 0.25f; // Slight erratic motor vibration
     public float focusLingerTimer = 0f;
     public bool isAcquiringTarget = false;
@@ -33,6 +34,8 @@ public class LightExposureZone : MonoBehaviour
     public bool isFlickering = false;
     public float flickerTimer = 0f;
     public float baseExposureLevel = 0.75f;
+    public int sweepDirection = 1; // 1 = forward, -1 = reverse
+    public float sweepDecelerationTimer = 0f;
     private Vector3 focusTargetPos;
     private Vector3 initialPosition;
 
@@ -99,9 +102,21 @@ public class LightExposureZone : MonoBehaviour
         {
             // Recover baseline radius
             radius = Mathf.Lerp(radius, baseRadius, Time.deltaTime * 2.0f);
-            // Oscillate spotlight beam horizontally across alley with realistic motor jitter
+
+            // Variable sweep velocity dynamics: if decelerated by nearby disturbance, slow sweep by 50%
+            if (sweepDecelerationTimer > 0f)
+            {
+                sweepDecelerationTimer -= Time.deltaTime;
+                sweepSpeed = baseSweepSpeed * 0.50f;
+            }
+            else
+            {
+                sweepSpeed = baseSweepSpeed;
+            }
+
+            // Oscillate spotlight beam horizontally across alley with realistic motor jitter & direction
             float jitter = Mathf.Sin(Time.time * 17.3f) * motorMechanicalJitter;
-            float offsetX = Mathf.Sin(Time.time * sweepSpeed) * sweepRangeX + jitter;
+            float offsetX = Mathf.Sin(Time.time * sweepSpeed * sweepDirection) * sweepRangeX + jitter;
             Vector3 sweepTarget = new Vector3(initialPosition.x + offsetX, initialPosition.y, initialPosition.z);
             transform.position = Vector3.Lerp(transform.position, sweepTarget, Time.deltaTime * 4.0f);
         }
@@ -111,6 +126,8 @@ public class LightExposureZone : MonoBehaviour
     {
         focusTargetPos = new Vector3(targetPos.x, transform.position.y, targetPos.z);
         focusLingerTimer = Mathf.Max(focusLingerTimer, duration);
+        sweepDecelerationTimer = duration + 2.0f; // Decelerate post-focus sweep
+        sweepDirection *= -1; // Reverse sweep direction to re-check sector
         if (!isAcquiringTarget && focusLingerTimer <= duration)
         {
             isAcquiringTarget = true;
