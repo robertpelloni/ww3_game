@@ -690,9 +690,10 @@ namespace WW3.StealthSim
 
                 double targetWind = 0.20 + (PlayerCharacter.Cold / 100.0) * 0.35;
                 WindAmbienceVolume = WindAmbienceVolume + (targetWind - WindAmbienceVolume) * dt * 2.0;
-            }
-            {
-                // Thermal factor: halogen spotlight radiant heat slows frostbite; deep shadow wind chill accelerates it
+
+                // Outdoor curfew frostbite with light-exposure thermal radiant dynamic (1:1 with Unity SurvivalSystem.cs):
+                // High exposure (spotlights/lamps, >= 0.70) emits radiant halogen heat slowing frostbite (-50%),
+                // whereas pitch-black wind tunnels (<= 0.15) induce increased wind chill (+25%).
                 double thermalFactor = 1.0;
                 if (exposure >= 0.70)
                 {
@@ -2134,6 +2135,19 @@ namespace WW3.StealthSim
 
             Assert(extendedGraceActive,
                 "Crouching in deep shadow extends checkpoint inspection grace period to 4.5s giving more time to bribe");
+
+            // Test 57: Shelter thermal warming scoping parity (shelter warming completely halts outdoor cold accumulation)
+            var simShelterParity = new SimulationWorld();
+            simShelterParity.PlayerCharacter.Cold = 40.0;
+            simShelterParity.PlayerCharacter.Position = simShelterParity.Shelters[0].Position; // Inside burn barrel alcove
+
+            // Step 1.0s: cold should decrease by exactly 6.0 (from 40.0 to 34.0) without outdoor wind tunnel accumulation
+            simShelterParity.Step(1.0, new Vec2(0, 0));
+            double expectedCold = 34.0;
+            bool exactShelterParity = Math.Abs(simShelterParity.PlayerCharacter.Cold - expectedCold) < 0.05;
+
+            Assert(exactShelterParity,
+                "Shelter warming completely halts outdoor cold accumulation with 1:1 parity between Unity and StealthSim");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

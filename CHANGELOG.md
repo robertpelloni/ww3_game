@@ -2,6 +2,13 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.8.1 — 2026-11-04 — Milestone 2 Simulation Parity & Scoped Thermal Thermodynamics
+- **Shelter Thermal Scoping Parity (`prototypes/StealthSim`)**:
+  - Scoped outdoor curfew cold accumulation and thermal factor calculation cleanly inside the `else` branch of `IsPlayerSheltered()`, achieving 1:1 parity with Unity's `SurvivalSystem.cs` and ensuring shelter warming (`-6.0/s`) completely halts outdoor frostbite accumulation.
+  - Added automated Test 57 validating exact shelter cold reduction rates (-6.0/s) without outdoor wind tunnel leakage (57/57 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 57/57 tests and updated governance docs to version 0.8.1.
+
 ## 0.8.0 — 2026-11-04 — Milestone 2 Checkpoint Shadow Grace & Low-Spec Polish
 - **Checkpoint Shadow Inspection Grace Extension (`CheckpointTrigger.cs`)**:
   - Implemented shadow-dependent inspection grace: when the player crouches in deep shadow beneath the barrier (exposure <= 0.20), the checkpoint guard squints into the darkness, extending the interrogation grace period from 3.0s to 4.5s before alarm sirens blare, rewarding covert players with additional time to execute food bribery.

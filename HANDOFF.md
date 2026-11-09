@@ -1,6 +1,10 @@
-# HANDOFF — session 2026-11-04 (v0.8.0)
+# HANDOFF — session 2026-11-04 (v0.8.1)
 
 ## What was accomplished this session
+- **Shelter Thermal Scoping Parity & Simulation Alignment (`prototypes/StealthSim`)**:
+  * Scoped outdoor curfew cold accumulation and thermal factor calculation cleanly inside the `else` branch of `IsPlayerSheltered()`, achieving 1:1 parity with Unity's `SurvivalSystem.cs` and ensuring shelter warming (`-6.0/s`) completely halts outdoor frostbite accumulation.
+  * Added automated Test 57 validating exact shelter cold reduction rates (-6.0/s) without outdoor wind tunnel leakage.
+  * Pure-C# simulation updated with 57/57 automated tests passing (`prototypes/StealthSim`).
 - **Checkpoint Shadow Inspection Grace Extension (`CheckpointTrigger.cs`)**:
   * Implemented shadow-dependent inspection grace: when the player crouches in deep shadow beneath the barrier (exposure <= 0.20), the checkpoint guard squints into the darkness, extending the interrogation grace period from 3.0s to 4.5s before alarm sirens blare, rewarding covert players with additional time to execute food bribery.
   * Pure-C# simulation updated with 56/56 automated tests passing (`prototypes/StealthSim`).
