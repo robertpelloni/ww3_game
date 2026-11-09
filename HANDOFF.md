@@ -1,6 +1,9 @@
-# HANDOFF — session 2026-11-04 (v0.7.6)
+# HANDOFF — session 2026-11-04 (v0.7.7)
 
 ## What was accomplished this session
+- **Checkpoint Verbal Interrogation Cues & Food Bribery Dialogue State (`CheckpointTrigger.cs`)**:
+  * Implemented verbal challenge and inspection grace period: approaching the Sector 4 checkpoint gate without credentials initiates a 3.0s verbal interrogation warning ("Halt! Curfew papers! Present identification immediately!"), giving players a narrow window to present forged papers or execute food bribery ([B]) before alarm sirens blare.
+  * Pure-C# simulation updated with 53/53 automated tests passing (`prototypes/StealthSim`).
 - **Procedural Breath Condensation Vapor Dissipation Physics (`SurvivalSystem.cs`)**:
   * Implemented continuous vapor expansion and progressive opacity decay: condensation puffs expand smoothly from 0.4m to 1.2m diameter over 0.75s while fading opacity and moonlight reflection from 1.0 to 0.0, avoiding abrupt binary visibility pop-in.
   * Pure-C# simulation updated with 52/52 automated tests passing (`prototypes/StealthSim`).

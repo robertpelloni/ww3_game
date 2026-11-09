@@ -18,6 +18,10 @@ public class CheckpointTrigger : MonoBehaviour
     public bool canBribe = true;
     public int bribeRiceCost = 2; // Scavenged food bribe
     public bool bribed = false;
+    public bool isInterrogating = false;
+    public float interrogationTimer = 0f;
+    public float interrogationGracePeriod = 3.0f; // 3.0s inspection grace period before alarm
+    public string interrogationDialogue = "";
 
     [Header("Guard Association")]
     public PatrolMover checkpointGuard;
@@ -71,12 +75,31 @@ public class CheckpointTrigger : MonoBehaviour
 
         if (playerInRange && !alarmTriggered && !playerHasPass && !bribed)
         {
+            if (!isInterrogating)
+            {
+                isInterrogating = true;
+                interrogationTimer = interrogationGracePeriod;
+                interrogationDialogue = "Halt! Curfew papers! Present identification immediately!";
+                Debug.Log($"[Checkpoint] {checkpointName}: {interrogationDialogue}");
+            }
+            else
+            {
+                interrogationTimer -= Time.deltaTime;
+                if (interrogationTimer <= 0f)
+                {
+                    Debug.LogWarning($"[Checkpoint] {checkpointName}: Interrogation grace period expired without clearance!");
+                    TriggerSecurityAlarm();
+                }
+            }
+
             // If player tries to pass through without credentials or bribe, alert guard
             if (Input.GetKeyDown(KeyCode.E))
             {
                 // Attempt presentation of papers
                 if (playerHasPass)
                 {
+                    isInterrogating = false;
+                    interrogationDialogue = "Passage approved.";
                     Debug.Log($"[Checkpoint] {checkpointName}: Papers inspected and approved. Passage granted.");
                 }
                 else
@@ -92,6 +115,8 @@ public class CheckpointTrigger : MonoBehaviour
                 {
                     survival.riceCount -= bribeRiceCost;
                     bribed = true;
+                    isInterrogating = false;
+                    interrogationDialogue = "Curfew passage granted. Keep moving.";
                     Debug.Log($"[Checkpoint] {checkpointName}: Guard accepted bribe of {bribeRiceCost} rice bowls. Passage granted.");
                 }
                 else
@@ -99,6 +124,13 @@ public class CheckpointTrigger : MonoBehaviour
                     Debug.LogWarning($"[Checkpoint] {checkpointName}: Guard sneers: 'Need at least {bribeRiceCost} rice bowls to pass.'");
                 }
             }
+        }
+        else if (!playerInRange && isInterrogating && !alarmTriggered)
+        {
+            // Player backed away from gate safely
+            isInterrogating = false;
+            interrogationTimer = 0f;
+            interrogationDialogue = "";
         }
     }
 
@@ -144,7 +176,8 @@ public class CheckpointTrigger : MonoBehaviour
             }
             else
             {
-                GUI.Label(new Rect(Screen.width / 2 - 150, Screen.height - 95, 300, 25), "[E] Present Transit Papers (Missing/Invalid)");
+                string timerStr = isInterrogating ? $" (Alarm in {interrogationTimer:F1}s)" : "";
+                GUI.Label(new Rect(Screen.width / 2 - 150, Screen.height - 95, 300, 25), $"[E] Present Papers{timerStr}");
                 if (canBribe)
                 {
                     GUI.Label(new Rect(Screen.width / 2 - 150, Screen.height - 75, 300, 25), $"[B] Bribe Guard ({bribeRiceCost} Rice Bowls)");

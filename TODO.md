@@ -1,6 +1,7 @@
-# TODO — granular short-term tasks (v0.7.6)
+# TODO — granular short-term tasks (v0.7.7)
 
 ## Verified working (keep green)
+- [x] Checkpoint Verbal Interrogation Cues & Food Bribery Dialogue State in `CheckpointTrigger.cs`
 - [x] Breath Condensation Vapor Dissipation Physics & Continuous Alpha Decay in `SurvivalSystem.cs`
 - [x] Dynamic Quality Adaptation & Low-Spec Performance Safeguard in `SurvivalSystem.cs` & `PatrolMover.cs`
 - [x] Searchlight Sweep Reversal & Post-Focus Deceleration in `LightExposureZone.cs`

@@ -2,6 +2,15 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.7.7 — 2026-11-04 — Milestone 2 Checkpoint Interrogation & Food Bribery Dialogue
+- **Checkpoint Verbal Interrogation Cues (`CheckpointTrigger.cs`)**:
+  - Implemented verbal challenge and inspection grace period: approaching the Sector 4 checkpoint gate without credentials initiates a 3.0s verbal interrogation warning ("Halt! Curfew papers! Present identification immediately!"), giving players a narrow window to present forged papers or execute food bribery ([B]) before alarm sirens blare.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored checkpoint verbal interrogation challenge, inspection countdown, and bribery clearance in `SimulationWorld`.
+  - Added automated Test 53 validating verbal challenge initiation, bribery clearance, and un-bribed siren expiration (53/53 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 53/53 tests and updated governance docs to version 0.7.7.
+
 ## 0.7.6 — 2026-11-04 — Milestone 2 Breath Condensation Vapor Dissipation Physics
 - **Procedural Breath Condensation Vapor Dissipation (`SurvivalSystem.cs`)**:
   - Implemented continuous vapor expansion and progressive opacity decay: condensation puffs expand from 0.4m to 1.2m diameter over 0.75s while fading opacity and moonlight reflection from 1.0 to 0.0, avoiding abrupt binary visibility pop-in.

@@ -144,7 +144,7 @@ namespace WW3.StealthSim
         public int RiceCount { get; set; } = 2;
         public int HotTeaCount { get; set; } = 1;
         public int BottleCount { get; set; } = 2;
-        public bool HasForgedPapers { get; set; } = true;
+        public bool HasForgedPapers { get; set; } = false;
         public bool HasWireCutters { get; set; } = true;
         public int WireCutterDurability { get; set; } = 2;
         public bool HasCutPerimeterFence { get; set; } = false;
@@ -296,6 +296,8 @@ namespace WW3.StealthSim
         public Vec2 CheckpointPosition { get; set; } = new Vec2(40.0, 10.0);
         public bool CheckpointBribed { get; set; } = false;
         public bool CheckpointAlarmTripped { get; set; } = false;
+        public bool CheckpointInterrogating { get; set; } = false;
+        public double CheckpointInterrogationTimer { get; set; } = 0.0;
         public Vec2? ActiveDistractionPos { get; set; } = null;
         public double ActiveDistractionRadius { get; set; } = 14.0;
         public double ActiveDistractionTimer { get; set; } = 0.0;
@@ -331,6 +333,8 @@ namespace WW3.StealthSim
             if (PlayerCharacter.RiceCount < 2) return false;
             PlayerCharacter.RiceCount -= 2;
             CheckpointBribed = true;
+            CheckpointInterrogating = false;
+            CheckpointInterrogationTimer = 0.0;
             ProceduralAudioLog.Add("CheckpointBribeAccepted");
             return true;
         }
@@ -736,6 +740,29 @@ namespace WW3.StealthSim
             else
             {
                 PlayerCharacter.FootstepTimer = 0.0;
+            }
+
+            // Checkpoint interrogation & clearance zone check
+            double distToCheckpoint = Vec2.Distance(PlayerCharacter.Position, CheckpointPosition);
+            if (distToCheckpoint <= 3.5 && !CheckpointBribed && !PlayerCharacter.HasForgedPapers && !CheckpointAlarmTripped)
+            {
+                if (!CheckpointInterrogating)
+                {
+                    CheckpointInterrogating = true;
+                    CheckpointInterrogationTimer = 3.0; // 3.0s inspection grace period
+                    ProceduralAudioLog.Add("CheckpointInterrogationChallenge");
+                }
+
+                CheckpointInterrogationTimer -= dt;
+                if (CheckpointInterrogationTimer <= 0)
+                {
+                    TriggerCheckpointAlarm();
+                }
+            }
+            else if (distToCheckpoint > 3.5 && CheckpointInterrogating && !CheckpointAlarmTripped)
+            {
+                CheckpointInterrogating = false;
+                CheckpointInterrogationTimer = 0.0;
             }
 
             // Win condition check
@@ -2018,6 +2045,30 @@ namespace WW3.StealthSim
 
             Assert(expandingDiameter && fadingAlpha && progressiveExposureDecay,
                 "Thermal breath vapor expands from 0.4m to 1.2m while fading opacity and exposure progressively");
+
+            // Test 53: Checkpoint verbal interrogation challenge grace period and food bribery resolution
+            var simInterrogate = new SimulationWorld();
+            simInterrogate.PlayerCharacter.Position = new Vec2(39.0, 10.0); // 1.0m from checkpoint gate (40, 10)
+            simInterrogate.PlayerCharacter.RiceCount = 2;
+
+            // Step 0.5s to initiate interrogation
+            simInterrogate.Step(0.5, new Vec2(0, 0));
+            bool interrogationChallenged = simInterrogate.CheckpointInterrogating &&
+                                           simInterrogate.ProceduralAudioLog.Contains("CheckpointInterrogationChallenge") &&
+                                           !simInterrogate.CheckpointAlarmTripped;
+
+            // Bribe checkpoint guard before 3.0s grace period elapses
+            bool bribeAccepted = simInterrogate.BribeCheckpointGuard();
+            bool interrogationResolved = !simInterrogate.CheckpointInterrogating && simInterrogate.CheckpointBribed;
+
+            // Un-bribed expiration triggers alarm
+            var simExpire = new SimulationWorld();
+            simExpire.PlayerCharacter.Position = new Vec2(39.0, 10.0);
+            simExpire.Step(3.2, new Vec2(0, 0)); // Exceed 3.0s grace period
+            bool alarmTrippedOnExpiration = simExpire.CheckpointAlarmTripped;
+
+            Assert(interrogationChallenged && bribeAccepted && interrogationResolved && alarmTrippedOnExpiration,
+                "Checkpoint guard initiates 3s verbal interrogation challenge before sirens trip, resolved cleanly by rice bribery");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;
