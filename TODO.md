@@ -1,6 +1,7 @@
-# TODO — granular short-term tasks (v0.7.7)
+# TODO — granular short-term tasks (v0.7.8)
 
 ## Verified working (keep green)
+- [x] Distance-Based Searchlight Shadow Culling (>22m) in `LightExposureZone.cs`
 - [x] Checkpoint Verbal Interrogation Cues & Food Bribery Dialogue State in `CheckpointTrigger.cs`
 - [x] Breath Condensation Vapor Dissipation Physics & Continuous Alpha Decay in `SurvivalSystem.cs`
 - [x] Dynamic Quality Adaptation & Low-Spec Performance Safeguard in `SurvivalSystem.cs` & `PatrolMover.cs`

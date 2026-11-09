@@ -1,6 +1,9 @@
-# HANDOFF — session 2026-11-04 (v0.7.7)
+# HANDOFF — session 2026-11-04 (v0.7.8)
 
 ## What was accomplished this session
+- **Distance-Based Shadow Ray Culling & 30FPS Low-Spec Optimization (`LightExposureZone.cs`)**:
+  * Implemented distance-based shadow ray culling: when entities are located beyond 22m from an active searchlight, shadow occlusion raycasting against obstacle colliders is bypassed, returning ambient shadow values directly to conserve CPU cycles on dual-core low-spec machines (Intel HD 520).
+  * Pure-C# simulation updated with 54/54 automated tests passing (`prototypes/StealthSim`).
 - **Checkpoint Verbal Interrogation Cues & Food Bribery Dialogue State (`CheckpointTrigger.cs`)**:
   * Implemented verbal challenge and inspection grace period: approaching the Sector 4 checkpoint gate without credentials initiates a 3.0s verbal interrogation warning ("Halt! Curfew papers! Present identification immediately!"), giving players a narrow window to present forged papers or execute food bribery ([B]) before alarm sirens blare.
   * Pure-C# simulation updated with 53/53 automated tests passing (`prototypes/StealthSim`).

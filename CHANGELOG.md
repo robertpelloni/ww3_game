@@ -2,6 +2,15 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.7.8 — 2026-11-04 — Milestone 2 Distance-Based Shadow Culling & 30FPS Safeguard
+- **Distance-Based Shadow Ray Culling (`LightExposureZone.cs`)**:
+  - Implemented distance-based shadow occlusion culling: when entities are located beyond 22m from an active searchlight, obstacle shadow raycasting is bypassed and ambient shadow is assigned directly, saving physics raycast CPU overhead on low-spec systems (Intel HD 520).
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored distance-based shadow occlusion culling beyond 22m in `SimulationWorld`.
+  - Added automated Test 54 validating distance-based shadow culling beyond 22m (54/54 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 54/54 tests and updated governance docs to version 0.7.8.
+
 ## 0.7.7 — 2026-11-04 — Milestone 2 Checkpoint Interrogation & Food Bribery Dialogue
 - **Checkpoint Verbal Interrogation Cues (`CheckpointTrigger.cs`)**:
   - Implemented verbal challenge and inspection grace period: approaching the Sector 4 checkpoint gate without credentials initiates a 3.0s verbal interrogation warning ("Halt! Curfew papers! Present identification immediately!"), giving players a narrow window to present forged papers or execute food bribery ([B]) before alarm sirens blare.

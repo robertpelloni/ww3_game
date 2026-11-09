@@ -234,6 +234,7 @@ namespace WW3.StealthSim
         public double InnerCoreRatio { get; set; } = 0.45;
         public bool HasDenseFog { get; set; } = true;
         public double FogScatteringFactor { get; set; } = 0.85;
+        public double ShadowCullingDistance { get; set; } = 22.0; // Distance-based shadow culling
         public double SweepRange { get; set; } = 10.0;
         public double SweepSpeed { get; set; } = 1.5;
         public double BaseSweepSpeed { get; set; } = 1.5;
@@ -485,10 +486,10 @@ namespace WW3.StealthSim
         {
             Vec2 pPos = PlayerCharacter.Position;
 
-            // Curfew Spotlight with smooth penumbra edge falloff
+            // Curfew Spotlight with smooth penumbra edge falloff & distance-based shadow culling
             Vec2 spotPos = CurfewSearchlight.GetCurrentPosition();
             double distToSpot = Vec2.Distance(pPos, spotPos);
-            if (distToSpot <= CurfewSearchlight.Radius)
+            if (distToSpot <= CurfewSearchlight.Radius && distToSpot <= CurfewSearchlight.ShadowCullingDistance)
             {
                 double coreR = CurfewSearchlight.Radius * CurfewSearchlight.InnerCoreRatio;
                 double maxSpotExp = CurfewSearchlight.HasDenseFog ? (1.0 * CurfewSearchlight.FogScatteringFactor) : 1.0;
@@ -2069,6 +2070,26 @@ namespace WW3.StealthSim
 
             Assert(interrogationChallenged && bribeAccepted && interrogationResolved && alarmTrippedOnExpiration,
                 "Checkpoint guard initiates 3s verbal interrogation challenge before sirens trip, resolved cleanly by rice bribery");
+
+            // Test 54: Distance-based searchlight shadow culling beyond 22m boundary
+            var simCull = new SimulationWorld();
+            simCull.Lamps.Clear(); // Clear lamps to isolate searchlight shadow test
+            simCull.CurfewSearchlight.Center = new Vec2(10.0, 10.0);
+            simCull.CurfewSearchlight.SweepRange = 0;
+            simCull.CurfewSearchlight.Radius = 25.0; // Artificial large searchlight
+            simCull.CurfewSearchlight.ShadowCullingDistance = 22.0;
+
+            // At 15m away (within 22m cull limit), exposure is computed
+            simCull.PlayerCharacter.Position = new Vec2(25.0, 10.0); // dist = 15m
+            double withinCullExposure = simCull.CalculatePlayerExposure();
+
+            // At 24m away (> 22m cull limit), exposure drops to ambient shadow (0.05) to conserve CPU cycles
+            simCull.PlayerCharacter.Position = new Vec2(34.0, 10.0); // dist = 24m
+            double culledExposure = simCull.CalculatePlayerExposure();
+
+            bool shadowCullingFunctional = withinCullExposure > 0.05 && culledExposure == 0.05;
+            Assert(shadowCullingFunctional,
+                "Distance-based searchlight shadow culling drops raycast evaluation beyond 22m to conserve low-spec CPU");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

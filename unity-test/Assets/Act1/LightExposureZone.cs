@@ -21,6 +21,7 @@ public class LightExposureZone : MonoBehaviour
     [Header("Atmospheric Fog Scattering")]
     public bool hasDenseFog = true;
     public float fogScatteringFactor = 0.85f; // Fog slightly diffuses direct glare
+    public float shadowCullingDistance = 22.0f; // Beyond 22m, cull shadow occlusion raycasts to preserve 30fps
 
     [Header("Oscillating Sweep Settings (Curfew Spotlight)")]
     public bool isSweepingSpotlight = false;
@@ -161,7 +162,8 @@ public class LightExposureZone : MonoBehaviour
     public float GetExposureAtPosition(Vector3 position)
     {
         float dist = Vector3.Distance(transform.position, position);
-        if (dist > radius) return 0.15f;
+        // Distance-based shadow culling: if outside emission radius or beyond 22m cull boundary
+        if (dist > radius || dist > shadowCullingDistance) return 0.15f;
 
         float coreRadius = radius * innerCoreRatio;
         float baseExp = GetEffectiveExposure();
