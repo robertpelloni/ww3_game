@@ -31,6 +31,18 @@ public class CheckpointTrigger : MonoBehaviour
     private bool playerInRange = false;
     private Transform playerTransform;
 
+    private static PatrolMover[] cachedGuards;
+    private static float lastGuardCacheTime = -999f;
+
+    private static void UpdateCachedGuards()
+    {
+        if (cachedGuards == null || (Time.unscaledTime - lastGuardCacheTime) >= 1.0f)
+        {
+            lastGuardCacheTime = Time.unscaledTime;
+            cachedGuards = FindObjectsByType<PatrolMover>(FindObjectsSortMode.None);
+        }
+    }
+
     void Awake()
     {
         if (checkpointGuard == null)
@@ -158,12 +170,13 @@ public class CheckpointTrigger : MonoBehaviour
             audioSource.Play();
         }
 
-        // Alert checkpoint guard and broadcast to all guards within 35m
-        var allGuards = FindObjectsByType<PatrolMover>(FindObjectsSortMode.None);
-        if (allGuards != null)
+        // Static cached guards array to prevent dynamic GC allocations during alarm sirens
+        UpdateCachedGuards();
+        if (cachedGuards != null)
         {
-            foreach (var g in allGuards)
+            for (int i = 0; i < cachedGuards.Length; i++)
             {
+                var g = cachedGuards[i];
                 if (g == null) continue;
                 if (Vector3.Distance(transform.position, g.transform.position) <= sirenBroadcastRadius)
                 {

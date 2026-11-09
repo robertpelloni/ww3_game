@@ -2,6 +2,16 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.8.9 — 2026-11-04 — Milestone 2 Checkpoint Zero-GC Guard Cache & Low-Spec Audio Throttling
+- **Checkpoint Alarm Zero-GC Guard Caching (`CheckpointTrigger.cs`)**:
+  - Replaced dynamic per-alarm array allocations (`FindObjectsByType<PatrolMover>`) with a preallocated static guard cache refreshed on a 1.0s interval, eliminating frame-time garbage collection spikes when security sirens trip.
+  - Implemented indexed array loops for Siren broadcasting, ensuring deterministic zero-allocation execution on low-spec hardware (Intel HD 520 target).
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored zero-GC guard escalation loops in `SimulationWorld.TriggerCheckpointAlarm`.
+  - Added automated Test 65 validating zero-allocation guard alert escalation upon checkpoint breach (65/65 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 65/65 tests and updated governance docs to version 0.8.9.
+
 ## 0.8.8 — 2026-11-04 — Milestone 2 Dynamic Low-Spec Spatial Sleep LOD
 - **Dynamic Guard Spatial Sleep Distance Contraction (`PatrolMover.cs`)**:
   - Connected `SurvivalSystem.isLowSpecSafeguardActive` to guard spatial sleep LOD: when low-spec safeguard is active (<28fps), distant guard sensory sleep distance contracts from 35m to 25m, throttling cruising guards to 2Hz sensory ticks earlier and conserving vital CPU cycles on dual-core hardware.

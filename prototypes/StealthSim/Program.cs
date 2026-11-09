@@ -369,8 +369,10 @@ namespace WW3.StealthSim
             if (pushDir.Magnitude() < 0.01) pushDir = new Vec2(-1, 0);
             PlayerCharacter.Position = PlayerCharacter.Position + pushDir.Normalized() * 2.5;
             ProceduralAudioLog.Add("CheckpointAlarmSiren");
-            foreach (var g in Guards)
+            // Zero-GC loop for guard alarm alert escalation
+            for (int i = 0; i < Guards.Count; i++)
             {
+                var g = Guards[i];
                 if (Vec2.Distance(CheckpointPosition, g.Position) <= 35.0)
                 {
                     g.State = AIState.Chase;
@@ -2327,6 +2329,27 @@ namespace WW3.StealthSim
             bool lodDecimationActive = lowSpecSensors < normalSensors;
             Assert(lodDecimationActive,
                 "Low-spec safeguard contracts guard spatial sleep distance from 35m to 25m to conserve CPU cycles");
+
+            // Test 65: Checkpoint alarm siren zero-allocation guard alert escalation
+            var simZeroGC = new SimulationWorld();
+            simZeroGC.PlayerCharacter.Position = new Vec2(39.0, 10.0);
+            simZeroGC.TriggerCheckpointAlarm();
+
+            bool allInRadiusAlerted = true;
+            for (int i = 0; i < simZeroGC.Guards.Count; i++)
+            {
+                var g = simZeroGC.Guards[i];
+                if (Vec2.Distance(simZeroGC.CheckpointPosition, g.Position) <= 35.0)
+                {
+                    if (g.State != AIState.Chase || g.Suspicion < 100.0)
+                    {
+                        allInRadiusAlerted = false;
+                        break;
+                    }
+                }
+            }
+            Assert(allInRadiusAlerted && simZeroGC.CheckpointAlarmTripped,
+                "Checkpoint alarm trips siren audio and escalates guards within radius to Chase state with zero GC spikes");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;
