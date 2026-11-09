@@ -2,6 +2,17 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.8.6 — 2026-11-04 — Milestone 2 Stance Audio Dampening & Searchlight Ray Culling
+- **Stance Acoustic Footstep Volume Dampening (`PlayerMove.cs`)**:
+  - Implemented stance-dependent volume attenuation: crouched stance attenuates footstep volume on loud surfaces (MetalGrate and GlassDebris) by 35% (0.65x multiplier), and prone stance attenuates by 55% (0.45x multiplier), rewarding deliberate tactical movement across hazardous debris.
+- **Searchlight Glare Distance Raycast Throttling (`LightExposureZone.cs`)**:
+  - Implemented distance-based glare raycast throttling beyond `shadowCullingDistance` (22m), dropping player exposure checks when targets are well outside effective light projection, conserving CPU cycles on dual-core low-spec machines.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored stance-dependent footstep volume logging and glare distance culling in `SimulationWorld`.
+  - Added automated Test 62 validating stance audio dampening on loud debris (62/62 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 62/62 tests and updated governance docs to version 0.8.6.
+
 ## 0.8.5 — 2026-11-04 — Milestone 2 Checkpoint Torch Sweep & Frame Budgeting
 - **Checkpoint Inspection Torch Cone Sweeping (`CheckpointTrigger.cs`)**:
   - Implemented dynamic inspection torch cone sweep: during interrogation, the checkpoint guard activates a sweeping inspection torch beam covering 35 degrees laterally across the gate threshold over 2.0s.

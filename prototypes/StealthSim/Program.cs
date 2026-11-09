@@ -760,7 +760,20 @@ namespace WW3.StealthSim
                 if (PlayerCharacter.FootstepTimer >= strideInterval)
                 {
                     PlayerCharacter.FootstepTimer = 0.0;
-                    ProceduralAudioLog.Add($"Footstep_{PlayerCharacter.CurrentSurface} at ({PlayerCharacter.Position.X:F1}, {PlayerCharacter.Position.Y:F1})");
+                    double stepVol = PlayerCharacter.CurrentStance switch
+                    {
+                        Stance.Sprint => 0.85,
+                        Stance.Walk => 0.50,
+                        Stance.Crouch => 0.25,
+                        Stance.Prone => 0.12,
+                        _ => 0.50
+                    };
+                    if (PlayerCharacter.CurrentStance == Stance.Crouch && (PlayerCharacter.CurrentSurface == SurfaceType.MetalGrate || PlayerCharacter.CurrentSurface == SurfaceType.GlassDebris))
+                        stepVol *= 0.65;
+                    else if (PlayerCharacter.CurrentStance == Stance.Prone && (PlayerCharacter.CurrentSurface == SurfaceType.MetalGrate || PlayerCharacter.CurrentSurface == SurfaceType.GlassDebris))
+                        stepVol *= 0.45;
+
+                    ProceduralAudioLog.Add($"Footstep_{PlayerCharacter.CurrentSurface}_Vol{stepVol:F2} at ({PlayerCharacter.Position.X:F1}, {PlayerCharacter.Position.Y:F1})");
                 }
             }
             else
@@ -2232,6 +2245,20 @@ namespace WW3.StealthSim
 
             Assert(torchSweepEngaged && torchDisengagedOnExit,
                 "Checkpoint guard activates inspection torch sweep during interrogation and disengages when player retreats");
+
+            // Test 62: Stance-dependent acoustic footstep audio dampening on loud debris
+            var simStanceDamp = new SimulationWorld();
+            simStanceDamp.PlayerCharacter.CurrentStance = Stance.Crouch;
+            simStanceDamp.PlayerCharacter.Position = new Vec2(22.0, 10.0); // Inside Catwalk Metal Grate zone
+
+            for (int i = 0; i < 15; i++)
+            {
+                simStanceDamp.Step(0.1, new Vec2(1, 0));
+            }
+
+            bool crouchDampenedStepLogged = simStanceDamp.ProceduralAudioLog.Exists(a => a.StartsWith("Footstep_MetalGrate_Vol0.16"));
+            Assert(crouchDampenedStepLogged,
+                "Crouching attenuates footstep audio volume on metallic grating and glass debris surfaces");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

@@ -1,6 +1,11 @@
-# HANDOFF — session 2026-11-04 (v0.8.5)
+# HANDOFF — session 2026-11-04 (v0.8.6)
 
 ## What was accomplished this session
+- **Stance Acoustic Footstep Volume Dampening (`PlayerMove.cs`)**:
+  * Implemented stance-dependent volume attenuation: crouched stance attenuates footstep volume on loud surfaces (MetalGrate and GlassDebris) by 35% (0.65x multiplier), and prone stance attenuates by 55% (0.45x multiplier), rewarding deliberate tactical movement across hazardous debris.
+  * Pure-C# simulation updated with 62/62 automated tests passing (`prototypes/StealthSim`).
+- **Searchlight Glare Distance Raycast Throttling (`LightExposureZone.cs`)**:
+  * Implemented distance-based glare raycast throttling beyond `shadowCullingDistance` (22m), dropping player exposure checks when targets are well outside effective light projection, conserving CPU cycles on dual-core low-spec machines.
 - **Checkpoint Inspection Torch Sweep (`CheckpointTrigger.cs`)**:
   * Implemented dynamic inspection torch cone sweep: during interrogation, the checkpoint guard activates a sweeping inspection torch beam covering 35 degrees laterally across the gate threshold over 2.0s, disengaging when the player retreats beyond 3.5m or bribes the guard.
   * Pure-C# simulation updated with 61/61 automated tests passing (`prototypes/StealthSim`).

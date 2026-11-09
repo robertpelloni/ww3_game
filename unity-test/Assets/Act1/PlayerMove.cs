@@ -182,6 +182,19 @@ public class PlayerMove : MonoBehaviour
                 Stance.Prone => 0.12f,
                 _ => 0.50f
             };
+
+            // Stance stealth acoustic dampening: crouch and prone stances attenuate noisy terrain strikes
+            if (currentStance == Stance.Crouch)
+            {
+                if (currentSurface == SurfaceType.MetalGrate || currentSurface == SurfaceType.GlassDebris)
+                    vol *= 0.65f;
+            }
+            else if (currentStance == Stance.Prone)
+            {
+                if (currentSurface == SurfaceType.MetalGrate || currentSurface == SurfaceType.GlassDebris)
+                    vol *= 0.45f;
+            }
+
             ProceduralAudio.PlayClipAtPoint(step, transform.position, vol);
         }
         catch (System.Exception) {}

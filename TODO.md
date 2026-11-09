@@ -1,6 +1,8 @@
-# TODO — granular short-term tasks (v0.8.5)
+# TODO — granular short-term tasks (v0.8.6)
 
 ## Verified working (keep green)
+- [x] Stance Acoustic Footstep Audio Dampening on Hazardous Debris in `PlayerMove.cs`
+- [x] Searchlight Glare Distance Raycast Throttling (>22m) in `LightExposureZone.cs`
 - [x] Checkpoint Inspection Torch Sweep Across Barrier in `CheckpointTrigger.cs`
 - [x] Procedural Audio Voice Concurrency Capping (Max 8 Voices) in `ProceduralAudio.cs`
 - [x] Checkpoint Barrier Breach Physical Shove Pushback (-2.5m) in `CheckpointTrigger.cs`

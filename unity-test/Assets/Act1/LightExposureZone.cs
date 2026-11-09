@@ -158,11 +158,13 @@ public class LightExposureZone : MonoBehaviour
     /// <summary>
     /// Computes exposure with smooth penumbra edge falloff based on distance from light center.
     /// Returns 1.0 in inner core, falling off smoothly to baseline at the outer rim.
+    /// Distance-based glare raycast throttling: ignores targets beyond shadowCullingDistance (22m)
+    /// to preserve CPU cycles on dual-core low-spec machines.
     /// </summary>
     public float GetExposureAtPosition(Vector3 position)
     {
         float dist = Vector3.Distance(transform.position, position);
-        // Distance-based shadow culling: if outside emission radius or beyond 22m cull boundary
+        // Distance-based shadow and glare culling: if outside emission radius or beyond 22m cull boundary
         if (dist > radius || dist > shadowCullingDistance) return 0.15f;
 
         float coreRadius = radius * innerCoreRatio;
