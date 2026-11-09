@@ -2,6 +2,16 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.9.0 — 2026-11-04 — Milestone 2 Multi-Guard Proximity Capture & Global Reset
+- **Multi-Guard Proximity Capture Evaluation (`SurvivalSystem.cs`)**:
+  - Replaced single-guard capture evaluation with multi-guard checks across preallocated static guard array (`cachedGuards`), validating capture proximity (<= 1.8m) against all active guards in Alert state.
+  - Updated `RestartLevel()` to reset suspicion meters and AI states across all cached guards cleanly with zero GC spikes.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored multi-guard capture evaluation across all active patrols.
+  - Added automated Test 66 validating multi-guard proximity capture evaluation (66/66 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 66/66 tests and updated governance docs to version 0.9.0.
+
 ## 0.8.9 — 2026-11-04 — Milestone 2 Checkpoint Zero-GC Guard Cache & Low-Spec Audio Throttling
 - **Checkpoint Alarm Zero-GC Guard Caching (`CheckpointTrigger.cs`)**:
   - Replaced dynamic per-alarm array allocations (`FindObjectsByType<PatrolMover>`) with a preallocated static guard cache refreshed on a 1.0s interval, eliminating frame-time garbage collection spikes when security sirens trip.

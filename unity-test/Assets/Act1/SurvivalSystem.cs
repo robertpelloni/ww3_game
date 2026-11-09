@@ -79,6 +79,18 @@ public class SurvivalSystem : MonoBehaviour
     private LightExposureZone[] lightZones;
     private CheckpointTrigger checkpointTrigger;
 
+    private static PatrolMover[] cachedGuards;
+    private static float lastGuardCacheTime = -999f;
+
+    private static void UpdateCachedGuards()
+    {
+        if (cachedGuards == null || (Time.unscaledTime - lastGuardCacheTime) >= 1.0f)
+        {
+            lastGuardCacheTime = Time.unscaledTime;
+            cachedGuards = FindObjectsByType<PatrolMover>(FindObjectsSortMode.None);
+        }
+    }
+
     void Awake()
     {
         playerMove = GetComponent<PlayerMove>();
@@ -313,15 +325,23 @@ public class SurvivalSystem : MonoBehaviour
             return;
         }
 
-        // Guard capture check: if guard is in Alert state and within 1.8 meters
-        if (nearestGuard != null && nearestGuard.currentState == PatrolMover.GuardState.Alert)
+        // Multi-guard capture check: inspect all active guards using static zero-GC array
+        UpdateCachedGuards();
+        if (cachedGuards != null)
         {
-            float dist = Vector3.Distance(transform.position, nearestGuard.transform.position);
-            if (dist <= 1.8f)
+            for (int i = 0; i < cachedGuards.Length; i++)
             {
-                isGameOver = true;
-                gameOverReason = "CAPTURED BY CURFEW PATROL";
-                return;
+                var g = cachedGuards[i];
+                if (g != null && g.currentState == PatrolMover.GuardState.Alert)
+                {
+                    float dist = Vector3.Distance(transform.position, g.transform.position);
+                    if (dist <= 1.8f)
+                    {
+                        isGameOver = true;
+                        gameOverReason = "CAPTURED BY CURFEW PATROL";
+                        return;
+                    }
+                }
             }
         }
     }
@@ -358,10 +378,18 @@ public class SurvivalSystem : MonoBehaviour
         isGameOver = false;
         isGameWon = false;
         gameOverReason = "";
-        if (nearestGuard != null)
+        UpdateCachedGuards();
+        if (cachedGuards != null)
         {
-            nearestGuard.currentState = PatrolMover.GuardState.Patrolling;
-            nearestGuard.suspicionMeter = 0f;
+            for (int i = 0; i < cachedGuards.Length; i++)
+            {
+                var g = cachedGuards[i];
+                if (g != null)
+                {
+                    g.currentState = PatrolMover.GuardState.Patrolling;
+                    g.suspicionMeter = 0f;
+                }
+            }
         }
     }
 

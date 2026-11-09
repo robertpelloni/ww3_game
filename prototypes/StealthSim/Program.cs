@@ -2351,6 +2351,19 @@ namespace WW3.StealthSim
             Assert(allInRadiusAlerted && simZeroGC.CheckpointAlarmTripped,
                 "Checkpoint alarm trips siren audio and escalates guards within radius to Chase state with zero GC spikes");
 
+            // Test 66: Multi-guard proximity capture evaluation across all active guards
+            var simMultiCapture = new SimulationWorld();
+            var gPatrol2 = simMultiCapture.Guards[1]; // Patrol-2 initialized at (28, 15)
+            gPatrol2.Position = new Vec2(30.0, 15.0);
+            gPatrol2.State = AIState.Chase;
+            gPatrol2.Suspicion = 100.0;
+            simMultiCapture.PlayerCharacter.Position = new Vec2(31.0, 15.0); // 1.0m from Patrol-2 (within 1.8m capture zone)
+            simMultiCapture.Step(0.1, new Vec2(0, 0));
+
+            bool playerCapturedByPatrol2 = simMultiCapture.GameOver && simMultiCapture.EndReason.Contains("caught you");
+            Assert(playerCapturedByPatrol2,
+                "Player proximity capture evaluates across all active patrol guards rather than only primary guard");
+
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;
         }

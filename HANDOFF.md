@@ -1,6 +1,10 @@
-# HANDOFF — session 2026-11-04 (v0.8.9)
+# HANDOFF — session 2026-11-04 (v0.9.0)
 
 ## What was accomplished this session
+- **Multi-Guard Proximity Capture Evaluation (`SurvivalSystem.cs`)**:
+  * Replaced single-guard capture evaluation with multi-guard checks across preallocated static guard array (`cachedGuards`), validating capture proximity (<= 1.8m) against all active guards in Alert state.
+  * Updated `RestartLevel()` to reset suspicion meters and AI states across all cached guards cleanly with zero GC spikes.
+  * Pure-C# simulation updated with 66/66 automated tests passing (`prototypes/StealthSim`).
 - **Checkpoint Alarm Zero-GC Guard Cache (`CheckpointTrigger.cs`)**:
   * Replaced dynamic per-alarm array allocations (`FindObjectsByType<PatrolMover>`) with a preallocated static guard cache refreshed on a 1.0s interval, eliminating frame-time garbage collection spikes when security sirens trip.
   * Pure-C# simulation updated with 65/65 automated tests passing (`prototypes/StealthSim`).
