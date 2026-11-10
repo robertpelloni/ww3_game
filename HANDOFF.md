@@ -1,6 +1,9 @@
-# HANDOFF — session 2026-11-04 (v0.9.4)
+# HANDOFF — session 2026-11-04 (v0.9.5)
 
 ## What was accomplished this session
+- **Procedural Audio Clip Pre-Caching (`ProceduralAudio.cs`)**:
+  * Implemented static clip pre-caching for ground footstep impulses (Dirt, Concrete, MetalGrate, GlassDebris), eliminating repeated dynamic PCM buffer allocations and GC fragmentation during sustained movement.
+  * Pure-C# simulation updated with 71/71 automated tests passing (`prototypes/StealthSim`).
 - **Searchlight Lookups Zero-GC Loops (`PatrolMover.cs`)**:
   * Refactored `CheckNearbySearchlightBeam`, `CheckSilhouetteBacklit`, and `CheckVision` (glare blindness) from `foreach` enumerations to indexed `for` loops on `cachedLightZones`, eliminating enumerator allocations during vision and stance calculations.
   * Added distance pre-filtering against light zones (> 25m for silhouettes, > 10m for glare blindness) to skip redundant vector operations on distant searchlights.

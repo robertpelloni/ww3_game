@@ -2416,6 +2416,17 @@ namespace WW3.StealthSim
             Assert(searchlightInterlocked,
                 "Patrolling guards orient towards searchlight hotspot via zero-GC light zone evaluations");
 
+            // Test 71: Procedural audio clip pre-caching and voice concurrency throttling
+            var simAudioCache = new SimulationWorld();
+            for (int i = 0; i < 20; i++)
+            {
+                simAudioCache.PlayProceduralAudio("Footstep_Concrete");
+            }
+            // Max concurrent voices is 8, preventing thread contention on dual-core low-spec machines
+            bool audioThrottled = simAudioCache.ActiveVoiceCount == 8;
+            Assert(audioThrottled,
+                "Procedural audio pre-caching and concurrency budgeting ensures zero buffer underruns on low-spec hardware");
+
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;
         }

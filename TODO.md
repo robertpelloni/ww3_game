@@ -1,6 +1,7 @@
-# TODO — granular short-term tasks (v0.9.4)
+# TODO — granular short-term tasks (v0.9.5)
 
 ## Verified working (keep green)
+- [x] Procedural Footstep Audio Clip Pre-Caching in `ProceduralAudio.cs`
 - [x] Zero-GC Searchlight Beam Glance, Silhouette, and Glare Loops in `PatrolMover.cs`
 - [x] Zero-GC Sound Distraction Array Caching & Raycast Pre-Filtering in `PatrolMover.cs`
 - [x] Zero-GC Environmental Shelter & Light Loops with Distance Pre-Culling (>30m) in `SurvivalSystem.cs`

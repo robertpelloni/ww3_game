@@ -151,12 +151,26 @@ public static class ProceduralAudio
         return clip;
     }
 
+    // Static pre-cached procedural clips for zero runtime GC allocations
+    private static AudioClip cachedDirtFootstep;
+    private static AudioClip cachedConcreteFootstep;
+    private static AudioClip cachedMetalFootstep;
+    private static AudioClip cachedGlassFootstep;
+
     /// <summary>
-    /// Generates a procedural footstep impulse parameterized by ground surface material.
+    /// Generates or retrieves a pre-cached procedural footstep impulse parameterized by ground surface material.
     /// Soft mud squish for Dirt, solid tap for Concrete, metallic ping for MetalGrate, and sharp crunch for GlassDebris.
     /// </summary>
     public static AudioClip CreateFootstepClip(PlayerMove.SurfaceType surface = PlayerMove.SurfaceType.Concrete, float duration = 0.12f)
     {
+        switch (surface)
+        {
+            case PlayerMove.SurfaceType.Dirt when cachedDirtFootstep != null: return cachedDirtFootstep;
+            case PlayerMove.SurfaceType.Concrete when cachedConcreteFootstep != null: return cachedConcreteFootstep;
+            case PlayerMove.SurfaceType.MetalGrate when cachedMetalFootstep != null: return cachedMetalFootstep;
+            case PlayerMove.SurfaceType.GlassDebris when cachedGlassFootstep != null: return cachedGlassFootstep;
+        }
+
         int sampleCount = Mathf.CeilToInt(SampleRate * duration);
         float[] samples = new float[sampleCount];
 
@@ -188,6 +202,15 @@ public static class ProceduralAudio
 
         AudioClip clip = AudioClip.Create($"Procedural_Footstep_{surface}", sampleCount, 1, SampleRate, false);
         clip.SetData(samples, 0);
+
+        switch (surface)
+        {
+            case PlayerMove.SurfaceType.Dirt: cachedDirtFootstep = clip; break;
+            case PlayerMove.SurfaceType.Concrete: cachedConcreteFootstep = clip; break;
+            case PlayerMove.SurfaceType.MetalGrate: cachedMetalFootstep = clip; break;
+            case PlayerMove.SurfaceType.GlassDebris: cachedGlassFootstep = clip; break;
+        }
+
         return clip;
     }
 

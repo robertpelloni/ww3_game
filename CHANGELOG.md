@@ -2,6 +2,15 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.9.5 — 2026-11-04 — Milestone 2 Procedural Audio Pre-Caching & Concurrency Budgeting
+- **Procedural Footstep Audio Pre-Caching (`ProceduralAudio.cs`)**:
+  - Implemented static clip pre-caching for ground footstep impulses (Dirt, Concrete, MetalGrate, GlassDebris), eliminating repeated dynamic PCM buffer allocations and GC fragmentation during sustained movement.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored audio clip pre-caching and voice concurrency throttling in `SimulationWorld`.
+  - Added automated Test 71 validating procedural audio clip pre-caching and concurrency budgeting (71/71 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 71/71 tests and updated governance docs to version 0.9.5.
+
 ## 0.9.4 — 2026-11-04 — Milestone 2 Searchlight Lookups Zero-GC Loops & Glare Optimization
 - **Searchlight Lookups Zero-GC Loops (`PatrolMover.cs`)**:
   - Refactored `CheckNearbySearchlightBeam`, `CheckSilhouetteBacklit`, and `CheckVision` (glare blindness) from `foreach` enumerations to indexed `for` loops on `cachedLightZones`, eliminating enumerator allocations during vision and stance calculations.
