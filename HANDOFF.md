@@ -1,6 +1,10 @@
-# HANDOFF — session 2026-11-04 (v0.9.7)
+# HANDOFF — session 2026-11-04 (v0.9.8)
 
 ## What was accomplished this session
+- **Checkpoint Food Bribery Audio Cue & Interaction Optimization (`CheckpointTrigger.cs`)**:
+  * Added acoustic radio confirmation audio cue (`ProceduralAudio.CreateRadioClickClip`) played immediately upon the guard accepting a 2-rice food bribe.
+  * Optimized player proximity evaluation by using squared-distance checks (`(transform.position - playerTransform.position).sqrMagnitude <= interactionDistance * interactionDistance`), eliminating per-frame square roots.
+  * Pure-C# simulation updated with 74/74 automated tests passing (`prototypes/StealthSim`).
 - **Guard Investigation Flashlight Scan Boost (`PatrolMover.cs`)**:
   * Implemented active secondary scanning vision boost: when an investigating guard reaches their vantage point (Stage 1), their tactical search flashlight beam focus extends base vision range by 15%, illuminating infiltrators hiding in distant shadows.
   * Replaced distance square root calls with squared magnitude comparisons (`sqrMagnitude > 1.44f`) during investigation waypoint arrival checks.

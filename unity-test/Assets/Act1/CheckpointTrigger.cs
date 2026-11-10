@@ -74,8 +74,9 @@ public class CheckpointTrigger : MonoBehaviour
 
         if (playerTransform != null)
         {
-            float dist = Vector3.Distance(transform.position, playerTransform.position);
-            playerInRange = dist <= interactionDistance;
+            // Use squared distance comparison to avoid square root calls on low-spec hardware
+            float sqrDist = (transform.position - playerTransform.position).sqrMagnitude;
+            playerInRange = sqrDist <= (interactionDistance * interactionDistance);
         }
 
         // Synchronize with player's SurvivalSystem if present
@@ -131,6 +132,12 @@ public class CheckpointTrigger : MonoBehaviour
                     bribed = true;
                     isInterrogating = false;
                     interrogationDialogue = "Curfew passage granted. Keep moving.";
+                    try
+                    {
+                        AudioClip confirmClip = ProceduralAudio.CreateRadioClickClip();
+                        ProceduralAudio.PlayClipAtPoint(confirmClip, transform.position, 0.6f);
+                    }
+                    catch (System.Exception) {}
                     Debug.Log($"[Checkpoint] {checkpointName}: Guard accepted bribe of {bribeRiceCost} rice bowls. Passage granted.");
                 }
                 else

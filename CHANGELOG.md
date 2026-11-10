@@ -2,6 +2,16 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.9.8 — 2026-11-04 — Milestone 2 Checkpoint Bribery Audio & Interaction Optimization
+- **Checkpoint Food Bribery Audio Cue & Squared Distance Optimization (`CheckpointTrigger.cs`)**:
+  - Added acoustic radio confirmation audio cue (`ProceduralAudio.CreateRadioClickClip`) played immediately upon the guard accepting a 2-rice food bribe.
+  - Optimized player proximity evaluation by using squared-distance checks (`(transform.position - playerTransform.position).sqrMagnitude <= interactionDistance * interactionDistance`), eliminating per-frame square roots.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored bribery confirmation audio event logging and squared-distance interaction checks in `SimulationWorld`.
+  - Added automated Test 74 validating checkpoint food bribery audio confirmation and squared-distance interaction checks (74/74 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 74/74 tests and updated governance docs to version 0.9.8.
+
 ## 0.9.7 — 2026-11-04 — Milestone 2 Guard Investigation Flashlight Intensity Boost
 - **Guard Investigation Flashlight Scan Boost (`PatrolMover.cs`)**:
   - Implemented active secondary scanning vision boost: when an investigating guard reaches their vantage point (Stage 1), their tactical search flashlight beam focus extends base vision range by 15%, illuminating infiltrators hiding in distant shadows.

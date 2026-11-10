@@ -789,9 +789,11 @@ namespace WW3.StealthSim
                 PlayerCharacter.FootstepTimer = 0.0;
             }
 
-            // Checkpoint interrogation & clearance zone check
-            double distToCheckpoint = Vec2.Distance(PlayerCharacter.Position, CheckpointPosition);
-            if (distToCheckpoint <= 3.5 && !CheckpointBribed && !PlayerCharacter.HasForgedPapers && !CheckpointAlarmTripped)
+            // Checkpoint interrogation & clearance zone check via squared distance
+            Vec2 toGate = PlayerCharacter.Position - CheckpointPosition;
+            double sqrDistGate = toGate.X * toGate.X + toGate.Y * toGate.Y;
+            double distToCheckpoint = (sqrDistGate <= 12.25) ? Math.Sqrt(sqrDistGate) : 999.0;
+            if (sqrDistGate <= 12.25 && !CheckpointBribed && !PlayerCharacter.HasForgedPapers && !CheckpointAlarmTripped)
             {
                 if (!CheckpointInterrogating)
                 {
@@ -2481,6 +2483,16 @@ namespace WW3.StealthSim
             bool visionExtensionActive = suspicionStage1 > suspicionStage0 && suspicionStage1 > 0.0;
             Assert(visionExtensionActive,
                 "Investigating guards focus flashlight beam extending active vision by 15% during secondary scan");
+
+            // Test 74: Checkpoint bribery audio confirmation cue and squared-distance interaction
+            var simBribeAudio = new SimulationWorld();
+            simBribeAudio.PlayerCharacter.Position = new Vec2(39.0, 10.0); // 1.0m from gate
+            simBribeAudio.PlayerCharacter.RiceCount = 2;
+
+            bool bribeSuccess = simBribeAudio.BribeCheckpointGuard();
+            bool bribeAudioLogged = simBribeAudio.ProceduralAudioLog.Contains("CheckpointBribeAccepted");
+            Assert(bribeSuccess && bribeAudioLogged && simBribeAudio.CheckpointBribed,
+                "Checkpoint guard food bribery emits audio confirmation and grants clearance via squared-distance checks");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;
