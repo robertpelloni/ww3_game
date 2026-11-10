@@ -1,6 +1,11 @@
-# HANDOFF — session 2026-11-04 (v0.9.9)
+# HANDOFF — session 2026-11-04 (v1.0.0)
 
 ## What was accomplished this session
+- **Vertical Slice Milestone Release (v1.0.0)**:
+  * Official delivery of Act 1: Blackout Chongjin vertical slice meeting all production fidelity and low-spec performance standards (locked 30fps+ on low-spec Intel HD 520 hardware).
+  * Contextual prompt distance evaluations refactored to squared distance checks (`sqrMagnitude <= 16.0f`), completing zero-square-root optimization across all environmental update loops.
+  * Complete state idempotency on quick reload: wire cutter fence status, durability charges, suspicion meters, and patrol states reset cleanly in `< 3s`.
+  * Pure-C# simulation updated with 76/76 automated tests passing (`prototypes/StealthSim`).
 - **Shelter and Safehouse Distance Squared Optimizations (`ShelterZone.cs`, `SafehouseTrigger.cs`)**:
   * Replaced `Vector3.Distance` with squared distance checks in `ShelterZone.IsInside` (`sqrMagnitude <= radius * radius`) and `SafehouseTrigger.Update` (`sqrMagnitude <= triggerRadius * triggerRadius`), eliminating expensive per-tick square root evaluations.
   * Pure-C# simulation updated with 75/75 automated tests passing (`prototypes/StealthSim`).

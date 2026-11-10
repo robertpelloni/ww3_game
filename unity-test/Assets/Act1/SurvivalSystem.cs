@@ -378,6 +378,7 @@ public class SurvivalSystem : MonoBehaviour
         isGameOver = false;
         isGameWon = false;
         gameOverReason = "";
+        hasCutPerimeterFence = false;
         UpdateCachedGuards();
         if (cachedGuards != null)
         {
@@ -426,7 +427,7 @@ public class SurvivalSystem : MonoBehaviour
         {
             activeContextualPrompt = $"[SHELTER: {currentShelterName}] Warming core body temperature";
         }
-        else if (checkpointTrigger != null && Vector3.Distance(transform.position, checkpointTrigger.transform.position) <= 4.0f)
+        else if (checkpointTrigger != null && (transform.position - checkpointTrigger.transform.position).sqrMagnitude <= 16.0f)
         {
             activeContextualPrompt = "[E] Present Transit Papers | [B] Bribe Guard (2 Rice)";
         }

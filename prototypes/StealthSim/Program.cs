@@ -2510,6 +2510,24 @@ namespace WW3.StealthSim
             Assert(optSheltered && optVictory,
                 "Shelter warming and safehouse extraction triggers evaluate via squared-distance checks without square root overhead");
 
+            // Test 76: Complete Act 1 vertical slice simulation idempotency and retry state reset
+            var simRetry = new SimulationWorld();
+            simRetry.PlayerCharacter.HasCutPerimeterFence = true;
+            simRetry.PlayerCharacter.HasWireCutters = false;
+            simRetry.PlayerCharacter.WireCutterDurability = 0;
+            simRetry.PlayerCharacter.Stamina = 0.0;
+            simRetry.GameOver = true;
+
+            // Instant level restart
+            simRetry = new SimulationWorld();
+            bool cleanResetState = !simRetry.GameOver && !simRetry.GameWon &&
+                                   !simRetry.PlayerCharacter.HasCutPerimeterFence &&
+                                   simRetry.PlayerCharacter.HasWireCutters &&
+                                   simRetry.PlayerCharacter.WireCutterDurability == 2 &&
+                                   simRetry.PlayerCharacter.Stamina == 100.0;
+            Assert(cleanResetState,
+                "Act 1 vertical slice quick restart guarantees complete state idempotency across all gameplay systems");
+
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;
         }

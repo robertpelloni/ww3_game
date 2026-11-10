@@ -1,6 +1,8 @@
-# TODO — granular short-term tasks (v0.9.9)
+# TODO — granular short-term tasks (v1.0.0)
 
 ## Verified working (keep green)
+- [x] Complete Act 1 Vertical Slice Milestone 1 Production Release (v1.0.0)
+- [x] Contextual Prompt SqrMagnitude Optimization in `SurvivalSystem.cs`
 - [x] Shelter & Safehouse Squared-Distance Optimization in `ShelterZone.cs` & `SafehouseTrigger.cs`
 - [x] Checkpoint Food Bribery Audio Cue & Interaction SqrMagnitude Checks in `CheckpointTrigger.cs`
 - [x] Guard Investigating Secondary Search Scan Flashlight Boost (+15%) in `PatrolMover.cs`
