@@ -1,6 +1,9 @@
-# HANDOFF — session 2026-11-04 (v0.9.5)
+# HANDOFF — session 2026-11-04 (v0.9.6)
 
 ## What was accomplished this session
+- **Searchlight Squared-Distance Optimization (`LightExposureZone.cs`)**:
+  * Replaced `Vector3.Distance` with squared distance lookups (`sqrMagnitude`) in `IsInside` and `GetExposureAtPosition`, avoiding redundant square root operations during continuous spotlight sweeps and penumbra calculations.
+  * Pure-C# simulation updated with 72/72 automated tests passing (`prototypes/StealthSim`).
 - **Procedural Audio Clip Pre-Caching (`ProceduralAudio.cs`)**:
   * Implemented static clip pre-caching for ground footstep impulses (Dirt, Concrete, MetalGrate, GlassDebris), eliminating repeated dynamic PCM buffer allocations and GC fragmentation during sustained movement.
   * Pure-C# simulation updated with 71/71 automated tests passing (`prototypes/StealthSim`).

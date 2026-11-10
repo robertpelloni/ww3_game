@@ -514,11 +514,14 @@ namespace WW3.StealthSim
         {
             Vec2 pPos = PlayerCharacter.Position;
 
-            // Curfew Spotlight with smooth penumbra edge falloff & distance-based shadow culling
+            // Curfew Spotlight with smooth penumbra edge falloff & distance-based shadow culling via squared distance lookups
             Vec2 spotPos = CurfewSearchlight.GetCurrentPosition();
-            double distToSpot = Vec2.Distance(pPos, spotPos);
-            if (distToSpot <= CurfewSearchlight.Radius && distToSpot <= CurfewSearchlight.ShadowCullingDistance)
+            double maxAllowed = Math.Min(CurfewSearchlight.Radius, CurfewSearchlight.ShadowCullingDistance);
+            Vec2 toSpot = pPos - spotPos;
+            double sqrDist = toSpot.X * toSpot.X + toSpot.Y * toSpot.Y;
+            if (sqrDist <= maxAllowed * maxAllowed)
             {
+                double distToSpot = Math.Sqrt(sqrDist);
                 double coreR = CurfewSearchlight.Radius * CurfewSearchlight.InnerCoreRatio;
                 double maxSpotExp = CurfewSearchlight.HasDenseFog ? (1.0 * CurfewSearchlight.FogScatteringFactor) : 1.0;
                 if (distToSpot <= coreR)
@@ -2426,6 +2429,25 @@ namespace WW3.StealthSim
             bool audioThrottled = simAudioCache.ActiveVoiceCount == 8;
             Assert(audioThrottled,
                 "Procedural audio pre-caching and concurrency budgeting ensures zero buffer underruns on low-spec hardware");
+
+            // Test 72: Searchlight squared-distance evaluation optimization and penumbra integrity
+            var simSqrDist = new SimulationWorld();
+            simSqrDist.CurfewSearchlight.Center = new Vec2(20.0, 10.0);
+            simSqrDist.CurfewSearchlight.SweepRange = 0.0;
+            simSqrDist.CurfewSearchlight.Radius = 5.0;
+
+            simSqrDist.PlayerCharacter.Position = new Vec2(20.0, 10.0); // Inside core
+            double expCore = simSqrDist.CalculatePlayerExposure();
+
+            simSqrDist.PlayerCharacter.Position = new Vec2(23.0, 10.0); // Inside penumbra (dist = 3.0m)
+            double expPenumbra = simSqrDist.CalculatePlayerExposure();
+
+            simSqrDist.PlayerCharacter.Position = new Vec2(20.0, 2.0); // Outside radius (dist = 8.0m, Y=2.0 dark alley)
+            double expOutside = simSqrDist.CalculatePlayerExposure();
+
+            bool sqrDistOptimizationValid = expCore > expPenumbra && expPenumbra > expOutside && expOutside <= 0.05;
+            Assert(sqrDistOptimizationValid,
+                "Squared-distance calculations optimize searchlight evaluation without degrading penumbra fidelity");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

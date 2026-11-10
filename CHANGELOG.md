@@ -2,6 +2,15 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.9.6 — 2026-11-04 — Milestone 2 Searchlight Squared-Distance Optimization
+- **Searchlight Squared-Distance Optimization (`LightExposureZone.cs`)**:
+  - Replaced `Vector3.Distance` with squared distance lookups (`sqrMagnitude`) in `IsInside` and `GetExposureAtPosition`, avoiding redundant square root operations during continuous spotlight sweeps and penumbra calculations.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored squared-distance optimizations in `CalculatePlayerExposure`.
+  - Added automated Test 72 validating squared-distance lookups and penumbra fidelity (72/72 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 72/72 tests and updated governance docs to version 0.9.6.
+
 ## 0.9.5 — 2026-11-04 — Milestone 2 Procedural Audio Pre-Caching & Concurrency Budgeting
 - **Procedural Footstep Audio Pre-Caching (`ProceduralAudio.cs`)**:
   - Implemented static clip pre-caching for ground footstep impulses (Dirt, Concrete, MetalGrate, GlassDebris), eliminating repeated dynamic PCM buffer allocations and GC fragmentation during sustained movement.

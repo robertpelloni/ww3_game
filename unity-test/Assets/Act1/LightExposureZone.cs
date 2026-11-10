@@ -151,11 +151,11 @@ public class LightExposureZone : MonoBehaviour
     }
 
     /// <summary>
-    /// Checks whether the specified position falls within this light volume.
+    /// Checks whether the specified position falls within this light volume using squared distance comparison.
     /// </summary>
     public bool IsInside(Vector3 position)
     {
-        return Vector3.Distance(transform.position, position) <= radius;
+        return (transform.position - position).sqrMagnitude <= (radius * radius);
     }
 
     public float GetEffectiveExposure()
@@ -171,9 +171,11 @@ public class LightExposureZone : MonoBehaviour
     /// </summary>
     public float GetExposureAtPosition(Vector3 position)
     {
-        float dist = Vector3.Distance(transform.position, position);
-        // Distance-based shadow and glare culling: if outside emission radius or beyond 22m cull boundary
-        if (dist > radius || dist > shadowCullingDistance) return 0.15f;
+        float sqrDist = (transform.position - position).sqrMagnitude;
+        float maxAllowed = Mathf.Min(radius, shadowCullingDistance);
+        if (sqrDist > maxAllowed * maxAllowed) return 0.15f;
+
+        float dist = Mathf.Sqrt(sqrDist);
 
         float coreRadius = radius * innerCoreRatio;
         float baseExp = GetEffectiveExposure();
