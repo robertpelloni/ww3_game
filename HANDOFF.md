@@ -1,6 +1,10 @@
-# HANDOFF — session 2026-11-04 (v0.9.3)
+# HANDOFF — session 2026-11-04 (v0.9.4)
 
 ## What was accomplished this session
+- **Searchlight Lookups Zero-GC Loops (`PatrolMover.cs`)**:
+  * Refactored `CheckNearbySearchlightBeam`, `CheckSilhouetteBacklit`, and `CheckVision` (glare blindness) from `foreach` enumerations to indexed `for` loops on `cachedLightZones`, eliminating enumerator allocations during vision and stance calculations.
+  * Added distance pre-filtering against light zones (> 25m for silhouettes, > 10m for glare blindness) to skip redundant vector operations on distant searchlights.
+  * Pure-C# simulation updated with 70/70 automated tests passing (`prototypes/StealthSim`).
 - **Sound Distraction Zero-GC Array Caching (`PatrolMover.cs`)**:
   * Replaced dynamic allocations (`FindObjectsByType<SoundDistractionEvent>`) with a preallocated static array cache (`cachedDistractions`) refreshed on a 0.5s interval with indexed `for` loops.
   * Added acoustic distance pre-filtering against `baseRadius` prior to sound vector calculation and raycast firing, preserving CPU budgets on dual-core low-spec machines.

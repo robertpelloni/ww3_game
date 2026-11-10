@@ -592,8 +592,9 @@ public class PatrolMover : MonoBehaviour
         var lights = cachedLightZones;
         if (lights == null) return false;
 
-        foreach (var lz in lights)
+        for (int i = 0; i < lights.Length; i++)
         {
+            var lz = lights[i];
             if (lz != null && lz.isSweepingSpotlight && (lz.focusLingerTimer > 0f || lz.exposureLevel >= 0.85f))
             {
                 float d = Vector3.Distance(transform.position, lz.transform.position);
@@ -617,9 +618,12 @@ public class PatrolMover : MonoBehaviour
 
         Vector3 toPlayer = (targetPlayer.position - transform.position).normalized;
 
-        foreach (var lz in lights)
+        for (int i = 0; i < lights.Length; i++)
         {
+            var lz = lights[i];
             if (lz == null || lz.exposureLevel < 0.70f) continue;
+            if (Vector3.Distance(transform.position, lz.transform.position) > 25.0f) continue;
+
             Vector3 toLight = (lz.transform.position - targetPlayer.position).normalized;
             // If light is behind the player from guard's perspective (dot product > 0.5)
             if (Vector3.Dot(toPlayer, toLight) > 0.5f && Vector3.Distance(lz.transform.position, targetPlayer.position) <= lz.radius * 1.5f)
@@ -647,10 +651,13 @@ public class PatrolMover : MonoBehaviour
         var lights = cachedLightZones;
         if (lights != null)
         {
-            foreach (var lz in lights)
+            for (int i = 0; i < lights.Length; i++)
             {
+                var lz = lights[i];
                 if (lz != null && lz.exposureLevel >= 0.75f)
                 {
+                    if (Vector3.Distance(transform.position, lz.transform.position) > 10.0f) continue;
+
                     Vector3 toLight = lz.transform.position - transform.position;
                     if (toLight.magnitude <= 6.0f && Vector3.Angle(transform.forward, toLight) <= 35f)
                     {

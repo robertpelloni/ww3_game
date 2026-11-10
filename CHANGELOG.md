@@ -2,6 +2,16 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.9.4 — 2026-11-04 — Milestone 2 Searchlight Lookups Zero-GC Loops & Glare Optimization
+- **Searchlight Lookups Zero-GC Loops (`PatrolMover.cs`)**:
+  - Refactored `CheckNearbySearchlightBeam`, `CheckSilhouetteBacklit`, and `CheckVision` (glare blindness) from `foreach` enumerations to indexed `for` loops on `cachedLightZones`, eliminating enumerator allocations during vision and stance calculations.
+  - Added distance pre-filtering against light zones (> 25m for silhouettes, > 10m for glare blindness) to skip redundant vector operations on distant searchlights.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored zero-GC light zone queries in `SimulationWorld`.
+  - Added automated Test 70 validating zero-allocation searchlight beam glance and orientation (70/70 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 70/70 tests and updated governance docs to version 0.9.4.
+
 ## 0.9.3 — 2026-11-04 — Milestone 2 Distraction Zero-GC Cache & Raycast Optimization
 - **Sound Distraction Zero-GC Array Caching (`PatrolMover.cs`)**:
   - Replaced dynamic allocations (`FindObjectsByType<SoundDistractionEvent>`) with a preallocated static array cache (`cachedDistractions`) refreshed on a 0.5s interval with indexed `for` loops.

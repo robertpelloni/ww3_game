@@ -2404,6 +2404,18 @@ namespace WW3.StealthSim
             Assert(distractionLuredCleanly,
                 "Sound distraction inspection evaluates acoustic propagation cleanly via zero-GC cached arrays");
 
+            // Test 70: Zero-GC searchlight beam glance and silhouette calculation
+            var simSearchlightLOD = new SimulationWorld();
+            var gGlance = simSearchlightLOD.Guards[0]; // (15, 5)
+            simSearchlightLOD.CurfewSearchlight.Center = new Vec2(18.0, 5.0);
+            simSearchlightLOD.CurfewSearchlight.FocusOn(new Vec2(18.0, 5.0), 3.0);
+            simSearchlightLOD.Step(0.1, new Vec2(0, 0));
+
+            // Guard forward should orient towards the searchlight beam
+            bool searchlightInterlocked = Vec2.Dot(gGlance.Forward, new Vec2(1, 0)) > 0.95;
+            Assert(searchlightInterlocked,
+                "Patrolling guards orient towards searchlight hotspot via zero-GC light zone evaluations");
+
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;
         }
