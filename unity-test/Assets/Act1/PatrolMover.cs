@@ -346,7 +346,8 @@ public class PatrolMover : MonoBehaviour
                     effectiveInvestigateSpeed *= 1.35f;
                 }
 
-                if (investDir.magnitude > 1.2f)
+                // Use squared magnitude comparison (1.2m * 1.2m = 1.44m^2) to avoid square root calls
+                if (investDir.sqrMagnitude > 1.44f)
                 {
                     Quaternion baseRot = Quaternion.LookRotation(investDir.normalized);
                     float sweep = Mathf.Sin(Time.time * flashlightSweepSpeed) * (flashlightSweepAngle * 0.4f);
@@ -364,7 +365,7 @@ public class PatrolMover : MonoBehaviour
                     }
                     else
                     {
-                        // Arrived at secondary search origin: execute wide sweeping look-around
+                        // Arrived at secondary search origin: execute wide sweeping look-around with heightened vigilance
                         float wideSweep = Mathf.Sin(Time.time * flashlightSweepSpeed) * flashlightSweepAngle;
                         transform.Rotate(Vector3.up, (35f + wideSweep * 0.5f) * Time.deltaTime);
                     }
@@ -642,9 +643,16 @@ public class PatrolMover : MonoBehaviour
         float dist = toPlayer.magnitude;
 
         // Apply dense fog atmospheric extinction (reduced range unless illuminated by flashlight)
+        float baseVision = viewDistance;
+        // In investigation stage 1 (active scanning probe), flashlight beam focus extends vision by 15%
+        if (currentState == GuardState.Investigating && investigationStage == 1)
+        {
+            baseVision *= 1.15f;
+        }
+
         float effectiveViewDistance = hasDenseFog && !isFlashlightActive
-            ? (viewDistance * (1f - fogExtinctionDistanceReduction))
-            : viewDistance;
+            ? (baseVision * (1f - fogExtinctionDistanceReduction))
+            : baseVision;
 
         // Apply glare blindness if guard is looking directly into an intense light beam within 6m
         UpdateCachedLightZones();

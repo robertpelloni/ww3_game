@@ -1,6 +1,7 @@
-# TODO — granular short-term tasks (v0.9.6)
+# TODO — granular short-term tasks (v0.9.7)
 
 ## Verified working (keep green)
+- [x] Guard Investigating Secondary Search Scan Flashlight Boost (+15%) in `PatrolMover.cs`
 - [x] Searchlight Squared-Distance Lookups & Penumbra Optimization in `LightExposureZone.cs`
 - [x] Procedural Footstep Audio Clip Pre-Caching in `ProceduralAudio.cs`
 - [x] Zero-GC Searchlight Beam Glance, Silhouette, and Glare Loops in `PatrolMover.cs`

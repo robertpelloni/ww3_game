@@ -1,6 +1,10 @@
-# HANDOFF — session 2026-11-04 (v0.9.6)
+# HANDOFF — session 2026-11-04 (v0.9.7)
 
 ## What was accomplished this session
+- **Guard Investigation Flashlight Scan Boost (`PatrolMover.cs`)**:
+  * Implemented active secondary scanning vision boost: when an investigating guard reaches their vantage point (Stage 1), their tactical search flashlight beam focus extends base vision range by 15%, illuminating infiltrators hiding in distant shadows.
+  * Replaced distance square root calls with squared magnitude comparisons (`sqrMagnitude > 1.44f`) during investigation waypoint arrival checks.
+  * Pure-C# simulation updated with 73/73 automated tests passing (`prototypes/StealthSim`).
 - **Searchlight Squared-Distance Optimization (`LightExposureZone.cs`)**:
   * Replaced `Vector3.Distance` with squared distance lookups (`sqrMagnitude`) in `IsInside` and `GetExposureAtPosition`, avoiding redundant square root operations during continuous spotlight sweeps and penumbra calculations.
   * Pure-C# simulation updated with 72/72 automated tests passing (`prototypes/StealthSim`).

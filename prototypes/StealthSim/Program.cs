@@ -890,9 +890,14 @@ namespace WW3.StealthSim
                 Vec2 dirToPlayer = toPlayer.Normalized();
 
                 // Dense fog atmospheric extinction reduces unassisted guard vision range by 16.6% (14m -> 11.67m) unless flashlight active
+                double baseVision = guard.VisionRange;
+                if (guard.State == AIState.Investigate && guard.InvestigationStage == 1)
+                {
+                    baseVision *= 1.15; // Active search sweep illumination extension
+                }
                 double effectiveVisionRange = (guard.HasDenseFog && !guard.FlashlightActive)
-                    ? (guard.VisionRange * 0.833)
-                    : guard.VisionRange;
+                    ? (baseVision * 0.833)
+                    : baseVision;
                 Vec2 toSearchlight = CurfewSearchlight.GetCurrentPosition() - guard.Position;
                 if (toSearchlight.Magnitude() <= 6.0)
                 {
@@ -2448,6 +2453,34 @@ namespace WW3.StealthSim
             bool sqrDistOptimizationValid = expCore > expPenumbra && expPenumbra > expOutside && expOutside <= 0.05;
             Assert(sqrDistOptimizationValid,
                 "Squared-distance calculations optimize searchlight evaluation without degrading penumbra fidelity");
+
+            // Test 73: Guard investigating secondary search sweep vision range extension
+            var simSearchVision = new SimulationWorld();
+            var gSearch = simSearchVision.Guards[0];
+            gSearch.State = AIState.Investigate;
+            gSearch.InvestigationStage = 0; // Primary probe
+            gSearch.Position = new Vec2(10.0, 10.0);
+            gSearch.Forward = new Vec2(1.0, 0.0);
+            simSearchVision.PlayerCharacter.Position = new Vec2(25.0, 10.0); // 15m ahead
+
+            // Outside normal vision (14m) in stage 0
+            simSearchVision.Step(0.1, new Vec2(0, 0));
+            double suspicionStage0 = gSearch.Suspicion;
+
+            // In stage 1 (active scanning), vision range extends by 15% (14m * 1.15 = 16.1m)
+            var simSearchStage1 = new SimulationWorld();
+            var gStage1 = simSearchStage1.Guards[0];
+            gStage1.State = AIState.Investigate;
+            gStage1.InvestigationStage = 1;
+            gStage1.Position = new Vec2(10.0, 10.0);
+            gStage1.Forward = new Vec2(1.0, 0.0);
+            simSearchStage1.PlayerCharacter.Position = new Vec2(25.0, 10.0); // 15m ahead (within 16.1m!)
+            simSearchStage1.Step(0.1, new Vec2(0, 0));
+            double suspicionStage1 = gStage1.Suspicion;
+
+            bool visionExtensionActive = suspicionStage1 > suspicionStage0 && suspicionStage1 > 0.0;
+            Assert(visionExtensionActive,
+                "Investigating guards focus flashlight beam extending active vision by 15% during secondary scan");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

@@ -2,6 +2,16 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.9.7 — 2026-11-04 — Milestone 2 Guard Investigation Flashlight Intensity Boost
+- **Guard Investigation Flashlight Scan Boost (`PatrolMover.cs`)**:
+  - Implemented active secondary scanning vision boost: when an investigating guard reaches their vantage point (Stage 1), their tactical search flashlight beam focus extends base vision range by 15%, illuminating infiltrators hiding in distant shadows.
+  - Replaced distance square root calls with squared magnitude comparisons (`sqrMagnitude > 1.44f`) during investigation waypoint arrival checks.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored secondary investigation scan vision range extensions in `SimulationWorld.UpdateGuard`.
+  - Added automated Test 73 validating secondary investigation search sweep vision boost (73/73 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 73/73 tests and updated governance docs to version 0.9.7.
+
 ## 0.9.6 — 2026-11-04 — Milestone 2 Searchlight Squared-Distance Optimization
 - **Searchlight Squared-Distance Optimization (`LightExposureZone.cs`)**:
   - Replaced `Vector3.Distance` with squared distance lookups (`sqrMagnitude`) in `IsInside` and `GetExposureAtPosition`, avoiding redundant square root operations during continuous spotlight sweeps and penumbra calculations.
