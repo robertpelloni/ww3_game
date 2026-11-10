@@ -1,6 +1,7 @@
-# TODO — granular short-term tasks (v0.9.8)
+# TODO — granular short-term tasks (v0.9.9)
 
 ## Verified working (keep green)
+- [x] Shelter & Safehouse Squared-Distance Optimization in `ShelterZone.cs` & `SafehouseTrigger.cs`
 - [x] Checkpoint Food Bribery Audio Cue & Interaction SqrMagnitude Checks in `CheckpointTrigger.cs`
 - [x] Guard Investigating Secondary Search Scan Flashlight Boost (+15%) in `PatrolMover.cs`
 - [x] Searchlight Squared-Distance Lookups & Penumbra Optimization in `LightExposureZone.cs`

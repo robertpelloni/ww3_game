@@ -2,6 +2,15 @@
 
 All notable changes. Single version source: [VERSION.md](VERSION.md).
 
+## 0.9.9 — 2026-11-04 — Milestone 2 Shelter and Safehouse Distance Optimization
+- **Shelter and Safehouse Distance Squared Optimizations (`ShelterZone.cs`, `SafehouseTrigger.cs`)**:
+  - Replaced `Vector3.Distance` with squared distance checks in `ShelterZone.IsInside` (`sqrMagnitude <= radius * radius`) and `SafehouseTrigger.Update` (`sqrMagnitude <= triggerRadius * triggerRadius`), eliminating expensive per-tick square root evaluations.
+- **StealthSim Simulation Suite Expansion (`prototypes/StealthSim`)**:
+  - Mirrored squared-distance checks for shelters and safehouse triggers in `SimulationWorld`.
+  - Added automated Test 75 validating squared-distance evaluations without square root overhead (75/75 tests passing).
+- **Tooling & Dashboard Sync**:
+  - Bumped `dashboard.html` status badge to 75/75 tests and updated governance docs to version 0.9.9.
+
 ## 0.9.8 — 2026-11-04 — Milestone 2 Checkpoint Bribery Audio & Interaction Optimization
 - **Checkpoint Food Bribery Audio Cue & Squared Distance Optimization (`CheckpointTrigger.cs`)**:
   - Added acoustic radio confirmation audio cue (`ProceduralAudio.CreateRadioClickClip`) played immediately upon the guard accepting a 2-rice food bribe.

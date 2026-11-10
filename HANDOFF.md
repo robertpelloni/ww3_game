@@ -1,6 +1,9 @@
-# HANDOFF — session 2026-11-04 (v0.9.8)
+# HANDOFF — session 2026-11-04 (v0.9.9)
 
 ## What was accomplished this session
+- **Shelter and Safehouse Distance Squared Optimizations (`ShelterZone.cs`, `SafehouseTrigger.cs`)**:
+  * Replaced `Vector3.Distance` with squared distance checks in `ShelterZone.IsInside` (`sqrMagnitude <= radius * radius`) and `SafehouseTrigger.Update` (`sqrMagnitude <= triggerRadius * triggerRadius`), eliminating expensive per-tick square root evaluations.
+  * Pure-C# simulation updated with 75/75 automated tests passing (`prototypes/StealthSim`).
 - **Checkpoint Food Bribery Audio Cue & Interaction Optimization (`CheckpointTrigger.cs`)**:
   * Added acoustic radio confirmation audio cue (`ProceduralAudio.CreateRadioClickClip`) played immediately upon the guard accepting a 2-rice food bribe.
   * Optimized player proximity evaluation by using squared-distance checks (`(transform.position - playerTransform.position).sqrMagnitude <= interactionDistance * interactionDistance`), eliminating per-frame square roots.

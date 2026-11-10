@@ -502,7 +502,9 @@ namespace WW3.StealthSim
             for (int i = 0; i < Shelters.Count; i++)
             {
                 var s = Shelters[i];
-                if (Vec2.Distance(PlayerCharacter.Position, s.Position) <= s.Radius)
+                Vec2 toShelter = PlayerCharacter.Position - s.Position;
+                double sqrDist = toShelter.X * toShelter.X + toShelter.Y * toShelter.Y;
+                if (sqrDist <= (s.Radius * s.Radius))
                 {
                     return true;
                 }
@@ -818,8 +820,10 @@ namespace WW3.StealthSim
                 CheckpointInterrogationTimer = 0.0;
             }
 
-            // Win condition check
-            if (Vec2.Distance(PlayerCharacter.Position, SafehousePosition) <= 2.5)
+            // Win condition check via squared distance
+            Vec2 toSafehouse = PlayerCharacter.Position - SafehousePosition;
+            double sqrDistSafehouse = toSafehouse.X * toSafehouse.X + toSafehouse.Y * toSafehouse.Y;
+            if (sqrDistSafehouse <= (2.5 * 2.5))
             {
                 GameWon = true;
                 ExtractionRoute = PlayerCharacter.HasCutPerimeterFence ? "Wire-Cut Side Alley Shortcut" : "Sector 4 Checkpoint Gate";
@@ -2493,6 +2497,18 @@ namespace WW3.StealthSim
             bool bribeAudioLogged = simBribeAudio.ProceduralAudioLog.Contains("CheckpointBribeAccepted");
             Assert(bribeSuccess && bribeAudioLogged && simBribeAudio.CheckpointBribed,
                 "Checkpoint guard food bribery emits audio confirmation and grants clearance via squared-distance checks");
+
+            // Test 75: Shelter and Safehouse squared-distance evaluation optimization
+            var simOpt = new SimulationWorld();
+            simOpt.PlayerCharacter.Position = new Vec2(20.0, 4.0); // Inside Alley Burn Barrel (radius = 3.5)
+            bool optSheltered = simOpt.IsPlayerSheltered();
+
+            simOpt.PlayerCharacter.Position = new Vec2(56.0, 10.0); // Safehouse extraction trigger
+            simOpt.Step(0.1, new Vec2(0, 0));
+            bool optVictory = simOpt.GameWon;
+
+            Assert(optSheltered && optVictory,
+                "Shelter warming and safehouse extraction triggers evaluate via squared-distance checks without square root overhead");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;
