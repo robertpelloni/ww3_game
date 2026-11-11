@@ -84,6 +84,10 @@ namespace WW3.StealthSim
         public Vec2 SecondaryInvestigateTarget { get; set; } = Vec2.Zero;
         public double SensorTimer { get; set; } = 0.0;
         public int SensorEvaluationCount { get; set; } = 0;
+        public int GuardIndex { get; set; } = 0;
+        public bool CachedInVision { get; set; } = false;
+        public bool HasEvaluatedVision { get; set; } = false;
+        public int RaycastEvaluationCount { get; set; } = 0;
     }
 
     public class Shelter
@@ -324,6 +328,7 @@ namespace WW3.StealthSim
         public double WindAmbienceVolume { get; set; } = 0.25;
         public bool IsLowSpecSafeguardActive { get; set; } = false;
         public double LowFPSTimer { get; set; } = 0.0;
+        public int FrameCount { get; set; } = 0;
 
         public void TriggerDistraction(Vec2 pos, double radius = 14.0, double duration = 2.5)
         {
@@ -413,6 +418,7 @@ namespace WW3.StealthSim
             Guards.Add(new Guard
             {
                 Name = "Patrol-1",
+                GuardIndex = 0,
                 Position = new Vec2(15.0, 5.0),
                 WaypointA = new Vec2(15.0, 3.0),
                 WaypointB = new Vec2(15.0, 17.0),
@@ -424,6 +430,7 @@ namespace WW3.StealthSim
             Guards.Add(new Guard
             {
                 Name = "Patrol-2",
+                GuardIndex = 1,
                 Position = new Vec2(28.0, 15.0),
                 WaypointA = new Vec2(28.0, 17.0),
                 WaypointB = new Vec2(28.0, 3.0),
@@ -435,6 +442,7 @@ namespace WW3.StealthSim
             Guards.Add(new Guard
             {
                 Name = "Checkpoint Guard",
+                GuardIndex = 2,
                 Position = new Vec2(42.0, 10.0),
                 WaypointA = new Vec2(42.0, 8.0),
                 WaypointB = new Vec2(42.0, 12.0),
@@ -583,6 +591,7 @@ namespace WW3.StealthSim
         {
             if (GameOver || GameWon) return;
 
+            FrameCount++;
             ElapsedMissionTime += dt;
 
             if (CurfewSearchlight.IsAcquiringTarget)
@@ -916,19 +925,36 @@ namespace WW3.StealthSim
 
                 if (dist <= effectiveVisionRange)
                 {
-                    bool rayBlocked = false;
-                    foreach (var obs in Obstacles)
+                    // Low-spec interleaved raycast budgeting parity:
+                    // Under multi-guard loads around 30fps (0.025s - 0.050s), alternate raycast checks
+                    // across guards (even index on even frames, odd index on odd frames) unless in Chase,
+                    // single guard, or during coarse simulation ticks (dt >= 0.10).
+                    bool shouldRaycast = !guard.HasEvaluatedVision ||
+                                         (guard.State == AIState.Chase) ||
+                                         (Guards.Count <= 1) ||
+                                         (FrameCount % 2 == guard.GuardIndex % 2) ||
+                                         (dt <= 0.020) || (dt >= 0.10);
+
+                    if (shouldRaycast)
                     {
-                        if (obs.BlocksSegment(guard.Position, PlayerCharacter.Position))
+                        guard.HasEvaluatedVision = true;
+                        guard.RaycastEvaluationCount++;
+                        bool rayBlocked = false;
+                        foreach (var obs in Obstacles)
                         {
-                            rayBlocked = true;
-                            break;
+                            if (obs.BlocksSegment(guard.Position, PlayerCharacter.Position))
+                            {
+                                rayBlocked = true;
+                                break;
+                            }
                         }
+
+                        double dot = Vec2.Dot(guard.Forward, dirToPlayer);
+                        double angleDeg = Math.Acos(Math.Clamp(dot, -1.0, 1.0)) * (180.0 / Math.PI);
+                        guard.CachedInVision = !rayBlocked && angleDeg <= (guard.VisionAngleDeg / 2.0);
                     }
 
-                    double dot = Vec2.Dot(guard.Forward, dirToPlayer);
-                    double angleDeg = Math.Acos(Math.Clamp(dot, -1.0, 1.0)) * (180.0 / Math.PI);
-                    inVisionCone = !rayBlocked && angleDeg <= (guard.VisionAngleDeg / 2.0);
+                    inVisionCone = guard.CachedInVision;
                 }
 
                 // Distance-culled Hearing Check with ambient wind masking
@@ -2527,6 +2553,40 @@ namespace WW3.StealthSim
                                    simRetry.PlayerCharacter.Stamina == 100.0;
             Assert(cleanResetState,
                 "Act 1 vertical slice quick restart guarantees complete state idempotency across all gameplay systems");
+
+            // Test 77: Multi-guard vision raycast interleaving prevents multi-ray spikes under 30fps loads
+            var simInterleave = new SimulationWorld();
+            // Position player directly in front of Patrol-1 (index 0) and Patrol-2 (index 1)
+            simInterleave.PlayerCharacter.Position = new Vec2(15.0, 10.0);
+            var ig0 = simInterleave.Guards[0]; // index 0
+            var ig1 = simInterleave.Guards[1]; // index 1
+            ig0.Position = new Vec2(15.0, 8.0);
+            ig0.WaypointA = new Vec2(15.0, 5.0);
+            ig0.WaypointB = new Vec2(15.0, 15.0);
+            ig0.Forward = new Vec2(0, 1);
+            ig0.PatrolSpeed = 0.1;
+
+            ig1.Position = new Vec2(15.0, 12.0);
+            ig1.WaypointA = new Vec2(15.0, 15.0);
+            ig1.WaypointB = new Vec2(15.0, 5.0);
+            ig1.Forward = new Vec2(0, -1);
+            ig1.PatrolSpeed = 0.1;
+
+            // Step with dt = 0.0333 (30fps) across 6 frames
+            int startG0Rays = ig0.RaycastEvaluationCount;
+            int startG1Rays = ig1.RaycastEvaluationCount;
+
+            for (int f = 0; f < 6; f++)
+            {
+                simInterleave.Step(0.0333, Vec2.Zero);
+            }
+
+            int newG0Rays = ig0.RaycastEvaluationCount - startG0Rays;
+            int newG1Rays = ig1.RaycastEvaluationCount - startG1Rays;
+            bool interleavingActive = newG0Rays < 6 && newG1Rays < 6 &&
+                                      ig0.CachedInVision && ig1.CachedInVision;
+            Assert(interleavingActive,
+                "Multi-guard vision raycast interleaving budgets CPU cycles across frames while preserving vision persistence");
 
             Console.WriteLine($"\nSimulation test results: {passed}/{total} tests passed.");
             return passed == total ? 0 : 1;

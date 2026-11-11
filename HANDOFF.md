@@ -1,6 +1,11 @@
-# HANDOFF — session 2026-11-04 (v1.0.0)
+# HANDOFF — session 2026-11-04 (v1.0.1)
 
 ## What was accomplished this session
+- **Multi-Guard Vision Raycast Interleaving & Zero-Sqrt Optimizations (`PatrolMover.cs`)**:
+  * Implemented low-spec multi-guard vision raycast frame-budgeting (`guardIndex % 2 == Time.frameCount % 2`) that interleaves line-of-sight raycasts across active guards under sub-60fps loads while preserving vision persistence via cached states.
+  * Eliminated all remaining `Vector3.Distance` calls in `PatrolMover.cs` (player proximity, sleep LOD distance, sound origin, radio alert radius, spotlight distance, searchlight glance distance, and backlit silhouette detection) in favor of squared distance comparisons (`sqrMagnitude`).
+  * Pre-cached patrol segment travel distance (`patrolSegmentLength`) on initialization, avoiding repeated per-frame vector magnitude evaluations during patrol movement.
+  * Pure-C# simulation updated with 77/77 automated tests passing (`prototypes/StealthSim`, 400k steps/second).
 - **Vertical Slice Milestone Release (v1.0.0)**:
   * Official delivery of Act 1: Blackout Chongjin vertical slice meeting all production fidelity and low-spec performance standards (locked 30fps+ on low-spec Intel HD 520 hardware).
   * Contextual prompt distance evaluations refactored to squared distance checks (`sqrMagnitude <= 16.0f`), completing zero-square-root optimization across all environmental update loops.

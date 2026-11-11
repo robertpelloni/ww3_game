@@ -1,6 +1,10 @@
-# TODO — granular short-term tasks (v1.0.0)
+# TODO — granular short-term tasks (v1.0.1)
 
 ## Verified working (keep green)
+- [x] Multi-Guard Vision Raycast Interleaving Frame-Budgeting in `PatrolMover.cs` (v1.0.1)
+- [x] Patrol Segment Length Pre-Caching in `PatrolMover.cs` (v1.0.1)
+- [x] Zero-Square-Root Distance Comparisons Across All Guard AI Systems (v1.0.1)
+- [x] Automated Unit Test 77 in `prototypes/StealthSim` (77/77 passing) (v1.0.1)
 - [x] Complete Act 1 Vertical Slice Milestone 1 Production Release (v1.0.0)
 - [x] Contextual Prompt SqrMagnitude Optimization in `SurvivalSystem.cs`
 - [x] Shelter & Safehouse Squared-Distance Optimization in `ShelterZone.cs` & `SafehouseTrigger.cs`

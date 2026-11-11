@@ -64,6 +64,12 @@ public class PatrolMover : MonoBehaviour
     private float t;
     private int dir = 1;
     private Vector3 lastKnownPlayerPos;
+    private float patrolSegmentLength = -1f;
+
+    // Guard instance indexing for interleaved multi-guard raycast frame budgeting
+    private static int s_NextGuardIndex = 0;
+    private int guardIndex = 0;
+    private bool cachedRaycastHitPlayer = false;
 
     // Static preallocated cache to eliminate per-frame GC allocations
     private static LightExposureZone[] cachedLightZones;
@@ -104,6 +110,8 @@ public class PatrolMover : MonoBehaviour
 
     void Awake()
     {
+        guardIndex = s_NextGuardIndex++;
+
         if (targetPlayer == null)
         {
             var p = GameObject.FindWithTag("Player");
@@ -127,8 +135,8 @@ public class PatrolMover : MonoBehaviour
 
         // Adaptive sensor frequency: 60Hz when active / suspicious, 15Hz when cruising on patrol, 2Hz if distant (>35m, or >25m in low-spec mode)
         float effectiveSleepDist = lowSpecActive ? (spatialSleepDistance * 0.714f) : spatialSleepDistance; // 25.0m threshold
-        float distToPlayer = targetPlayer != null ? Vector3.Distance(transform.position, targetPlayer.position) : 999f;
-        bool isDistant = distToPlayer > effectiveSleepDist && currentState == GuardState.Patrolling && suspicionMeter <= 0.05f;
+        float distSqToPlayer = targetPlayer != null ? (transform.position - targetPlayer.position).sqrMagnitude : 999999f;
+        bool isDistant = distSqToPlayer > (effectiveSleepDist * effectiveSleepDist) && currentState == GuardState.Patrolling && suspicionMeter <= 0.05f;
 
         if (lowSpecActive)
         {
@@ -341,7 +349,7 @@ public class PatrolMover : MonoBehaviour
                 // Searchlight-guard intersect synergy: if searchlight beam sweeps within 5.0m of search target, accelerate tempo by 1.35x
                 float effectiveInvestigateSpeed = investigateSpeed;
                 Vector3 searchlightHotspotPos;
-                if (CheckNearbySearchlightBeam(out searchlightHotspotPos) && Vector3.Distance(currentTarget, searchlightHotspotPos) <= 5.0f)
+                if (CheckNearbySearchlightBeam(out searchlightHotspotPos) && (currentTarget - searchlightHotspotPos).sqrMagnitude <= 25.0f)
                 {
                     effectiveInvestigateSpeed *= 1.35f;
                 }
@@ -408,8 +416,10 @@ public class PatrolMover : MonoBehaviour
         float baseNoise = pm.CurrentNoiseRadius * hearingMultiplier;
         if (baseNoise <= 0f) return false;
 
-        float dist = Vector3.Distance(transform.position, targetPlayer.position);
-        if (dist > baseNoise) return false;
+        Vector3 toPlayer = targetPlayer.position - transform.position;
+        float distSq = toPlayer.sqrMagnitude;
+        if (distSq > baseNoise * baseNoise) return false;
+        float dist = Mathf.Sqrt(distSq);
 
         // Environmental wind masking: howling curfew wind gusts mask subtle footstep acoustics (-25% hearing range)
         // while loud events (whistles, bottle shatters) maintain high penetration
@@ -459,17 +469,18 @@ public class PatrolMover : MonoBehaviour
         var allGuards = cachedGuards;
         if (allGuards == null) return;
 
-        int guardIndex = 0;
+        int alertIndex = 0;
+        float radioRadiusSq = radioBroadcastRadius * radioBroadcastRadius;
         for (int i = 0; i < allGuards.Length; i++)
         {
             var other = allGuards[i];
             if (other == null || other == this) continue;
-            float d = Vector3.Distance(transform.position, other.transform.position);
-            if (d <= radioBroadcastRadius)
+            float dSq = (transform.position - other.transform.position).sqrMagnitude;
+            if (dSq <= radioRadiusSq)
             {
-                guardIndex++;
+                alertIndex++;
                 // Alternate lateral flanking offset: +4.5m or -4.5m
-                float flank = (guardIndex % 2 == 1) ? 4.5f : -4.5f;
+                float flank = (alertIndex % 2 == 1) ? 4.5f : -4.5f;
                 Vector3 toDisturbance = (lastKnownPlayerPos - transform.position).normalized;
                 Vector3 flankPerpendicular = new Vector3(-toDisturbance.z, 0, toDisturbance.x);
                 Vector3 flankPosition = lastKnownPlayerPos + flankPerpendicular * flank;
@@ -493,8 +504,8 @@ public class PatrolMover : MonoBehaviour
             var lz = lights[i];
             if (lz != null && lz.isSweepingSpotlight)
             {
-                float dist = Vector3.Distance(transform.position, lz.transform.position);
-                if (dist <= 20.0f)
+                float distSq = (transform.position - lz.transform.position).sqrMagnitude;
+                if (distSq <= 400.0f) // 20m * 20m
                 {
                     lz.FocusOnTarget(targetPos, lingerDuration);
                 }
@@ -531,9 +542,10 @@ public class PatrolMover : MonoBehaviour
         {
             var sde = distractions[i];
             if (sde == null) continue;
-            float d = Vector3.Distance(transform.position, sde.originPosition);
+            float dSq = (transform.position - sde.originPosition).sqrMagnitude;
             float baseRadius = sde.noiseRadius * hearingMultiplier;
-            if (d > baseRadius) continue;
+            if (dSq > baseRadius * baseRadius) continue;
+            float d = Mathf.Sqrt(dSq);
 
             // Acoustic ray occlusion check for environmental sound
             float effectiveRadius = baseRadius;
@@ -571,8 +583,12 @@ public class PatrolMover : MonoBehaviour
 
     private void PatrolMovement()
     {
-        float dist = Vector3.Distance(pointA, pointB);
-        t += dir * speed * Time.deltaTime / Mathf.Max(0.01f, dist);
+        if (patrolSegmentLength < 0f)
+        {
+            patrolSegmentLength = Mathf.Max(0.01f, (pointA - pointB).magnitude);
+        }
+        float dist = patrolSegmentLength;
+        t += dir * speed * Time.deltaTime / dist;
         if (t >= 1f) { t = 1f; dir = -1; }
         if (t <= 0f) { t = 0f; dir = 1; }
 
@@ -598,9 +614,9 @@ public class PatrolMover : MonoBehaviour
             var lz = lights[i];
             if (lz != null && lz.isSweepingSpotlight && (lz.focusLingerTimer > 0f || lz.exposureLevel >= 0.85f))
             {
-                float d = Vector3.Distance(transform.position, lz.transform.position);
-                // Interlocking searchlight-patrol sector coordination within 18m
-                if (d <= 18.0f)
+                float dSq = (transform.position - lz.transform.position).sqrMagnitude;
+                // Interlocking searchlight-patrol sector coordination within 18m (18m * 18m = 324m^2)
+                if (dSq <= 324.0f)
                 {
                     beamPosition = lz.transform.position;
                     return true;
@@ -623,11 +639,12 @@ public class PatrolMover : MonoBehaviour
         {
             var lz = lights[i];
             if (lz == null || lz.exposureLevel < 0.70f) continue;
-            if (Vector3.Distance(transform.position, lz.transform.position) > 25.0f) continue;
+            if ((transform.position - lz.transform.position).sqrMagnitude > 625.0f) continue; // > 25m
 
             Vector3 toLight = (lz.transform.position - targetPlayer.position).normalized;
             // If light is behind the player from guard's perspective (dot product > 0.5)
-            if (Vector3.Dot(toPlayer, toLight) > 0.5f && Vector3.Distance(lz.transform.position, targetPlayer.position) <= lz.radius * 1.5f)
+            float maxLightDist = lz.radius * 1.5f;
+            if (Vector3.Dot(toPlayer, toLight) > 0.5f && (lz.transform.position - targetPlayer.position).sqrMagnitude <= maxLightDist * maxLightDist)
             {
                 return true;
             }
@@ -664,10 +681,10 @@ public class PatrolMover : MonoBehaviour
                 var lz = lights[i];
                 if (lz != null && lz.exposureLevel >= 0.75f)
                 {
-                    if (Vector3.Distance(transform.position, lz.transform.position) > 10.0f) continue;
+                    if ((transform.position - lz.transform.position).sqrMagnitude > 100.0f) continue; // > 10m
 
                     Vector3 toLight = lz.transform.position - transform.position;
-                    if (toLight.magnitude <= 6.0f && Vector3.Angle(transform.forward, toLight) <= 35f)
+                    if (toLight.sqrMagnitude <= 36.0f && Vector3.Angle(transform.forward, toLight) <= 35f)
                     {
                         effectiveViewDistance *= (1f - glareBlindnessDistanceReduction);
                         break;
@@ -681,23 +698,35 @@ public class PatrolMover : MonoBehaviour
         float angle = Vector3.Angle(transform.forward, toPlayer);
         if (angle > viewAngle) return false;
 
-        // Raycast check to ensure line of sight isn't blocked by obstacles (clamped to dist)
-        Vector3 guardEye = transform.position + Vector3.up * 1.5f;
-        Vector3 playerChest = targetPlayer.position + Vector3.up * 0.7f;
-        Vector3 rayDir = playerChest - guardEye;
-        float rayDist = rayDir.magnitude;
+        // Low-spec interleaved raycast budgeting:
+        // When multiple guards are active and frame rate is constrained, interleave line-of-sight raycasts
+        // across frames (evaluating even guards on even frames, odd guards on odd frames) unless guard is Alert.
+        bool shouldExecuteRaycast = (currentState == GuardState.Alert) ||
+                                    (Time.frameCount % 2 == guardIndex % 2) ||
+                                    (Time.deltaTime <= 0.0166f); // Always unthrottled at 60fps+
 
-        RaycastHit hit;
-        if (Physics.Raycast(guardEye, rayDir.normalized, out hit, rayDist))
+        if (shouldExecuteRaycast)
         {
-            if (hit.transform == targetPlayer || hit.transform.IsChildOf(targetPlayer))
+            // Raycast check to ensure line of sight isn't blocked by obstacles (clamped to dist)
+            Vector3 guardEye = transform.position + Vector3.up * 1.5f;
+            Vector3 playerChest = targetPlayer.position + Vector3.up * 0.7f;
+            Vector3 rayDir = playerChest - guardEye;
+            float rayDist = rayDir.magnitude;
+
+            RaycastHit hit;
+            if (Physics.Raycast(guardEye, rayDir.normalized, out hit, rayDist))
             {
-                return true;
+                cachedRaycastHitPlayer = (hit.transform == targetPlayer || hit.transform.IsChildOf(targetPlayer));
+            }
+            else
+            {
+                // If raycast didn't hit any obstacle before reaching the player, target in clear sight
+                cachedRaycastHitPlayer = true;
             }
         }
-        else
+
+        if (cachedRaycastHitPlayer)
         {
-            // If raycast didn't hit any obstacle before reaching the player, target in clear sight
             return true;
         }
 
