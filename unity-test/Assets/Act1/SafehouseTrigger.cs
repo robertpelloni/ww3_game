@@ -30,8 +30,9 @@ public class SafehouseTrigger : MonoBehaviour
 
         if (playerTransform != null)
         {
-            float dist = Vector3.Distance(transform.position, playerTransform.position);
-            if (dist <= triggerRadius)
+            // Use squared magnitude comparison to avoid square root calls on low-spec hardware
+            float sqrDist = (transform.position - playerTransform.position).sqrMagnitude;
+            if (sqrDist <= (triggerRadius * triggerRadius))
             {
                 victoryTriggered = true;
                 var survival = playerTransform.GetComponent<SurvivalSystem>();

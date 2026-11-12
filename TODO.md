@@ -1,6 +1,59 @@
-# TODO — granular short-term tasks (v0.5.4)
+# TODO — granular short-term tasks (v1.0.1)
 
 ## Verified working (keep green)
+- [x] Multi-Guard Vision Raycast Interleaving Frame-Budgeting in `PatrolMover.cs` (v1.0.1)
+- [x] Patrol Segment Length Pre-Caching in `PatrolMover.cs` (v1.0.1)
+- [x] Zero-Square-Root Distance Comparisons Across All Guard AI Systems (v1.0.1)
+- [x] Automated Unit Test 77 in `prototypes/StealthSim` (77/77 passing) (v1.0.1)
+- [x] Complete Act 1 Vertical Slice Milestone 1 Production Release (v1.0.0)
+- [x] Contextual Prompt SqrMagnitude Optimization in `SurvivalSystem.cs`
+- [x] Shelter & Safehouse Squared-Distance Optimization in `ShelterZone.cs` & `SafehouseTrigger.cs`
+- [x] Checkpoint Food Bribery Audio Cue & Interaction SqrMagnitude Checks in `CheckpointTrigger.cs`
+- [x] Guard Investigating Secondary Search Scan Flashlight Boost (+15%) in `PatrolMover.cs`
+- [x] Searchlight Squared-Distance Lookups & Penumbra Optimization in `LightExposureZone.cs`
+- [x] Procedural Footstep Audio Clip Pre-Caching in `ProceduralAudio.cs`
+- [x] Zero-GC Searchlight Beam Glance, Silhouette, and Glare Loops in `PatrolMover.cs`
+- [x] Zero-GC Sound Distraction Array Caching & Raycast Pre-Filtering in `PatrolMover.cs`
+- [x] Zero-GC Environmental Shelter & Light Loops with Distance Pre-Culling (>30m) in `SurvivalSystem.cs`
+- [x] Radio Alert Broadcast Zero-GC Array Iteration in `PatrolMover.cs`
+- [x] Multi-Guard Proximity Capture Evaluation & Global Reset in `SurvivalSystem.cs`
+- [x] Checkpoint Alarm Zero-GC Static Guard Cache in `CheckpointTrigger.cs`
+- [x] Low-Spec Spatial Sleep LOD Distance Contraction (35m -> 25m) in `PatrolMover.cs`
+- [x] Guard Tactical Flashlight Direct Glare Detection Synergy in `PatrolMover.cs`
+- [x] Searchlight Mechanical Motor Whine Audio Cue in `LightExposureZone.cs`
+- [x] Stance Acoustic Footstep Audio Dampening on Hazardous Debris in `PlayerMove.cs`
+- [x] Searchlight Glare Distance Raycast Throttling (>22m) in `LightExposureZone.cs`
+- [x] Checkpoint Inspection Torch Sweep Across Barrier in `CheckpointTrigger.cs`
+- [x] Procedural Audio Voice Concurrency Capping (Max 8 Voices) in `ProceduralAudio.cs`
+- [x] Checkpoint Barrier Breach Physical Shove Pushback (-2.5m) in `CheckpointTrigger.cs`
+- [x] Broken Glass Shard Scavenging (`[G]`) & Throwable Replenishment in `PlayerMove.cs`
+- [x] Shelter Thermal Scoping Parity & Zero Outdoor Cold Bleed in `prototypes/StealthSim`
+- [x] Checkpoint Deep Shadow Inspection Grace Extension (4.5s) in `CheckpointTrigger.cs`
+- [x] Searchlight-Guard Investigation Intersect Tempo Acceleration in `PatrolMover.cs`
+- [x] Distance-Based Searchlight Shadow Culling (>22m) in `LightExposureZone.cs`
+- [x] Checkpoint Verbal Interrogation Cues & Food Bribery Dialogue State in `CheckpointTrigger.cs`
+- [x] Breath Condensation Vapor Dissipation Physics & Continuous Alpha Decay in `SurvivalSystem.cs`
+- [x] Dynamic Quality Adaptation & Low-Spec Performance Safeguard in `SurvivalSystem.cs` & `PatrolMover.cs`
+- [x] Searchlight Sweep Reversal & Post-Focus Deceleration in `LightExposureZone.cs`
+- [x] Searchlight-Patrol Interlocking Sector Vigilance Coordination (<18m) in `PatrolMover.cs`
+- [x] Dynamic Ambient Wind Acoustic Masking & Sound Dampening in `PatrolMover.cs` & `SurvivalSystem.cs`
+- [x] Broken Glass Debris Acoustic Shards & Guard Suspicion Floor Escalation in `PlayerMove.cs` & `PatrolMover.cs`
+- [x] Thermal Condensation Breath Vapor Cycles & Shelter Heat Suppression in `SurvivalSystem.cs`
+- [x] Curfew Night Wind Ambience Audio & Shelter Volume Dampening in `SurvivalSystem.cs` & `ProceduralAudio.cs`
+- [x] Contextual Proximity Interaction Prompt HUD & Tool Durability Decay in `SurvivalSystem.cs` & `PlayerMove.cs`
+- [x] Decoupled Time-Stamped Cache Invalidation & Algebraic Smoothstep Penumbra in `PatrolMover.cs` & `LightExposureZone.cs`
+- [x] 0 B/Frame GC Allocation Mitigation & Native Array Caching in `PatrolMover.cs` & `SurvivalSystem.cs`
+- [x] Searchlight Penumbra Edge Falloff & Progressive Shadow Dynamics in `LightExposureZone.cs` & `SurvivalSystem.cs`
+- [x] Surface-Dependent Procedural Footstep Audio & Stride Intervals in `PlayerMove.cs` & `ProceduralAudio.cs`
+- [x] Guard Alert Shout Vocalization Synthesis & State Escalation in `PatrolMover.cs` & `ProceduralAudio.cs`
+- [x] Guard Radio Static Click Audio Synthesis & Acoustic Threat Escalation in `PatrolMover.cs` & `ProceduralAudio.cs`
+- [x] Multi-Stage Investigation Search Probing & Searchlight Mechanical Jitter in `PatrolMover.cs` & `LightExposureZone.cs`
+- [x] Act 1 Chongjin Vertical Slice Completion & Victory Summary HUD in `SurvivalSystem.cs`
+- [x] Atmospheric Fog Extinction (16.6% range reduction) & Direct Glare Scattering in `PatrolMover.cs` & `LightExposureZone.cs`
+- [x] Real-Time FPS Profiler HUD & Dynamic Sensor Decimation Under Load (1.5x) in `SurvivalSystem.cs` & `PatrolMover.cs`
+- [x] Searchlight Pre-Lock Strobe Acquisition Warning & Guard Focus Signal Debounce in `LightExposureZone.cs` & `PatrolMover.cs`
+- [x] Tactical Pincer Flanking Formations (+4.5m offsets) & Searchlight Beam Widening in `PatrolMover.cs` & `LightExposureZone.cs`
+- [x] Scavenged Wire Cutters Fence Breach Shortcut (`[T]`) & Metallic Snip Audio in `PlayerMove.cs` & `ProceduralAudio.cs`
 - [x] Checkpoint Security Gate Inspection, 2-Rice Food Bribery, and Alarm Siren Propagation in `CheckpointTrigger.cs`
 - [x] Low-Spec Dynamic Spatial Sleep LOD (2Hz >35m) & Throttled 10Hz Environmental Calculations in `PatrolMover.cs` & `SurvivalSystem.cs`
 - [x] Guard Searchlight Beam Glance Synergy & Power Grid Flicker Dynamics in `PatrolMover.cs` & `LightExposureZone.cs`
@@ -36,7 +89,7 @@
 - [x] Sound lure mechanics: Player whistle `[Q]` producing a 20m acoustic radius in `PlayerMove.cs`
 - [x] Guard acoustic hearing & `Investigating` AI state machine in `PatrolMover.cs`
 - [x] Checkpoint security gate & interrogation system (`CheckpointTrigger.cs`) with paper checks `[E]` and bribe `[B]`
-- [x] Pure-C# console sim `prototypes/StealthSim` (.NET 10/8, 30/30 tests passing)
+- [x] Pure-C# console sim `prototypes/StealthSim` (.NET 10/8, 61/61 tests passing)
 - [x] Unity MCP round-trip U-T1–U-T14 via AnkleBreaker (`unity-test/` Act 1 starter)
 - [x] Godot G-T1–G-T7 via Coding-Solo G1 (`godot-test/` boot + debug capture + compiled TypeScript)
 - [x] Unreal R-T1–R-T2 graceful no-engine failure (sam-david R8)

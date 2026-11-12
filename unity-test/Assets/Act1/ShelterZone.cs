@@ -37,11 +37,11 @@ public class ShelterZone : MonoBehaviour
     }
 
     /// <summary>
-    /// Checks whether the specified position is within this shelter zone.
+    /// Checks whether the specified position is within this shelter zone using squared distance comparison.
     /// </summary>
     public bool IsInside(Vector3 position)
     {
-        return Vector3.Distance(transform.position, position) <= radius;
+        return (transform.position - position).sqrMagnitude <= (radius * radius);
     }
 
     /// <summary>

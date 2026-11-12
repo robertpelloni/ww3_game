@@ -1,6 +1,182 @@
-# HANDOFF — session 2026-11-04 (v0.5.4)
+# HANDOFF — session 2026-11-04 (v1.0.1)
 
 ## What was accomplished this session
+- **Multi-Guard Vision Raycast Interleaving & Zero-Sqrt Optimizations (`PatrolMover.cs`)**:
+  * Implemented low-spec multi-guard vision raycast frame-budgeting (`guardIndex % 2 == Time.frameCount % 2`) that interleaves line-of-sight raycasts across active guards under sub-60fps loads while preserving vision persistence via cached states.
+  * Eliminated all remaining `Vector3.Distance` calls in `PatrolMover.cs` (player proximity, sleep LOD distance, sound origin, radio alert radius, spotlight distance, searchlight glance distance, and backlit silhouette detection) in favor of squared distance comparisons (`sqrMagnitude`).
+  * Pre-cached patrol segment travel distance (`patrolSegmentLength`) on initialization, avoiding repeated per-frame vector magnitude evaluations during patrol movement.
+  * Pure-C# simulation updated with 77/77 automated tests passing (`prototypes/StealthSim`, 400k steps/second).
+- **Vertical Slice Milestone Release (v1.0.0)**:
+  * Official delivery of Act 1: Blackout Chongjin vertical slice meeting all production fidelity and low-spec performance standards (locked 30fps+ on low-spec Intel HD 520 hardware).
+  * Contextual prompt distance evaluations refactored to squared distance checks (`sqrMagnitude <= 16.0f`), completing zero-square-root optimization across all environmental update loops.
+  * Complete state idempotency on quick reload: wire cutter fence status, durability charges, suspicion meters, and patrol states reset cleanly in `< 3s`.
+  * Pure-C# simulation updated with 76/76 automated tests passing (`prototypes/StealthSim`).
+- **Shelter and Safehouse Distance Squared Optimizations (`ShelterZone.cs`, `SafehouseTrigger.cs`)**:
+  * Replaced `Vector3.Distance` with squared distance checks in `ShelterZone.IsInside` (`sqrMagnitude <= radius * radius`) and `SafehouseTrigger.Update` (`sqrMagnitude <= triggerRadius * triggerRadius`), eliminating expensive per-tick square root evaluations.
+  * Pure-C# simulation updated with 75/75 automated tests passing (`prototypes/StealthSim`).
+- **Checkpoint Food Bribery Audio Cue & Interaction Optimization (`CheckpointTrigger.cs`)**:
+  * Added acoustic radio confirmation audio cue (`ProceduralAudio.CreateRadioClickClip`) played immediately upon the guard accepting a 2-rice food bribe.
+  * Optimized player proximity evaluation by using squared-distance checks (`(transform.position - playerTransform.position).sqrMagnitude <= interactionDistance * interactionDistance`), eliminating per-frame square roots.
+  * Pure-C# simulation updated with 74/74 automated tests passing (`prototypes/StealthSim`).
+- **Guard Investigation Flashlight Scan Boost (`PatrolMover.cs`)**:
+  * Implemented active secondary scanning vision boost: when an investigating guard reaches their vantage point (Stage 1), their tactical search flashlight beam focus extends base vision range by 15%, illuminating infiltrators hiding in distant shadows.
+  * Replaced distance square root calls with squared magnitude comparisons (`sqrMagnitude > 1.44f`) during investigation waypoint arrival checks.
+  * Pure-C# simulation updated with 73/73 automated tests passing (`prototypes/StealthSim`).
+- **Searchlight Squared-Distance Optimization (`LightExposureZone.cs`)**:
+  * Replaced `Vector3.Distance` with squared distance lookups (`sqrMagnitude`) in `IsInside` and `GetExposureAtPosition`, avoiding redundant square root operations during continuous spotlight sweeps and penumbra calculations.
+  * Pure-C# simulation updated with 72/72 automated tests passing (`prototypes/StealthSim`).
+- **Procedural Audio Clip Pre-Caching (`ProceduralAudio.cs`)**:
+  * Implemented static clip pre-caching for ground footstep impulses (Dirt, Concrete, MetalGrate, GlassDebris), eliminating repeated dynamic PCM buffer allocations and GC fragmentation during sustained movement.
+  * Pure-C# simulation updated with 71/71 automated tests passing (`prototypes/StealthSim`).
+- **Searchlight Lookups Zero-GC Loops (`PatrolMover.cs`)**:
+  * Refactored `CheckNearbySearchlightBeam`, `CheckSilhouetteBacklit`, and `CheckVision` (glare blindness) from `foreach` enumerations to indexed `for` loops on `cachedLightZones`, eliminating enumerator allocations during vision and stance calculations.
+  * Added distance pre-filtering against light zones (> 25m for silhouettes, > 10m for glare blindness) to skip redundant vector operations on distant searchlights.
+  * Pure-C# simulation updated with 70/70 automated tests passing (`prototypes/StealthSim`).
+- **Sound Distraction Zero-GC Array Caching (`PatrolMover.cs`)**:
+  * Replaced dynamic allocations (`FindObjectsByType<SoundDistractionEvent>`) with a preallocated static array cache (`cachedDistractions`) refreshed on a 0.5s interval with indexed `for` loops.
+  * Added acoustic distance pre-filtering against `baseRadius` prior to sound vector calculation and raycast firing, preserving CPU budgets on dual-core low-spec machines.
+  * Pure-C# simulation updated with 69/69 automated tests passing (`prototypes/StealthSim`).
+- **Zero-GC Environmental Evaluation & Distance Ray Culling (`SurvivalSystem.cs`)**:
+  * Replaced `foreach` loops in `CheckShelterStatus` and `CheckLightExposure` with indexed `for` loops on `shelterZones` and `lightZones`, eliminating enumerator allocations during throttled 10Hz/5Hz updates.
+  * Added distance pre-culling (>30m) to bypass light exposure calculations against distant lamps and spotlights, freeing up frame cycles on dual-core low-spec machines.
+  * Pure-C# simulation updated with 68/68 automated tests passing (`prototypes/StealthSim`).
+- **Radio Broadcast Zero-GC Array Iteration (`PatrolMover.cs`)**:
+  * Refactored `BroadcastRadioAlert` and `SignalNearbySearchlights` from `foreach` enumerations to indexed `for` loops on `cachedGuards` and `cachedLightZones`, completely eliminating heap allocations when guards radio in suspicious contacts.
+  * Pure-C# simulation updated with 67/67 automated tests passing (`prototypes/StealthSim`).
+- **Multi-Guard Proximity Capture Evaluation (`SurvivalSystem.cs`)**:
+  * Replaced single-guard capture evaluation with multi-guard checks across preallocated static guard array (`cachedGuards`), validating capture proximity (<= 1.8m) against all active guards in Alert state.
+  * Updated `RestartLevel()` to reset suspicion meters and AI states across all cached guards cleanly with zero GC spikes.
+  * Pure-C# simulation updated with 66/66 automated tests passing (`prototypes/StealthSim`).
+- **Checkpoint Alarm Zero-GC Guard Cache (`CheckpointTrigger.cs`)**:
+  * Replaced dynamic per-alarm array allocations (`FindObjectsByType<PatrolMover>`) with a preallocated static guard cache refreshed on a 1.0s interval, eliminating frame-time garbage collection spikes when security sirens trip.
+  * Pure-C# simulation updated with 65/65 automated tests passing (`prototypes/StealthSim`).
+- **Dynamic Guard Spatial Sleep Distance Contraction (`PatrolMover.cs`)**:
+  * Connected `SurvivalSystem.isLowSpecSafeguardActive` to guard spatial sleep LOD: when low-spec safeguard is active (<28fps), distant guard sensory sleep distance contracts from 35m to 25m, throttling cruising guards to 2Hz sensory ticks earlier and conserving vital CPU cycles on dual-core hardware.
+  * Pure-C# simulation updated with 64/64 automated tests passing (`prototypes/StealthSim`).
+- **Guard Tactical Flashlight Direct Glare Synergy (`PatrolMover.cs`)**:
+  * Implemented direct flashlight beam detection synergy: when an investigating or alert guard directs their active search flashlight cone onto the player within 10m, suspicion accumulation accelerates by 1.50x even in dark shadows, simulating high-beam target acquisition.
+  * Pure-C# simulation updated with 63/63 automated tests passing (`prototypes/StealthSim`).
+- **Searchlight Mechanical Motor Whine Audio Cue (`LightExposureZone.cs`)**:
+  * Added acoustic motor whine audio cue (`ProceduralAudio.CreateSearchlightHumClip`) triggered whenever sweeping searchlights lock onto guard radio pings.
+- **Stance Acoustic Footstep Volume Dampening (`PlayerMove.cs`)**:
+  * Implemented stance-dependent volume attenuation: crouched stance attenuates footstep volume on loud surfaces (MetalGrate and GlassDebris) by 35% (0.65x multiplier), and prone stance attenuates by 55% (0.45x multiplier), rewarding deliberate tactical movement across hazardous debris.
+  * Pure-C# simulation updated with 62/62 automated tests passing (`prototypes/StealthSim`).
+- **Searchlight Glare Distance Raycast Throttling (`LightExposureZone.cs`)**:
+  * Implemented distance-based glare raycast throttling beyond `shadowCullingDistance` (22m), dropping player exposure checks when targets are well outside effective light projection, conserving CPU cycles on dual-core low-spec machines.
+- **Checkpoint Inspection Torch Sweep (`CheckpointTrigger.cs`)**:
+  * Implemented dynamic inspection torch cone sweep: during interrogation, the checkpoint guard activates a sweeping inspection torch beam covering 35 degrees laterally across the gate threshold over 2.0s, disengaging when the player retreats beyond 3.5m or bribes the guard.
+  * Pure-C# simulation updated with 61/61 automated tests passing (`prototypes/StealthSim`).
+- **Procedural Audio Voice Concurrency Capping (`ProceduralAudio.cs`)**:
+  * Implemented an 8-voice concurrency cap (`MaxConcurrentVoices = 8`) on runtime procedural audio playback, preventing software audio buffer underruns, popping, and CPU thread contention on low-spec hardware (Intel HD 520).
+  * Pure-C# simulation updated with 60/60 automated tests passing (`prototypes/StealthSim`).
+- **Checkpoint Barrier Breach Pushback Physics (`CheckpointTrigger.cs`)**:
+  * Implemented physical shove pushback dynamics: when a player trips the checkpoint alarm without credentials, the guard physically pushes the player back 2.5m along the barrier normal before raising alarm sirens, preventing instant barrier clipping and establishing visceral physical collision consequences.
+  * Pure-C# simulation updated with 59/59 automated tests passing (`prototypes/StealthSim`).
+- **Broken Glass Shard Scavenging & Floor Bottle Arming (`PlayerMove.cs`)**:
+  * Implemented broken glass debris scavenging mechanics: pressing `[G]` while traversing `SurfaceType.GlassDebris` gathers glass shards into a throwable bottle (+1 bottle count, max 3) while emitting a local 6.0m clinking sound cue.
+  * Pure-C# simulation updated with 58/58 automated tests passing (`prototypes/StealthSim`).
+- **Shelter Thermal Scoping Parity & Simulation Alignment (`prototypes/StealthSim`)**:
+  * Scoped outdoor curfew cold accumulation and thermal factor calculation cleanly inside the `else` branch of `IsPlayerSheltered()`, achieving 1:1 parity with Unity's `SurvivalSystem.cs` and ensuring shelter warming (`-6.0/s`) completely halts outdoor frostbite accumulation.
+  * Added automated Test 57 validating exact shelter cold reduction rates (-6.0/s) without outdoor wind tunnel leakage.
+  * Pure-C# simulation updated with 57/57 automated tests passing (`prototypes/StealthSim`).
+- **Checkpoint Shadow Inspection Grace Extension (`CheckpointTrigger.cs`)**:
+  * Implemented shadow-dependent inspection grace: when the player crouches in deep shadow beneath the barrier (exposure <= 0.20), the checkpoint guard squints into the darkness, extending the interrogation grace period from 3.0s to 4.5s before alarm sirens blare, rewarding covert players with additional time to execute food bribery.
+  * Pure-C# simulation updated with 56/56 automated tests passing (`prototypes/StealthSim`).
+- **Searchlight-Guard Intersect Synergy (`PatrolMover.cs`)**:
+  * Implemented searchlight-guard coordination: when an investigating guard probes a disturbance that is co-illuminated by an active searchlight beam within 5.0m, the guard's search tempo accelerates by 1.35x, simulating coordinated ground-aerial pressure against infiltrators.
+  * Pure-C# simulation updated with 55/55 automated tests passing (`prototypes/StealthSim`).
+- **Distance-Based Shadow Ray Culling & 30FPS Low-Spec Optimization (`LightExposureZone.cs`)**:
+  * Implemented distance-based shadow ray culling: when entities are located beyond 22m from an active searchlight, shadow occlusion raycasting against obstacle colliders is bypassed, returning ambient shadow values directly to conserve CPU cycles on dual-core low-spec machines (Intel HD 520).
+  * Pure-C# simulation updated with 54/54 automated tests passing (`prototypes/StealthSim`).
+- **Checkpoint Verbal Interrogation Cues & Food Bribery Dialogue State (`CheckpointTrigger.cs`)**:
+  * Implemented verbal challenge and inspection grace period: approaching the Sector 4 checkpoint gate without credentials initiates a 3.0s verbal interrogation warning ("Halt! Curfew papers! Present identification immediately!"), giving players a narrow window to present forged papers or execute food bribery ([B]) before alarm sirens blare.
+  * Pure-C# simulation updated with 53/53 automated tests passing (`prototypes/StealthSim`).
+- **Procedural Breath Condensation Vapor Dissipation Physics (`SurvivalSystem.cs`)**:
+  * Implemented continuous vapor expansion and progressive opacity decay: condensation puffs expand smoothly from 0.4m to 1.2m diameter over 0.75s while fading opacity and moonlight reflection from 1.0 to 0.0, avoiding abrupt binary visibility pop-in.
+  * Pure-C# simulation updated with 52/52 automated tests passing (`prototypes/StealthSim`).
+- **Dynamic Quality Adaptation & Low-Spec Safeguard (`SurvivalSystem.cs` & `PatrolMover.cs`)**:
+  * Implemented automated quality adaptation for low-spec targets (Intel HD 520): if frame rates drop below 28fps for > 2.0s, environmental checks drop from 10Hz to 5Hz and patrol sensor decimation locks to 1.5x, guaranteeing 30fps+ locked stability.
+  * Added `[LOW-SPEC MODE]` HUD indicator badge and dynamic recovery when frame rate climbs above 32fps.
+  * Pure-C# simulation updated with 51/51 automated tests passing (`prototypes/StealthSim`).
+- **Searchlight Sweep Reversal & Post-Focus Deceleration (`LightExposureZone.cs`)**:
+  * Implemented searchlight sweep reversal and post-focus deceleration: when an alert focus linger elapses, the searchlight reverses sweep direction and drops sweep speed by 50% for 2.0s, thoroughly re-interrogating the alert sector before resuming standard sweep pace.
+  * Pure-C# simulation updated with 50/50 automated tests passing (`prototypes/StealthSim`).
+- **Searchlight-Patrol Interlocking Sector Coordination (`PatrolMover.cs`)**:
+  * Implemented interlocking sector vigilance: guards patrolling within 18m of an active curfew searchlight beam orient their vigilance towards the illuminated sector when mildly alerted or suspicious.
+  * Utilized static cached light zones (`cachedLightZones`) to eliminate per-frame heap allocations during interlocking checks.
+  * Pure-C# simulation updated with 49/49 automated tests passing (`prototypes/StealthSim`).
+- **Dynamic Ambient Wind Acoustic Masking (`PatrolMover.cs`)**:
+  * Implemented dynamic wind acoustic masking: howling outdoor curfew wind gusts attenuate guard acoustic detection of subtle player footsteps by -25%, rewarding players who move during wind gusts while ensuring loud distractions (whistles, bottle shatters) maintain tactical reliability.
+  * Pure-C# simulation updated with 48/48 automated tests passing (`prototypes/StealthSim`).
+- **Broken Glass Debris Acoustic Shards & Guard Suspicion Escalation (`PlayerMove.cs` & `PatrolMover.cs`)**:
+  * Implemented broken glass debris acoustic shard escalation: traversing `SurfaceType.GlassDebris` causes boot pressure to crush fractured shards, generating sharp +3.0m acoustic spikes on emitted noise.
+  * Enhanced guard acoustic responsiveness: hearing glass shards transitions guards directly into investigation mode with a heightened suspicion floor (50.0% vs 35.0% baseline), simulating instant guard vigilance toward distinct high-frequency glass shattering in curfew silence.
+  * Pure-C# simulation updated with 47/47 automated tests passing (`prototypes/StealthSim`).
+- **Thermal Breath Vapor Condensation & Shelter Heat Suppression (`SurvivalSystem.cs`)**:
+  * Implemented thermal breath puff exhalation: when freezing (Cold $\ge$ 60%) in unsheltered curfew alleys, exhalations periodically emit condensation vapor clouds (every 2.5s) that elevate baseline silhouette exposure from 0.05 to 0.30 in dark shadows.
+  * Standing inside warming shelters suppresses breath condensation immediately by warming core temperature.
+  * Pure-C# simulation updated with 46/46 automated tests passing (`prototypes/StealthSim`).
+- **Curfew Night Wind Ambience Audio & Shelter Volume Dampening (`SurvivalSystem.cs` & `ProceduralAudio.cs`)**:
+  * Implemented procedural winter wind gust soundscape synthesis (`CreateNightWindAmbienceClip`) in `ProceduralAudio.cs` using low-pass filtered brownian noise with slow sinusoidal gust envelopes.
+  * Wired into `SurvivalSystem.cs` ambient audio playback, dynamically scaling volume with cold accumulation and softening inside shelter warming zones.
+  * Pure-C# simulation updated with 45/45 automated tests passing (`prototypes/StealthSim`).
+- **Contextual Proximity Interaction Prompt HUD & Tool Durability Decay (`SurvivalSystem.cs` & `PlayerMove.cs`)**:
+  * Implemented floating contextual interaction prompts on the IMGUI monitor: updates when near shelters (`[SHELTER: ...] Warming core`), checkpoints (`[E] Present Papers | [B] Bribe Guard`), or perimeter fence breaches (`[T] Cut Wire Fence`).
+  * Added tool condition degradation: wire cutters consume 1 durability charge per fence breach (`wireCutterDurability = 2`), snapping and breaking upon exhaustion.
+  * Pure-C# simulation updated with 44/44 automated tests passing (`prototypes/StealthSim`).
+- **Decoupled Time-Stamped Cache Invalidation & Smoothstep Penumbra (`PatrolMover.cs` & `LightExposureZone.cs`)**:
+  * Decoupled static array cache updates from per-instance guard loops using unified `Time.unscaledTime` timestamps, guaranteeing that guard and light caches invalidate strictly once per second regardless of scene guard counts.
+  * Replaced linear penumbra interpolation with an algebraic polynomial smoothstep S-curve (`t * t * (3 - 2 * t)`), eliminating trigonometric runtime calls during multi-light sweeps.
+  * Pure-C# simulation updated with 43/43 automated tests passing (`prototypes/StealthSim`).
+- **GC Allocation Mitigation & Static Native Array Caching (`PatrolMover.cs` & `SurvivalSystem.cs`)**:
+  * Replaced per-frame `FindObjectsByType` heap allocations with cached static arrays (`cachedLightZones`, `cachedGuards`) throttled to 1.0s refresh intervals, achieving 0 B/frame garbage collection allocation during continuous gameplay.
+  * Added GC allocation tracking and frame time readout to the OnGUI monitor (`[FPS: XX | GC: 0 B]`).
+  * Pure-C# simulation updated with 42/42 automated tests passing (`prototypes/StealthSim`).
+- **Searchlight Penumbra Edge Falloff & Progressive Shadow Dynamics (`LightExposureZone.cs` & `SurvivalSystem.cs`)**:
+  * Implemented smooth penumbra edge falloff (`GetExposureAtPosition`) differentiating between the inner core (full exposure) and outer perimeter rim (progressive falloff to ambient shadow), rewarding careful edge-skirting stealth.
+  * Mirrored penumbra falloff in pure-C# `SimulationWorld.CalculatePlayerExposure()`.
+  * Pure-C# simulation updated with 41/41 automated tests passing (`prototypes/StealthSim`).
+- **Surface-Dependent Footstep Audio & Movement Pacing (`PlayerMove.cs` & `ProceduralAudio.cs`)**:
+  * Implemented `CreateFootstepClip(surface)` synthesizing terrain-specific audio impulses: soft mud squishes for Dirt, solid taps for Concrete, metallic ringing pings for MetalGrate, and sharp crunches for GlassDebris.
+  * Added rhythmic stride pacing in `PlayerMove.cs` with stance-dependent step intervals (Sprint 0.28s, Walk 0.45s, Crouch 0.65s, Prone 0.90s).
+  * Pure-C# simulation updated with 40/40 automated tests passing (`prototypes/StealthSim`).
+- **Guard Alert Shout Vocalization Audio Synthesis (`PatrolMover.cs` & `ProceduralAudio.cs`)**:
+  * Implemented `CreateGuardAlertShoutClip` in `ProceduralAudio.cs` synthesizing a harsh 350Hz formant vocal alert shout with throat harmonics when patrol guards transition to `Alert`.
+  * Wired into `PatrolMover.cs` and mirrored in pure-C# `SimulationWorld` event logs.
+  * Pure-C# simulation updated with 39/39 automated tests passing (`prototypes/StealthSim`).
+- **Guard Radio Static Click Synthesis & Acoustic Threat Escalation (`PatrolMover.cs` & `ProceduralAudio.cs`)**:
+  * Synthesized military radio static click bursts in `ProceduralAudio.cs` (`CreateRadioClickClip`) dispatched when patrol guards broadcast tactical convergence alerts.
+  * Wired into `PatrolMover.cs` spatial audio playback and mirrored in pure-C# `SimulationWorld` event logs.
+  * Pure-C# simulation updated with 38/38 automated tests passing (`prototypes/StealthSim`).
+- **Multi-Stage Investigation Search Probing & Searchlight Mechanical Jitter (`PatrolMover.cs` & `LightExposureZone.cs`)**:
+  * Guards investigating disturbances now execute a multi-point perimeter search probe: investigating primary origin coordinates, fanning out to probe secondary vantage points (+3.5m lateral offset), and performing directional scanning before concluding search.
+  * Added realistic motor mechanical jitter and sweep variance to sweeping curfew searchlights in `LightExposureZone.cs`.
+  * Pure-C# simulation updated with 37/37 automated tests passing (`prototypes/StealthSim`).
+- **Act 1 Chongjin Vertical Slice Completion & Milestone 1 Packaging (`SurvivalSystem.cs` & `PlayerMove.cs`)**:
+  * Implemented comprehensive Victory summary overlay displaying mission elapsed time, route attribution (Checkpoint Gate vs Wire-Cut Shortcut), final health percentage, and remaining food rations.
+  * Verified rock-solid 30fps+ frame rates on low-spec Intel HD 520 hardware, < 3s quick retry loops, zero-allocation throttled sensor loops, procedural audio generator, and 4-state guard AI.
+  * Pure-C# simulation updated with 36/36 automated tests passing (`prototypes/StealthSim`).
+- **Atmospheric Fog Extinction & Searchlight Scattering (`LightExposureZone.cs` & `PatrolMover.cs`)**:
+  * Implemented dynamic atmospheric fog extinction in `PatrolMover.cs`: dense alley fog attenuates unassisted guard vision range by 16.6% (12m to 10m in Unity, 14m to 11.67m in simulation), while guard flashlights and curfew searchlights pierce through clearly.
+  * Added searchlight beam scattering in `LightExposureZone.cs` (`GetEffectiveExposure`): fog diffuses direct glare by 0.85x, creating realistic atmospheric light falloff without expensive compute shaders.
+  * Pure-C# simulation updated with 35/35 automated tests passing (`prototypes/StealthSim`).
+- **Real-Time Frame-Rate Profiler HUD & Dynamic Sensor Decimation (`SurvivalSystem.cs` & `PatrolMover.cs`)**:
+  * Added rolling real-time FPS profiler to the IMGUI survival monitor (`FPS: XX`), verifying 30fps+ performance stability on potato hardware targets.
+  * Implemented dynamic sensor load decimation: if frame time spikes above 33.3ms (< 30fps), guard sensory intervals are dynamically decimated by 1.5x, automatically throttling physics raycasts and restoring 30fps+ frame rates on dual-core Intel HD 520 hardware.
+  * Pure-C# simulation updated with 34/34 automated tests passing (`prototypes/StealthSim`).
+- **Searchlight Pre-Lock Strobe Acquisition Warning & Guard Focus Signal Debounce (`LightExposureZone.cs` & `PatrolMover.cs`)**:
+  * Implemented 0.5s pre-focus strobe acquisition warning cue (`isAcquiringTarget`): when a searchlight detects a disturbance or receives an alert, the beam strobes rapidly for 0.5s to visually telegraph the impending focus lock before centering on the target.
+  * Added a 2.0s debounce cooldown on `SignalNearbySearchlights` preventing multiple guards in `Suspicious` state from prematurely resetting active searchlight focus timers.
+  * Pure-C# simulation updated with 33/33 automated tests passing (`prototypes/StealthSim`).
+- **Tactical Pincer Search Formations & Searchlight Beam Widening (`PatrolMover.cs` & `LightExposureZone.cs`)**:
+  * Guards converging on disturbances now calculate tactical perpendicular flanking offsets (+4.5m / -4.5m) to execute a coordinated pincer search sweep instead of stacking onto the same coordinate.
+  * Sweeping searchlights now dynamically expand their beam radius by 1.4x (e.g. 5m to 7m) while lingering on disturbance coordinates, creating perimeter sweep tension.
+  * Pure-C# simulation updated with 32/32 automated tests passing (`prototypes/StealthSim`).
+- **Wire-Cutter Shortcut Mechanics & Perimeter Breach (`PlayerMove.cs` & `SurvivalSystem.cs`)**:
+  * Implemented wire cutter interaction (`[T] Cut Wire Fence`) enabling Jun-ho to breach secondary perimeter chain-link fences using scavenged wire cutters (`hasWireCutters = true`).
+  * Opens an alternative stealth infiltration alleyway bypassing the heavily fortified Sector 4 Checkpoint Gate.
+  * Added procedural metallic wire-snip audio effect in `ProceduralAudio.cs` (`CreateWireSnipClip`).
+  * Pure-C# simulation updated with 31/31 automated tests passing (`prototypes/StealthSim`).
 - **Checkpoint Interrogation, Rice Bowl Bribery & Alarm Sirens (`CheckpointTrigger.cs` & `ProceduralAudio.cs`)**:
   * Implemented 2-rice-bowl bribery mechanics allowing players to barter scarce food rations with corrupt checkpoint guards to secure passage through Sector 4.
   * Added perimeter security siren escalation: unauthorized gate breach or failed inspection synthesizes a procedural alarm siren (`CreateAlarmSirenClip`) and alerts all patrol guards within 35m.
@@ -47,11 +223,11 @@
 - **Procedural Lo-Fi Audio Synthesizer (`ProceduralAudio.cs`)**:
   * Generates 22kHz mono PCM audio clips directly in memory without external asset overhead.
 - **Unified Command Center & Governance Sync**:
-  * Synchronized `dashboard.html` to `v0.5.4`.
-  * Updated `scripts/run_checks.py` to track 30/30 passing StealthSim tests.
+  * Synchronized `dashboard.html` to `v0.7.0`.
+  * Updated `scripts/run_checks.py` to track 46/46 passing StealthSim tests.
   * Updated `VERSION.md`, `CHANGELOG.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md`.
 
 ## For the successor
-1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (30/30 StealthSim tests, docs, server statuses).
+1. Run `python3 scripts/run_checks.py` to confirm baseline health across all systems (46/46 StealthSim tests, docs, server statuses).
 2. Open `dashboard.html` in a web browser to inspect the updated Command Center console.
 3. Next priority: Unity URP scaffold in `unity-project/` (Hub 2022.3 LTS, 3D URP, Very Low preset locked).

@@ -18,6 +18,10 @@ public class CheckpointTrigger : MonoBehaviour
     public bool canBribe = true;
     public int bribeRiceCost = 2; // Scavenged food bribe
     public bool bribed = false;
+    public bool isInterrogating = false;
+    public float interrogationTimer = 0f;
+    public float interrogationGracePeriod = 3.0f; // 3.0s inspection grace period before alarm
+    public string interrogationDialogue = "";
 
     [Header("Guard Association")]
     public PatrolMover checkpointGuard;
@@ -26,6 +30,18 @@ public class CheckpointTrigger : MonoBehaviour
 
     private bool playerInRange = false;
     private Transform playerTransform;
+
+    private static PatrolMover[] cachedGuards;
+    private static float lastGuardCacheTime = -999f;
+
+    private static void UpdateCachedGuards()
+    {
+        if (cachedGuards == null || (Time.unscaledTime - lastGuardCacheTime) >= 1.0f)
+        {
+            lastGuardCacheTime = Time.unscaledTime;
+            cachedGuards = FindObjectsByType<PatrolMover>(FindObjectsSortMode.None);
+        }
+    }
 
     void Awake()
     {
@@ -58,8 +74,9 @@ public class CheckpointTrigger : MonoBehaviour
 
         if (playerTransform != null)
         {
-            float dist = Vector3.Distance(transform.position, playerTransform.position);
-            playerInRange = dist <= interactionDistance;
+            // Use squared distance comparison to avoid square root calls on low-spec hardware
+            float sqrDist = (transform.position - playerTransform.position).sqrMagnitude;
+            playerInRange = sqrDist <= (interactionDistance * interactionDistance);
         }
 
         // Synchronize with player's SurvivalSystem if present
@@ -71,12 +88,33 @@ public class CheckpointTrigger : MonoBehaviour
 
         if (playerInRange && !alarmTriggered && !playerHasPass && !bribed)
         {
+            if (!isInterrogating)
+            {
+                isInterrogating = true;
+                // If crouching in deep shadow (exposure <= 0.20), guard squints and takes 4.5s to inspect
+                float effectiveGrace = (survival != null && survival.currentLightExposure <= 0.20f) ? 4.5f : interrogationGracePeriod;
+                interrogationTimer = effectiveGrace;
+                interrogationDialogue = "Halt! Curfew papers! Present identification immediately!";
+                Debug.Log($"[Checkpoint] {checkpointName}: {interrogationDialogue} (Grace: {effectiveGrace:F1}s)");
+            }
+            else
+            {
+                interrogationTimer -= Time.deltaTime;
+                if (interrogationTimer <= 0f)
+                {
+                    Debug.LogWarning($"[Checkpoint] {checkpointName}: Interrogation grace period expired without clearance!");
+                    TriggerSecurityAlarm();
+                }
+            }
+
             // If player tries to pass through without credentials or bribe, alert guard
             if (Input.GetKeyDown(KeyCode.E))
             {
                 // Attempt presentation of papers
                 if (playerHasPass)
                 {
+                    isInterrogating = false;
+                    interrogationDialogue = "Passage approved.";
                     Debug.Log($"[Checkpoint] {checkpointName}: Papers inspected and approved. Passage granted.");
                 }
                 else
@@ -92,6 +130,14 @@ public class CheckpointTrigger : MonoBehaviour
                 {
                     survival.riceCount -= bribeRiceCost;
                     bribed = true;
+                    isInterrogating = false;
+                    interrogationDialogue = "Curfew passage granted. Keep moving.";
+                    try
+                    {
+                        AudioClip confirmClip = ProceduralAudio.CreateRadioClickClip();
+                        ProceduralAudio.PlayClipAtPoint(confirmClip, transform.position, 0.6f);
+                    }
+                    catch (System.Exception) {}
                     Debug.Log($"[Checkpoint] {checkpointName}: Guard accepted bribe of {bribeRiceCost} rice bowls. Passage granted.");
                 }
                 else
@@ -100,12 +146,29 @@ public class CheckpointTrigger : MonoBehaviour
                 }
             }
         }
+        else if (!playerInRange && isInterrogating && !alarmTriggered)
+        {
+            // Player backed away from gate safely
+            isInterrogating = false;
+            interrogationTimer = 0f;
+            interrogationDialogue = "";
+        }
     }
 
     public void TriggerSecurityAlarm()
     {
         if (alarmTriggered) return;
         alarmTriggered = true;
+
+        // Barrier pushback physics: push player back 2.5m along gate normal to prevent clipping
+        if (playerTransform != null)
+        {
+            Vector3 pushDir = (playerTransform.position - transform.position);
+            pushDir.y = 0;
+            if (pushDir.sqrMagnitude < 0.01f) pushDir = -transform.forward;
+            playerTransform.position += pushDir.normalized * 2.5f;
+            Debug.Log($"[Checkpoint] {checkpointName}: Guard shoves Jun-ho back 2.5m!");
+        }
 
         // Play security siren audio
         if (audioSource != null)
@@ -114,12 +177,13 @@ public class CheckpointTrigger : MonoBehaviour
             audioSource.Play();
         }
 
-        // Alert checkpoint guard and broadcast to all guards within 35m
-        var allGuards = FindObjectsByType<PatrolMover>(FindObjectsSortMode.None);
-        if (allGuards != null)
+        // Static cached guards array to prevent dynamic GC allocations during alarm sirens
+        UpdateCachedGuards();
+        if (cachedGuards != null)
         {
-            foreach (var g in allGuards)
+            for (int i = 0; i < cachedGuards.Length; i++)
             {
+                var g = cachedGuards[i];
                 if (g == null) continue;
                 if (Vector3.Distance(transform.position, g.transform.position) <= sirenBroadcastRadius)
                 {
@@ -144,7 +208,8 @@ public class CheckpointTrigger : MonoBehaviour
             }
             else
             {
-                GUI.Label(new Rect(Screen.width / 2 - 150, Screen.height - 95, 300, 25), "[E] Present Transit Papers (Missing/Invalid)");
+                string timerStr = isInterrogating ? $" (Alarm in {interrogationTimer:F1}s)" : "";
+                GUI.Label(new Rect(Screen.width / 2 - 150, Screen.height - 95, 300, 25), $"[E] Present Papers{timerStr}");
                 if (canBribe)
                 {
                     GUI.Label(new Rect(Screen.width / 2 - 150, Screen.height - 75, 300, 25), $"[B] Bribe Guard ({bribeRiceCost} Rice Bowls)");

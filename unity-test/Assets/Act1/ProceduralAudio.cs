@@ -33,6 +33,80 @@ public static class ProceduralAudio
     }
 
     /// <summary>
+    /// Synthesizes a sharp, harsh guard alert vocalization yell / shout.
+    /// Dispatched when a patrol guard spots Jun-ho and escalates into Alert state.
+    /// </summary>
+    public static AudioClip CreateGuardAlertShoutClip(float duration = 0.40f)
+    {
+        int sampleCount = (int)(SampleRate * duration);
+        float[] samples = new float[sampleCount];
+
+        for (int i = 0; i < sampleCount; i++)
+        {
+            float t = (float)i / SampleRate;
+            float decay = Mathf.Exp(-t * 8f);
+            // Formant approximation: 350Hz fundamental with 700Hz and 1050Hz throat harmonics
+            float f1 = Mathf.Sin(2f * Mathf.PI * 350f * t);
+            float f2 = Mathf.Sin(2f * Mathf.PI * 700f * t) * 0.6f;
+            float f3 = Mathf.Sin(2f * Mathf.PI * 1050f * t) * 0.35f;
+            float breath = (Random.value * 2f - 1f) * 0.2f;
+            samples[i] = (f1 + f2 + f3 + breath) * decay * 0.5f;
+        }
+
+        AudioClip clip = AudioClip.Create("GuardAlertShout", sampleCount, 1, SampleRate, false);
+        clip.SetData(samples, 0);
+        return clip;
+    }
+
+    /// <summary>
+    /// Synthesizes a military radio static burst & microphone click.
+    /// Played when patrol guards transmit alerts or coordinate searchlight sweeps.
+    /// </summary>
+    public static AudioClip CreateRadioClickClip(float duration = 0.18f)
+    {
+        int sampleCount = (int)(SampleRate * duration);
+        float[] samples = new float[sampleCount];
+
+        for (int i = 0; i < sampleCount; i++)
+        {
+            float t = (float)i / SampleRate;
+            float noise = (Random.value * 2f - 1f) * 0.35f;
+            // Short chirp at 1800Hz followed by white noise burst
+            float chirp = (t < 0.05f) ? Mathf.Sin(2f * Mathf.PI * 1800f * t) * 0.4f : 0f;
+            samples[i] = (noise + chirp) * 0.3f;
+        }
+
+        AudioClip clip = AudioClip.Create("RadioStaticClick", sampleCount, 1, SampleRate, false);
+        clip.SetData(samples, 0);
+        return clip;
+    }
+
+    /// <summary>
+    /// Synthesizes a sharp metallic wire snip / tension snap sound.
+    /// Used when cutting through secondary perimeter chain-link wire fences.
+    /// </summary>
+    public static AudioClip CreateWireSnipClip()
+    {
+        float duration = 0.25f;
+        int sampleCount = (int)(SampleRate * duration);
+        float[] samples = new float[sampleCount];
+
+        for (int i = 0; i < sampleCount; i++)
+        {
+            float t = (float)i / SampleRate;
+            float decay = Mathf.Exp(-t * 22f);
+            // High metallic ping (~2200Hz) plus quick noise snap
+            float metallic = Mathf.Sin(2f * Mathf.PI * 2200f * t);
+            float noise = (Random.value * 2f - 1f) * 0.5f;
+            samples[i] = (metallic * 0.6f + noise * 0.4f) * decay * 0.45f;
+        }
+
+        AudioClip clip = AudioClip.Create("WireFenceSnip", sampleCount, 1, SampleRate, false);
+        clip.SetData(samples, 0);
+        return clip;
+    }
+
+    /// <summary>
     /// Synthesizes a curfew perimeter security siren: warbling dual-frequency alarm tone.
     /// Used when a checkpoint security gate is breached or alarm is tripped.
     /// </summary>
@@ -77,23 +151,92 @@ public static class ProceduralAudio
         return clip;
     }
 
+    // Static pre-cached procedural clips for zero runtime GC allocations
+    private static AudioClip cachedDirtFootstep;
+    private static AudioClip cachedConcreteFootstep;
+    private static AudioClip cachedMetalFootstep;
+    private static AudioClip cachedGlassFootstep;
+
     /// <summary>
-    /// Generates a subtle low-frequency footstep thud pulse.
+    /// Generates or retrieves a pre-cached procedural footstep impulse parameterized by ground surface material.
+    /// Soft mud squish for Dirt, solid tap for Concrete, metallic ping for MetalGrate, and sharp crunch for GlassDebris.
     /// </summary>
-    public static AudioClip CreateFootstepClip(float duration = 0.15f)
+    public static AudioClip CreateFootstepClip(PlayerMove.SurfaceType surface = PlayerMove.SurfaceType.Concrete, float duration = 0.12f)
     {
+        switch (surface)
+        {
+            case PlayerMove.SurfaceType.Dirt when cachedDirtFootstep != null: return cachedDirtFootstep;
+            case PlayerMove.SurfaceType.Concrete when cachedConcreteFootstep != null: return cachedConcreteFootstep;
+            case PlayerMove.SurfaceType.MetalGrate when cachedMetalFootstep != null: return cachedMetalFootstep;
+            case PlayerMove.SurfaceType.GlassDebris when cachedGlassFootstep != null: return cachedGlassFootstep;
+        }
+
         int sampleCount = Mathf.CeilToInt(SampleRate * duration);
         float[] samples = new float[sampleCount];
 
         for (int i = 0; i < sampleCount; i++)
         {
-            float decay = Mathf.Exp(-18f * (float)i / sampleCount);
-            float lowFreq = Mathf.Sin(2f * Mathf.PI * 110f * ((float)i / SampleRate));
-            float noise = (Random.value * 2f - 1f) * 0.25f;
-            samples[i] = (lowFreq + noise) * decay * 0.35f;
+            float t = (float)i / SampleRate;
+            float decay = Mathf.Exp(-t * (surface == PlayerMove.SurfaceType.MetalGrate ? 24f : 36f));
+            float noise = (Random.value * 2f - 1f);
+            float sample = 0f;
+
+            switch (surface)
+            {
+                case PlayerMove.SurfaceType.Dirt:
+                    sample = (Mathf.Sin(2f * Mathf.PI * 85f * t) * 0.7f + noise * 0.2f) * decay * 0.22f;
+                    break;
+                case PlayerMove.SurfaceType.Concrete:
+                    sample = (Mathf.Sin(2f * Mathf.PI * 135f * t) * 0.65f + noise * 0.3f) * decay * 0.32f;
+                    break;
+                case PlayerMove.SurfaceType.MetalGrate:
+                    sample = (Mathf.Sin(2f * Mathf.PI * 1550f * t) * 0.5f + noise * 0.3f) * decay * 0.40f;
+                    break;
+                case PlayerMove.SurfaceType.GlassDebris:
+                    sample = noise * decay * 0.50f;
+                    break;
+            }
+
+            samples[i] = sample;
         }
 
-        AudioClip clip = AudioClip.Create("Procedural_Footstep", sampleCount, 1, SampleRate, false);
+        AudioClip clip = AudioClip.Create($"Procedural_Footstep_{surface}", sampleCount, 1, SampleRate, false);
+        clip.SetData(samples, 0);
+
+        switch (surface)
+        {
+            case PlayerMove.SurfaceType.Dirt: cachedDirtFootstep = clip; break;
+            case PlayerMove.SurfaceType.Concrete: cachedConcreteFootstep = clip; break;
+            case PlayerMove.SurfaceType.MetalGrate: cachedMetalFootstep = clip; break;
+            case PlayerMove.SurfaceType.GlassDebris: cachedGlassFootstep = clip; break;
+        }
+
+        return clip;
+    }
+
+    /// <summary>
+    /// Generates a continuous chilling curfew winter wind gust ambience clip.
+    /// Uses low-pass filtered brownian noise with slow sinusoidal gust modulation.
+    /// </summary>
+    public static AudioClip CreateNightWindAmbienceClip(float duration = 2.0f)
+    {
+        int sampleCount = Mathf.CeilToInt(SampleRate * duration);
+        float[] samples = new float[sampleCount];
+        float lastVal = 0f;
+
+        for (int i = 0; i < sampleCount; i++)
+        {
+            float t = (float)i / SampleRate;
+            // Brownian random walk
+            float white = (Random.value * 2f - 1f);
+            lastVal = (lastVal + (0.02f * white)) / 1.02f;
+
+            // Slow wind gust envelope (0.5Hz - 1.5Hz)
+            float gust = 0.5f + 0.5f * Mathf.Sin(2f * Mathf.PI * 0.75f * t);
+            samples[i] = lastVal * gust * 0.45f;
+        }
+
+        AudioClip clip = AudioClip.Create("CurfewWinterWind_Ambience", sampleCount, 1, SampleRate, false);
         clip.SetData(samples, 0);
         return clip;
     }
@@ -121,12 +264,37 @@ public static class ProceduralAudio
         return clip;
     }
 
+    // Low-spec concurrency capping: maximum 8 concurrent audio voices to prevent CPU buffer underruns
+    private static int activeVoiceCount = 0;
+    public const int MaxConcurrentVoices = 8;
+
     /// <summary>
-    /// Helper to play an AudioClip at a point in world space.
+    /// Helper to play an AudioClip at a point in world space with voice concurrency budgeting.
     /// </summary>
     public static void PlayClipAtPoint(AudioClip clip, Vector3 position, float volume = 1f)
     {
         if (clip == null) return;
+        if (activeVoiceCount >= MaxConcurrentVoices) return; // Drop low-priority voices when budget saturated
+
+        activeVoiceCount++;
         AudioSource.PlayClipAtPoint(clip, position, volume);
+
+        // Reset voice counter after sample playback duration
+        var runner = Object.FindFirstObjectByType<SurvivalSystem>();
+        if (runner != null)
+        {
+            float duration = clip.length;
+            runner.StartCoroutine(ReleaseVoiceAfterDuration(duration));
+        }
+        else
+        {
+            activeVoiceCount = Mathf.Max(0, activeVoiceCount - 1);
+        }
+    }
+
+    private static System.Collections.IEnumerator ReleaseVoiceAfterDuration(float duration)
+    {
+        yield return new WaitForSeconds(duration);
+        activeVoiceCount = Mathf.Max(0, activeVoiceCount - 1);
     }
 }

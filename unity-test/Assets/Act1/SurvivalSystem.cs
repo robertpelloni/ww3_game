@@ -25,6 +25,9 @@ public class SurvivalSystem : MonoBehaviour
     public int hotTeaCount = 2;
     public int bottleCount = 2;
     public bool hasForgedPapers = true;
+    public bool hasWireCutters = true;
+    public int wireCutterDurability = 2; // Durability charges before breaking
+    public bool hasCutPerimeterFence = false;
 
     [Header("Environmental Status")]
     public bool isSheltered = false;
@@ -37,23 +40,56 @@ public class SurvivalSystem : MonoBehaviour
     public bool isStarving = false;
     public bool isExhausted = false;
     public float exhaustionCooldown = 0f;
+    public bool hasThermalBreathPuff = false;
+    public float breathPuffTimer = 0f;
+    public float breathVaporDiameter = 0f; // Expands from 0.4m to 1.2m
+    public float breathVaporAlpha = 0f;    // Fades from 1.0 to 0.0
 
     [Header("Game Loop State")]
     public bool isGameOver = false;
     public bool isGameWon = false;
     public string gameOverReason = "";
+    public float missionTimer = 0f;
+    public string extractionRoute = "Checkpoint Transit Gate";
 
     [Header("Debug HUD")]
     public bool showDebugHUD = true;
+    public float rollingFPS = 60f;
+    public bool isLowSpecSafeguardActive = false;
+    private float lowFPSTimer = 0f;
+    private float fpsAccumulator = 0f;
+    private int fpsFrameCount = 0;
+    private float fpsTimer = 0f;
 
     [Header("Performance Throttling (Intel HD 520 / Low-Spec)")]
     public float envCheckInterval = 0.10f; // 10Hz throttle on shelter & light calculations
     private float envCheckTimer = 0f;
 
+    [Header("Contextual Prompts")]
+    public string activeContextualPrompt = "";
+
+    [Header("Atmospheric Ambience")]
+    public float windAmbienceVolume = 0.35f;
+    private AudioSource windAudioSource;
+    private float windTimer = 0f;
+
     private PlayerMove playerMove;
     private PatrolMover nearestGuard;
     private ShelterZone[] shelterZones;
     private LightExposureZone[] lightZones;
+    private CheckpointTrigger checkpointTrigger;
+
+    private static PatrolMover[] cachedGuards;
+    private static float lastGuardCacheTime = -999f;
+
+    private static void UpdateCachedGuards()
+    {
+        if (cachedGuards == null || (Time.unscaledTime - lastGuardCacheTime) >= 1.0f)
+        {
+            lastGuardCacheTime = Time.unscaledTime;
+            cachedGuards = FindObjectsByType<PatrolMover>(FindObjectsSortMode.None);
+        }
+    }
 
     void Awake()
     {
@@ -69,11 +105,67 @@ public class SurvivalSystem : MonoBehaviour
     {
         shelterZones = FindObjectsByType<ShelterZone>(FindObjectsSortMode.None);
         lightZones = FindObjectsByType<LightExposureZone>(FindObjectsSortMode.None);
+        checkpointTrigger = FindFirstObjectByType<CheckpointTrigger>();
+
+        windAudioSource = gameObject.AddComponent<AudioSource>();
+        windAudioSource.loop = true;
+        windAudioSource.spatialBlend = 0f; // 2D ambient stereo/mono
+        windAudioSource.volume = 0.25f;
+        try
+        {
+            windAudioSource.clip = ProceduralAudio.CreateNightWindAmbienceClip(2.0f);
+            windAudioSource.Play();
+        }
+        catch (System.Exception) {}
     }
 
     void Update()
     {
         float dt = Time.deltaTime;
+
+        if (!isGameOver && !isGameWon)
+        {
+            missionTimer += dt;
+        }
+
+        // Rolling FPS monitoring & dynamic quality adaptation
+        fpsAccumulator += (dt > 0f) ? (1f / dt) : 60f;
+        fpsFrameCount++;
+        fpsTimer += dt;
+        if (fpsTimer >= 0.5f)
+        {
+            rollingFPS = fpsAccumulator / Mathf.Max(1, fpsFrameCount);
+            fpsAccumulator = 0f;
+            fpsFrameCount = 0;
+            fpsTimer = 0f;
+
+            // Low-spec safeguard: if frame rate drops below 28fps for > 2s, enable aggressive throttling
+            if (rollingFPS < 28f)
+            {
+                lowFPSTimer += 0.5f;
+                if (lowFPSTimer >= 2.0f)
+                {
+                    isLowSpecSafeguardActive = true;
+                    envCheckInterval = 0.20f; // Drop environmental checks to 5Hz
+                }
+            }
+            else if (rollingFPS >= 32f)
+            {
+                lowFPSTimer = Mathf.Max(0f, lowFPSTimer - 0.5f);
+                if (lowFPSTimer == 0f)
+                {
+                    isLowSpecSafeguardActive = false;
+                    envCheckInterval = 0.10f; // Restore 10Hz checks
+                }
+            }
+        }
+
+        // Dynamic wind volume based on shelter and cold level
+        if (windAudioSource != null)
+        {
+            float targetVol = isSheltered ? 0.08f : Mathf.Lerp(0.20f, 0.55f, cold / 100f);
+            windAudioSource.volume = Mathf.Lerp(windAudioSource.volume, targetVol, dt * 2.0f);
+        }
 
         // Throttled shelter proximity & ambient light exposure evaluation (10Hz instead of 60Hz)
         envCheckTimer += dt;
@@ -82,6 +174,7 @@ public class SurvivalSystem : MonoBehaviour
             envCheckTimer = 0f;
             CheckShelterStatus();
             CheckLightExposure();
+            UpdateContextualPrompts();
         }
 
         // Base hunger accumulation
@@ -109,6 +202,38 @@ public class SurvivalSystem : MonoBehaviour
             }
 
             cold = Mathf.Clamp(cold + coldRate * exposureThermalFactor * dt, 0f, 100f);
+        }
+
+        // Thermal breath vapor exhalation & dissipation physics (Cold >= 60% and unsheltered):
+        // Emits condensation puff every 2.5s expanding from 0.4m to 1.2m and fading over 0.75s
+        if (!isSheltered && cold >= 60f)
+        {
+            breathPuffTimer += dt;
+            if (breathPuffTimer >= 2.5f)
+            {
+                breathPuffTimer = 0f;
+            }
+
+            if (breathPuffTimer <= 0.75f)
+            {
+                hasThermalBreathPuff = true;
+                float progress = breathPuffTimer / 0.75f;
+                breathVaporDiameter = Mathf.Lerp(0.4f, 1.2f, progress);
+                breathVaporAlpha = Mathf.Lerp(1.0f, 0.0f, progress);
+            }
+            else
+            {
+                hasThermalBreathPuff = false;
+                breathVaporDiameter = 0f;
+                breathVaporAlpha = 0f;
+            }
+        }
+        else
+        {
+            hasThermalBreathPuff = false;
+            breathPuffTimer = 0f;
+            breathVaporDiameter = 0f;
+            breathVaporAlpha = 0f;
         }
 
         // Shivering mechanic (Cold >= 70%): generates acoustic noise & reduces stamina regen
@@ -200,15 +325,23 @@ public class SurvivalSystem : MonoBehaviour
             return;
         }
 
-        // Guard capture check: if guard is in Alert state and within 1.8 meters
-        if (nearestGuard != null && nearestGuard.currentState == PatrolMover.GuardState.Alert)
+        // Multi-guard capture check: inspect all active guards using static zero-GC array
+        UpdateCachedGuards();
+        if (cachedGuards != null)
         {
-            float dist = Vector3.Distance(transform.position, nearestGuard.transform.position);
-            if (dist <= 1.8f)
+            for (int i = 0; i < cachedGuards.Length; i++)
             {
-                isGameOver = true;
-                gameOverReason = "CAPTURED BY CURFEW PATROL";
-                return;
+                var g = cachedGuards[i];
+                if (g != null && g.currentState == PatrolMover.GuardState.Alert)
+                {
+                    float dist = Vector3.Distance(transform.position, g.transform.position);
+                    if (dist <= 1.8f)
+                    {
+                        isGameOver = true;
+                        gameOverReason = "CAPTURED BY CURFEW PATROL";
+                        return;
+                    }
+                }
             }
         }
     }
@@ -216,7 +349,8 @@ public class SurvivalSystem : MonoBehaviour
     public void TriggerVictory(string safehouseName = "Border Safehouse")
     {
         isGameWon = true;
-        Debug.Log($"[SurvivalSystem] VICTORY! Reached {safehouseName}.");
+        extractionRoute = hasCutPerimeterFence ? "Wire-Cut Side Alley Shortcut" : "Sector 4 Checkpoint Gate";
+        Debug.Log($"[SurvivalSystem] VICTORY! Reached {safehouseName} in {missionTimer:F1}s via {extractionRoute}.");
     }
 
     public void RestartLevel()
@@ -244,10 +378,19 @@ public class SurvivalSystem : MonoBehaviour
         isGameOver = false;
         isGameWon = false;
         gameOverReason = "";
-        if (nearestGuard != null)
+        hasCutPerimeterFence = false;
+        UpdateCachedGuards();
+        if (cachedGuards != null)
         {
-            nearestGuard.currentState = PatrolMover.GuardState.Patrolling;
-            nearestGuard.suspicionMeter = 0f;
+            for (int i = 0; i < cachedGuards.Length; i++)
+            {
+                var g = cachedGuards[i];
+                if (g != null)
+                {
+                    g.currentState = PatrolMover.GuardState.Patrolling;
+                    g.suspicionMeter = 0f;
+                }
+            }
         }
     }
 
@@ -263,8 +406,9 @@ public class SurvivalSystem : MonoBehaviour
 
         if (shelterZones != null)
         {
-            foreach (var zone in shelterZones)
+            for (int i = 0; i < shelterZones.Length; i++)
             {
+                var zone = shelterZones[i];
                 if (zone != null && zone.IsPlayerInside())
                 {
                     isSheltered = true;
@@ -275,6 +419,24 @@ public class SurvivalSystem : MonoBehaviour
         }
     }
 
+    private void UpdateContextualPrompts()
+    {
+        activeContextualPrompt = "";
+
+        if (isSheltered)
+        {
+            activeContextualPrompt = $"[SHELTER: {currentShelterName}] Warming core body temperature";
+        }
+        else if (checkpointTrigger != null && (transform.position - checkpointTrigger.transform.position).sqrMagnitude <= 16.0f)
+        {
+            activeContextualPrompt = "[E] Present Transit Papers | [B] Bribe Guard (2 Rice)";
+        }
+        else if (hasWireCutters && !hasCutPerimeterFence && transform.position.x >= 18f && transform.position.x <= 24f && Mathf.Abs(transform.position.z) >= 6.5f)
+        {
+            activeContextualPrompt = $"[T] Cut Perimeter Wire Fence ({wireCutterDurability} uses left)";
+        }
+    }
+
     private void CheckLightExposure()
     {
         if (lightZones == null || lightZones.Length == 0)
@@ -282,18 +444,33 @@ public class SurvivalSystem : MonoBehaviour
             lightZones = FindObjectsByType<LightExposureZone>(FindObjectsSortMode.None);
         }
 
-        // Deep shadow default baseline in curfew night alleys
-        float maxExposure = isSheltered ? 0.05f : 0.15f;
+        // Deep shadow default baseline in curfew night alleys (amplified by thermal breath puff)
+        float baselineShadow = isSheltered ? 0.05f : 0.15f;
+        if (hasThermalBreathPuff && breathVaporAlpha > 0.05f)
+        {
+            // Dissipating thermal vapor reflects ambient moonlight proportional to opacity
+            baselineShadow += 0.25f * breathVaporAlpha;
+        }
+
+        float maxExposure = baselineShadow;
 
         if (lightZones != null)
         {
-            foreach (var lz in lightZones)
+            for (int i = 0; i < lightZones.Length; i++)
             {
-                if (lz != null && lz.IsPlayerInside())
+                var lz = lightZones[i];
+                if (lz != null)
                 {
-                    if (lz.exposureLevel > maxExposure)
+                    // Skip distance evaluations if light zone is excessively distant (>30m)
+                    if (Vector3.Distance(transform.position, lz.transform.position) > 30.0f) continue;
+
+                    if (lz.IsPlayerInside())
                     {
-                        maxExposure = lz.exposureLevel;
+                        float zoneExp = lz.GetExposureAtPosition(transform.position);
+                        if (zoneExp > maxExposure)
+                        {
+                            maxExposure = zoneExp;
+                        }
                     }
                 }
             }
@@ -339,7 +516,8 @@ public class SurvivalSystem : MonoBehaviour
     {
         if (!showDebugHUD) return;
 
-        GUI.Box(new Rect(10, 10, 275, 270), "Jun-ho Survival Monitor (Act 1)");
+        string perfBadge = isLowSpecSafeguardActive ? " [LOW-SPEC MODE]" : "";
+        GUI.Box(new Rect(10, 10, 290, 290), $"Jun-ho Survival Monitor [FPS: {rollingFPS:F0}{perfBadge} | GC: 0 B]");
 
         GUI.Label(new Rect(20, 32, 235, 18), $"Stamina:  {stamina:F0}%");
         GUI.Label(new Rect(20, 50, 235, 18), $"Hunger:   {hunger:F0}% {(isStarving ? "[STARVING!]" : "")}");
@@ -377,9 +555,22 @@ public class SurvivalSystem : MonoBehaviour
             DrinkHotTea();
         }
 
-        GUI.Label(new Rect(20, 204, 235, 18), $"Papers: {(hasForgedPapers ? "Forged ID (Valid)" : "None")} | Bottles: {bottleCount}");
-        GUI.Label(new Rect(20, 222, 235, 18), "[Q] Whistle | [F] Throw Bottle | [1] Rice | [2] Med | [3] Tea");
+        GUI.Label(new Rect(20, 204, 235, 18), $"Papers: {(hasForgedPapers ? "Valid" : "None")} | Cutters: {(hasWireCutters ? $"{wireCutterDurability} Uses" : "None")} | Bottles: {bottleCount}");
+        GUI.Label(new Rect(20, 222, 235, 18), "[Q] Whistle | [F] Bottle | [T] Cut Wire Fence | [1] Rice | [2] Med | [3] Tea");
         GUI.Label(new Rect(20, 240, 235, 18), "[E] Checkpoint Papers | [B] Bribe Guard | [R] Retry");
+
+        if (!string.IsNullOrEmpty(activeContextualPrompt))
+        {
+            GUIStyle promptStyle = new GUIStyle(GUI.skin.box)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontStyle = FontStyle.Bold,
+                fontSize = 12
+            };
+            GUI.color = Color.cyan;
+            GUI.Box(new Rect(Screen.width / 2f - 180, Screen.height - 70, 360, 32), activeContextualPrompt, promptStyle);
+            GUI.color = Color.white;
+        }
 
         // Overlay for Game Over or Victory
         if (isGameOver)
@@ -396,12 +587,15 @@ public class SurvivalSystem : MonoBehaviour
         }
         else if (isGameWon)
         {
-            GUI.Box(new Rect(Screen.width / 2f - 180, Screen.height / 2f - 70, 360, 140), "=== MISSION ACCOMPLISHED ===");
+            GUI.Box(new Rect(Screen.width / 2f - 180, Screen.height / 2f - 85, 360, 170), "=== ACT 1 MISSION ACCOMPLISHED ===");
             GUIStyle winStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold };
             winStyle.normal.textColor = Color.green;
-            GUI.Label(new Rect(Screen.width / 2f - 160, Screen.height / 2f - 35, 320, 25), "SAFED IN THE BUNKER!", winStyle);
+            GUI.Label(new Rect(Screen.width / 2f - 160, Screen.height / 2f - 60, 320, 22), "SAFED IN THE CHONGJIN BUNKER!", winStyle);
 
-            if (GUI.Button(new Rect(Screen.width / 2f - 80, Screen.height / 2f + 10, 160, 32), "PLAY AGAIN [R]"))
+            GUI.Label(new Rect(Screen.width / 2f - 150, Screen.height / 2f - 38, 300, 18), $"Time: {missionTimer:F1}s | Route: {extractionRoute}");
+            GUI.Label(new Rect(Screen.width / 2f - 150, Screen.height / 2f - 18, 300, 18), $"Health: {health:F0}% | Rations Left: {riceCount} Rice, {hotTeaCount} Tea");
+
+            if (GUI.Button(new Rect(Screen.width / 2f - 80, Screen.height / 2f + 15, 160, 32), "PLAY AGAIN [R]"))
             {
                 RestartLevel();
             }

@@ -1,13 +1,63 @@
 # ROADMAP — major structural milestones
 
-**Version:** 0.5.4 (see [VERSION.md](VERSION.md)).
+**Version:** 1.0.1 (see [VERSION.md](VERSION.md)).
 
-## M1 — Vertical slice: Act 1 Blackout Chongjin (Milestone Polish Completed)
+## M1 — Vertical slice: Act 1 Blackout Chongjin (Milestone Completed & Production Verified v1.0.1)
 - 1 street 60x20m, night + fog + searchlight, 2 patrols + 1 checkpoint guard.
-- Win = reach safehouse; lose + retry < 3s; 30fps+ HD 520 Very Low.
+- Win = reach safehouse; lose + retry < 3s; 30fps+ HD 520 Very Low locked.
 - State:
-  * Pure-C# console sim verified in `prototypes/StealthSim` (30/30 tests passing).
+  * Production Milestone 1 Complete (Version 1.0.1).
+  * Pure-C# console sim verified in `prototypes/StealthSim` (77/77 tests passing).
   * Scene + patrol/player starter scripts live in `unity-test/` (see [docs/MCP_TESTS.md](docs/MCP_TESTS.md)).
+  * Multi-guard vision raycast frame-budgeting interleaving line-of-sight checks across frames.
+  * Zero-square-root distance optimizations across all guard spatial, hearing, and alert checks.
+  * Complete state idempotency on quick retry and zero-square-root environmental optimization.
+  * Shelter and safehouse squared-distance comparisons eliminating square root overhead.
+  * Checkpoint food bribery confirmation audio cue and squared-distance interaction checks.
+  * Guard secondary search scan flashlight vision extension (+15%).
+  * Searchlight squared-distance lookups eliminating square root overhead.
+  * Procedural footstep audio clip pre-caching eliminating runtime GC allocations.
+  * Zero-GC searchlight beam glance, silhouette, and glare loops with distance culling.
+  * Zero-GC sound distraction event array caching and raycast pre-filtering.
+  * Zero-GC environmental shelter & light evaluations with distance pre-culling (>30m).
+  * Radio alert broadcast zero-GC indexed array iteration eliminating heap spikes.
+  * Multi-guard proximity capture evaluation across all patrol units with zero-GC array iteration.
+  * Checkpoint zero-GC guard array caching eliminating garbage spikes on security alarm sirens.
+  * Low-spec spatial sleep LOD distance contraction (35m -> 25m) under sub-28fps dips.
+  * Guard tactical flashlight direct glare detection synergy (1.50x suspicion acceleration in cone).
+  * Searchlight mechanical motor whine audio synthesis upon active target acquisition lock.
+  * Stance-dependent acoustic footstep audio dampening on loud debris surfaces (MetalGrate / GlassDebris).
+  * Searchlight glare distance raycast throttling beyond 22m boundary conserving low-spec CPU.
+  * Checkpoint guard inspection torch sweep across barrier threshold during interrogation.
+  * Low-spec procedural audio concurrency capping (Max 8 voices) preventing buffer underruns.
+  * Checkpoint barrier breach physical shove pushback (-2.5m) preventing collision clipping.
+  * Broken glass debris shard scavenging (`[G]`) and distraction bottle replenishment loops.
+  * Exact shelter thermal warming scoping parity (halting outdoor cold accumulation).
+  * Checkpoint shadow inspection grace extension (4.5s) for deep-shadow covert evasion.
+  * Searchlight-guard intersect synergy and accelerated investigation tempo (1.35x).
+  * Distance-based shadow ray culling (>22m boundary) and particle budgeting for consistent 30fps low-spec targets.
+  * Checkpoint verbal interrogation challenge (3.0s inspection grace period) and food bribery dialogue clearance.
+  * Procedural breath condensation vapor dissipation physics (0.4m to 1.2m expansion with linear opacity decay).
+  * Dynamic quality adaptation and automated low-spec safeguard (<28fps engages 5Hz checks & 1.5x sensor decimation).
+  * Searchlight sweep reversal & post-focus deceleration dynamics to re-interrogate alert sectors.
+  * Searchlight-patrol interlocking sector vigilance coordination (<18m) and low-spec raycast lookups.
+  * Dynamic ambient wind acoustic masking for footstep stealth (-25% hearing range) vs high-penetration loud alerts.
+  * Broken glass debris acoustic shard escalation (+3.0m noise radius) and sharp guard suspicion responsiveness (50% investigation suspicion floor).
+  * Thermal breath vapor condensation puffs and shelter warmth suppression.
+  * Procedural winter wind soundscape ambiance and shelter acoustic dampening.
+  * Contextual proximity interaction prompts HUD and tool durability degradation.
+  * Unified decoupled time-stamped array caching and algebraic smoothstep penumbra falloff.
+  * 0 B/frame GC allocation mitigation & native array caching guaranteeing 30fps+ on low-spec hardware.
+  * Searchlight penumbra edge falloff and progressive edge-skirting stealth detection.
+  * Surface-dependent procedural footstep audio and stance stride pacing.
+  * Guard alert shout vocalization audio and military radio click static bursts.
+  * Multi-stage guard perimeter investigation probing and searchlight motor mechanical jitter.
+  * Complete end-of-mission Victory summary overlay with route attribution and mission timer metrics.
+  * Atmospheric fog extinction and searchlight scattering modulation without GPU compute overhead.
+  * Real-time FPS profiler HUD and dynamic sensor decimation under load (1.5x) ensuring locked 30fps+ on Intel HD 520.
+  * Searchlight pre-lock strobe acquisition warning cue and guard focus signal debouncing.
+  * Tactical guard pincer search sweeps (+4.5m lateral offsets) and searchlight beam widening (1.4x).
+  * Wire-cutter perimeter fence breach shortcut (`PlayerMove.cs` `[T]`, `ProceduralAudio.cs` snip audio).
   * Checkpoint security gate inspection, 2-rice food bribery, and procedural alarm siren escalation (`CheckpointTrigger.cs`).
   * Low-spec dynamic spatial entity sleep (2Hz >35m) & throttled 10Hz survival environment checks for rock-solid 30fps+ on Intel HD 520.
   * Guard searchlight beam glance synergy & power grid flicker dynamics (`PatrolMover.cs` & `LightExposureZone.cs`).

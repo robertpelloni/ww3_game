@@ -51,6 +51,9 @@ public class PlayerMove : MonoBehaviour
     [Header("Boundaries")]
     public float minX = -28f, maxX = 28f, minZ = -9f, maxZ = 9f;
 
+    [Header("Footstep Audio Pacing")]
+    public float footstepTimer = 0f;
+
     public bool IsMoving { get; private set; }
     public float CurrentNoiseRadius { get; private set; }
     public bool IsWhistling => whistleTimer > 0f;
@@ -90,6 +93,30 @@ public class PlayerMove : MonoBehaviour
         p.y = 1f;
         transform.position = p;
 
+        // Footstep audio pacing based on movement and stance
+        if (IsMoving)
+        {
+            float strideInterval = currentStance switch
+            {
+                Stance.Sprint => 0.28f,
+                Stance.Walk => 0.45f,
+                Stance.Crouch => 0.65f,
+                Stance.Prone => 0.90f,
+                _ => 0.45f
+            };
+
+            footstepTimer += Time.deltaTime;
+            if (footstepTimer >= strideInterval)
+            {
+                footstepTimer = 0f;
+                PlayFootstepAudio();
+            }
+        }
+        else
+        {
+            footstepTimer = 0f;
+        }
+
         // Update surface material multiplier
         surfaceNoiseMultiplier = currentSurface switch
         {
@@ -109,6 +136,12 @@ public class PlayerMove : MonoBehaviour
         else
         {
             float baseNoise = IsMoving ? (GetBaseNoiseRadius() * surfaceNoiseMultiplier) : 0f;
+
+            // Glass shards crunch escalation: fractured glass beneath boots causes sharp acoustic spikes (+3.0m)
+            if (IsMoving && currentSurface == SurfaceType.GlassDebris)
+            {
+                baseNoise += 3.0f;
+            }
 
             // Shivering chattering noise & exhaustion heavy breathing:
             if (survival != null)
@@ -134,6 +167,37 @@ public class PlayerMove : MonoBehaviour
         {
             throwCooldownTimer -= Time.deltaTime;
         }
+    }
+
+    private void PlayFootstepAudio()
+    {
+        try
+        {
+            AudioClip step = ProceduralAudio.CreateFootstepClip(currentSurface);
+            float vol = currentStance switch
+            {
+                Stance.Sprint => 0.85f,
+                Stance.Walk => 0.50f,
+                Stance.Crouch => 0.25f,
+                Stance.Prone => 0.12f,
+                _ => 0.50f
+            };
+
+            // Stance stealth acoustic dampening: crouch and prone stances attenuate noisy terrain strikes
+            if (currentStance == Stance.Crouch)
+            {
+                if (currentSurface == SurfaceType.MetalGrate || currentSurface == SurfaceType.GlassDebris)
+                    vol *= 0.65f;
+            }
+            else if (currentStance == Stance.Prone)
+            {
+                if (currentSurface == SurfaceType.MetalGrate || currentSurface == SurfaceType.GlassDebris)
+                    vol *= 0.45f;
+            }
+
+            ProceduralAudio.PlayClipAtPoint(step, transform.position, vol);
+        }
+        catch (System.Exception) {}
     }
 
     void HandleDistractionInputs()
@@ -191,6 +255,56 @@ public class PlayerMove : MonoBehaviour
             else
             {
                 Debug.Log("[PlayerMove] No glass bottles left to throw!");
+            }
+        }
+
+        // [G] Key scavenges glass debris shards into inventory (+1 bottle count) when on GlassDebris surface
+        if (Input.GetKeyDown(KeyCode.G) && currentSurface == SurfaceType.GlassDebris)
+        {
+            if (survival != null && survival.bottleCount < 3)
+            {
+                survival.bottleCount++;
+                // Emit small scavenging noise (6m radius)
+                CurrentNoiseRadius = Mathf.Max(CurrentNoiseRadius, 6.0f);
+                SoundDistractionEvent.Create(transform.position, 6.0f, 1.0f);
+                try
+                {
+                    AudioClip clink = ProceduralAudio.CreateFootstepClip(SurfaceType.GlassDebris);
+                    ProceduralAudio.PlayClipAtPoint(clink, transform.position, 0.6f);
+                }
+                catch (System.Exception) {}
+                Debug.Log($"[PlayerMove] Scavenged glass shard into throwable bottle! Bottles: {survival.bottleCount}");
+            }
+            else
+            {
+                Debug.Log("[PlayerMove] Cannot carry more bottles (max 3) or not near survival inventory!");
+            }
+        }
+
+        // [T] Key uses scavenged wire cutters to breach secondary perimeter fence shortcut
+        if (Input.GetKeyDown(KeyCode.T))
+        {
+            if (survival != null && survival.hasWireCutters && survival.wireCutterDurability > 0)
+            {
+                survival.hasCutPerimeterFence = true;
+                survival.wireCutterDurability--;
+                if (survival.wireCutterDurability <= 0)
+                {
+                    survival.hasWireCutters = false;
+                    Debug.Log("[PlayerMove] Wire cutters snapped and broke after cutting the fence!");
+                }
+
+                try
+                {
+                    AudioClip snip = ProceduralAudio.CreateWireSnipClip();
+                    ProceduralAudio.PlayClipAtPoint(snip, transform.position, 0.85f);
+                }
+                catch (System.Exception) {}
+                Debug.Log($"[PlayerMove] Snip! Wire fence breached. Shortcut opened! Cutters left: {survival.wireCutterDurability}");
+            }
+            else
+            {
+                Debug.LogWarning("[PlayerMove] Cannot cut fence without functional wire cutters!");
             }
         }
     }
