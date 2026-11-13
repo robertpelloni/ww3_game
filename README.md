@@ -1,177 +1,30 @@
-# WW3: Escape from North Korea 🇰🇵🔥
+# WW3: Escape from North Korea
 
-**WW3 stealth-survival game — escape North Korea as World War 3 erupts.**
+A stealth-survival game: WW3 breaks out and you are a civilian in Chongjin with 72 hours before the northern front collapses. No guns-blazing — you sneak, barter, hide, and run: avoid patrols, manage hunger/cold/stamina, forge papers, bribe guards, cross the Tumen river into China, then the DMZ to freedom.
 
-> Primary engine: **Unity 2022 LTS / Unity 6 LTS + URP** (laptop-friendly, runs on Intel HD 520 + dual-core).
-> Research engine: **Unreal Engine 5** (docs + MCP only — too heavy for this laptop, see `docs/ENGINE_DECISION.md`).
-> Built AI-first with **Model Context Protocol (MCP) servers** for Unity + Unreal.
+Pillars: stealth over shooting (cone-of-vision, noise, light/shadow, curfew); survival pressure (hunger, cold, stamina, medicine, batteries); choices matter (papers vs bribe vs river vs tunnel, who you trust); low-spec stylized (night fog + searchlights carry the mood, not poly count).
 
-**Repo:** https://github.com/robertpelloni/ww3_game
-**Workspace submodule:** `workspace/ww3_game`
-**Status:** pre-production — repo live, GDD v0.1, **23 MCP servers** vendored (8 Unity + 8 Unreal + 7 Godot), 13/23 live-verified
+## Status
 
----
+**Active pre-production (v1.0.1).** Last significant activity: **2026-11-12** — merge of a command-center/tray-cleanup branch (Protocol #281). Nov 10–11 shipped v0.9.6–v1.0.1: an Act 1 vertical slice with low-spec performance optimization, checkpoint bribery audio, shelter/safehouse distance optimization, and multi-guard raycast interleaving.
 
-## Why Unity, not Unreal (on this laptop)
-
-| | This laptop (Lenovo 20FR, i7-6600U, HD 520, 16GB, ~37GB free) | Unity URP | Unreal 5 |
-|---|---|---|---|
-| CPU (2C/4T 15W) | ✅ Unity editor usable | ✅ | ❌ hours of shader compiles |
-| GPU (HD 520, 1GB) | ✅ URP low-poly / stylized OK | ✅ | ❌ no Lumen/Nanite, 5-10fps editor |
-| Disk (~37GB free) | ✅ Unity ~15-20GB | ✅ | ❌ UE5 needs 60-100GB+ |
-| MCP ecosystem | ✅ mature | ✅ 15k⭐ options | ⚠️ younger, heavier |
-
-Full analysis: [`docs/ENGINE_DECISION.md`](docs/ENGINE_DECISION.md)
-
-**Verdict: build the game in Unity. Use Unreal MCPs for research/reference only.**
-
----
-
-## Game pitch (1-min)
-
-**Title (working):** *WW3: DMZ Run / Escape from North Korea*
-
-WW3 breaks out. You are a civilian in Chongjin with 72 hours before the northern front collapses. No guns-blazing — you **sneak, barter, hide, and run**: avoid patrols, manage hunger/cold/stamina, forge papers, bribe guards, cross the Tumen river into China, then the DMZ to freedom.
-
-Pillars:
-1. **Stealth over shooting** — cone-of-vision, noise, light/shadow, curfew
-2. **Survival pressure** — hunger, cold, stamina, medicine, batteries
-3. **Choices matter** — papers vs bribe vs river vs tunnel, who you trust
-4. **Low-spec stylized** — night fog + searchlights carry the mood, not poly count
-
-See [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md) for acts, mechanics, and vertical-slice plan.
-
----
+Primary engine: **Unity 2022 LTS / Unity 6 LTS + URP** (laptop-friendly, runs on Intel HD 520 + dual-core). Unreal Engine 5 is research-only (docs + MCP — too heavy for the dev laptop, see `docs/ENGINE_DECISION.md`). Built AI-first with Model Context Protocol (MCP) servers for Unity + Unreal.
 
 ## Repo layout
 
-```
-ww3_game/
-├── README.md                 # you are here
-├── docs/
-│   ├── ENGINE_DECISION.md    # Unity vs Unreal on this laptop
-│   ├── GAME_DESIGN.md        # GDD v0.1
-│   └── MCP_SETUP.md          # how to install/activate all MCP servers
-├── mcp-servers/
-│   ├── unity/                # 8 Unity MCP servers (cloned)
-│   ├── unreal/               # 8 Unreal MCP servers (cloned)
-│   └── godot/                # 7 Godot MCP servers (cloned)
-├── unity-project/            # Unity URP project goes here (Unity Hub → open this folder)
-├── prototypes/               # pure C# / console prototypes (no engine needed)
-├── .mcp.json                 # MCP client config (Claude Code / Cursor / pi)
-├── .vscode/
-│   └── mcp.json              # VS Code MCP config (copy of .mcp.json)
-└── .gitignore
-```
+- `docs/` — `ENGINE_DECISION.md` (Unity vs Unreal on this laptop), `GAME_DESIGN.md` (GDD v0.1), `MCP_SETUP.md`
+- `mcp-servers/` — 23 vendored MCP servers (8 Unity + 8 Unreal + 7 Godot); 13/23 live-verified per repo docs
+- `unity-project/` — Unity URP project (open with Unity Hub)
+- `prototypes/` — pure C# / console prototypes (no engine needed), including a top-down console stealth sim (patrol cones, noise, light)
+- `godot-test/`, `unity-test/` — engine test projects; `scripts/` — setup scripts
+- `.mcp.json` / `.vscode/mcp.json` — MCP client config
 
----
+Note: 17 near-identical dashboard screenshots (`dashboard_v085.png`–`dashboard_v101.png`, ~680 KB each) are committed at the root — bloat worth cleaning up.
 
 ## Quickstart (Windows 10, low-spec)
 
-### 1. Install Unity (do this first)
-1. Install **Unity Hub** → https://unity.com/download
-2. In Hub → Installs → install **Unity 2022.3 LTS** (most stable on HD 520) with modules:
-   - `Windows Build Support (IL2CPP)`
-   - `Windows Dedicated Server` (optional)
-   - Documentation
-3. In this repo: Hub → Open → select `unity-project/` (create it as **3D (URP)** template if empty)
-4. Open `Edit → Project Settings → Quality` → set default to **Very Low**, URP Asset → disable shadows / SSAO for now
+1. Install Unity Hub, then **Unity 2022.3 LTS** with Windows Build Support (IL2CPP). Open `unity-project/` (create as 3D URP template if empty). Set Quality to Very Low.
+2. Activate MCP servers: `.\scripts\install-mcp.ps1`, then point your AI client at `.mcp.json`.
+3. Run the no-engine prototype: `dotnet run --project prototypes/StealthSim`
 
-> Don't install Unreal Engine on this laptop unless you free 80GB+ and accept 5fps editor. Research via MCP servers instead.
-
-### 2. Activate MCP servers
-All 10 servers are vendored under `mcp-servers/` (see table below). Install once:
-
-```powershell
-# from repo root
-.\scripts\install-mcp.ps1
-```
-
-Then point your AI client at `.mcp.json`:
-- **Claude Code / Cursor / Windsurf:** auto-reads `.mcp.json` in repo root
-- **VS Code (MCP extension):** uses `.vscode/mcp.json`
-- **pi agent:** `hypernexus_tool_search "unity mcp"` or import `.mcp.json`
-
-Full per-server build/run notes: [`docs/MCP_SETUP.md`](docs/MCP_SETUP.md)
-
-### 3. Run the no-engine prototype
-```powershell
-dotnet run --project prototypes/StealthSim
-# top-down console stealth sim: patrol cones, noise, light — no GPU needed
-```
-
----
-
-## MCP servers (8 Unity + 8 Unreal + 7 Godot, by ⭐)
-
-### Unity — installed & activated (8/8 vendored, 7/8 live-verified)
-| # | Repo | ⭐ | Why |
-|---|------|----|-----|
-| U1 | [CoplayDev/unity-mcp](https://github.com/CoplayDev/unity-mcp) | ~15.4k | Biggest community, bridge LLM ↔ Unity Editor |
-| U2 | [IvanMurzak/Unity-MCP](https://github.com/IvanMurzak/Unity-MCP) | ~4.5k | CLI + tools + skills, best docs, free |
-| U3 | [CoderGamester/mcp-unity](https://github.com/CoderGamester/mcp-unity) | ~2k | Clean Cursor/Claude Code plugin |
-| U4 | [AnkleBreaker-Studio/unity-mcp-server](https://github.com/AnkleBreaker-Studio/unity-mcp-server) | ~500 | 268 tools: scenes, builds, NavMesh, multiplayer |
-| U5 | [jackwrichards/UnityMCP](https://github.com/jackwrichards/UnityMCP) | ~500 | Lightweight alternative |
-| U6 | [isuzu-shiranui/UnityMCP](https://github.com/isuzu-shiranui/UnityMCP) | ~340 | No-runtime native CLI, Editor-hosted HTTP — great for weak PCs |
-| U7 | [FunplayAI/funplay-unity-mcp](https://github.com/FunplayAI/funplay-unity-mcp) | ~270 | In-process HTTP + broker mode |
-| U8 | [Glade-tool/glade-mcp](https://github.com/Glade-tool/glade-mcp) | ~210 | **Unity + Godot** dual-engine, `uvx gladekit-mcp` |
-
-### Unreal — research only (don't run UE5 editor on this laptop) (8/8 vendored, 2/8 live-verified)
-| # | Repo | ⭐ | Why |
-|---|------|----|-----|
-| R1 | [chongdashu/unreal-mcp](https://github.com/chongdashu/unreal-mcp) | ~2.1k | #1 Unreal MCP, natural-language control |
-| R2 | [ChiR24/Unreal_mcp](https://github.com/ChiR24/Unreal_mcp) | ~980 | TS + C++ Automation Bridge, comprehensive |
-| R3 | [kvick-games/UnrealMCP](https://github.com/kvick-games/UnrealMCP) | ~600 | Straightforward AI-agent control |
-| R4 | [GenOrca/unreal-mcp](https://github.com/GenOrca/unreal-mcp) | ~140 | UE5 + Claude & agents, Python+C++ tools |
-| R5 | [runreal/unreal-mcp](https://github.com/runreal/unreal-mcp) | ~110 | Uses Unreal Python Remote Execution |
-| R6 | [IvanMurzak/Unreal-MCP](https://github.com/IvanMurzak/Unreal-MCP) | ~50 | Same CLI family as U2/G9 (`unreal-mcp-cli`) |
-| R7 | [appleweed/UnrealMCPBridge](https://github.com/appleweed/UnrealMCPBridge) | ~60 | UE plugin + Python FastMCP client |
-| R8 | [sam-david/unreal-mcp](https://github.com/sam-david/unreal-mcp) | — | 127 tools, **no C++ plugin required** — most laptop-friendly UE path |
-
-### Godot — runs on this laptop! (7/7 vendored, editor not installed yet)
-| # | Repo | ⭐ | Why |
-|---|------|----|-----|
-| G1 | [Coding-Solo/godot-mcp](https://github.com/Coding-Solo/godot-mcp) | ~6.4k | #1 Godot MCP, launches editor + captures debug output |
-| G2 | [hi-godot/godot-ai](https://github.com/hi-godot/godot-ai) | ~3.2k | From the MCP-for-Unity makers, `uvx godot-ai`, totally free |
-| G3 | [yurineko73/Godot-MCP-Native](https://github.com/yurineko73/Godot-MCP-Native) | ~860 | Zero-dep native, headless `--mcp-server` mode |
-| G5 | [ee0pdt/Godot-MCP](https://github.com/ee0pdt/Godot-MCP) | ~620 | FastMCP bridge + editor addon |
-| G7 | [tugcantopaloglu/godot-mcp](https://github.com/tugcantopaloglu/godot-mcp) | ~500 | 157 tools, Godot 4.7-tested |
-| G8 | [tomyud1/godot-mcp](https://github.com/tomyud1/godot-mcp) | ~450 | 71 tools + visualizer |
-| G9 | [IvanMurzak/Godot-MCP](https://github.com/IvanMurzak/Godot-MCP) | ~310 | Same CLI family (`godot-cli`), C# + cloud via ai-game.dev |
-
-Bonus research: `IvanMurzak/Unreal-MCP` (same author as U2), `sam-david/unreal-mcp` (127 tools, no C++ plugin required — interesting for weak PCs).
-
-> Vendored copies live in `mcp-servers/unity/*` and `mcp-servers/unreal/*`. Upstreams remain the source of truth — pull to update.
-
----
-
-## Roadmap
-
-- [x] Repo + submodule + README + MCP toolchain (10/10 vendored, 6/10 live-verified)
-- [x] `docs/GAME_DESIGN.md` Act 1 vertical slice (Chongjin night escape)
-- [x] 23 MCP servers (8 Unity + 8 Unreal + 7 Godot) vendored + activated in `.mcp.json`
-- [ ] Install Godot 4 (Compatibility renderer — runs on HD 520) and wire G1/G3 to a test project
-- [ ] Unity URP project scaffold (URP asset, input, stealth toolkit)
-- [x] `prototypes/StealthSim` console sim (patrol AI, noise/light, survival stats)
-- [x] System Tray Icon & Background Server Manager (`scripts/tray_manager.py`)
-- [x] Redesigned unified Command Center (`dashboard.html` v0.2.0)
-- [ ] First playable in Unity: 1 street, 2 patrols, 1 checkpoint, win = reach safehouse
-- [ ] Itch.io private playtest build (Windows x64, Very Low preset)
-
----
-
-## Contributing / agents
-
-- Workspace protocol: see `../AGENTS.md` + `../HANDOFF.md`
-- Memory: Brain `.memory/main.md` + HyperNexus L2 (`hypernexus_memory_search "ww3_game"`)
-- When you finish a turn, update `HANDOFF.md` (root) and push **both** submodule + superproject
-
-```powershell
-# typical loop (run inside workspace/ww3_game for game changes)
-git add -A; git commit -m "ww3: <what>"; git push origin main
-cd ..; git add ww3_game; git commit -m "ww3_game: <what>"; git push
-```
-
-## License
-
-MIT (game code + docs). Vendored MCP servers keep their own licenses — check each `mcp-servers/*/*/LICENSE`.
+Do not install Unreal Engine on the dev laptop unless you free 80 GB+ and accept a 5 fps editor; research via MCP servers instead.
